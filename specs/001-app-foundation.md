@@ -2,10 +2,10 @@
 
 | Field     | Value |
 |-----------|-------|
-| Status    | In progress |
+| Status    | Done |
 | Branch    | `feature/001-app-foundation` |
 | Estimate  | ~3.5 h (AI-assisted) · ~6.5 h manual |
-| Actual    | — |
+| Actual    | ~2.5 h |
 
 ## Goal
 
@@ -45,8 +45,8 @@ GraphQL API.
 
 ## Acceptance criteria
 
-- [ ] `shopify app dev` opens the app inside the Vicubites admin without console errors.
-- [ ] The home page shows the store's real product count and Ingredient entries.
+- [x] `shopify app dev` opens the app inside the Vicubites admin without console errors.
+- [x] The home page shows the store's real product count and Ingredient entries.
 - [x] `npm run graphql-codegen`, `npm run typecheck`, `npm run lint` and `npm test` pass.
 - [x] A field that doesn't exist on the schema fails codegen; reading a field the query didn't
       select fails the typecheck.
