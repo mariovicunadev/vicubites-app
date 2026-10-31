@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   isExpired,
   isTerminal,
+  needsRefresh,
   parseWebhookErrorCode,
   parseWebhookStatus,
   resultUrlExpiresAt,
@@ -33,6 +34,22 @@ describe("isTerminal", () => {
     expect(isTerminal("FAILED")).toBe(true);
     expect(isTerminal("RUNNING")).toBe(false);
     expect(isTerminal("CREATED")).toBe(false);
+  });
+});
+
+describe("needsRefresh", () => {
+  const url = "https://storage.example/result.jsonl";
+
+  it("refreshes running jobs and completed jobs the webhook closed without details", () => {
+    expect(needsRefresh({ status: "RUNNING", url: null })).toBe(true);
+    expect(needsRefresh({ status: "COMPLETED", url: null })).toBe(true);
+    expect(needsRefresh({ status: "PAUSED", url: null })).toBe(true);
+  });
+
+  it("leaves finished jobs alone once their details are stored", () => {
+    expect(needsRefresh({ status: "COMPLETED", url })).toBe(false);
+    expect(needsRefresh({ status: "FAILED", url: null })).toBe(false);
+    expect(needsRefresh({ status: "CANCELED", url: null })).toBe(false);
   });
 });
 

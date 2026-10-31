@@ -71,8 +71,11 @@ Facts from the 2026-10 docs that shape the design:
   values compare without casts.
 - `objectCount` and `rootObjectCount` are `UnsignedInt64` and arrive as strings; they're
   converted before they're stored.
-- The webhook records status, error code and completion time. GraphQL fills in counts and the
-  signed URL, through polling while a job runs or on download.
+- The webhook records status, error code and completion time, then reads counts and the signed
+  URL from GraphQL, since its payload carries neither. Found in manual testing: a fast export
+  finished before the first poll, the webhook closed the job and the table showed 0 objects
+  until a download refreshed it. As a fallback the page also refreshes completed jobs that
+  still have no URL (`needsRefresh()`).
 - The browser never sees the signed result URL: the download route fetches the JSONL on the
   server and streams the CSV back. The page uses `fetch` (App Bridge adds the session token)
   rather than a plain link, which wouldn't carry it inside the admin iframe.

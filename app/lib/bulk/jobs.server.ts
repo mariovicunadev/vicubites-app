@@ -4,8 +4,7 @@ import type { BulkJob } from "@prisma/client";
 import prisma from "../../db.server";
 import { getBulkOperation, startBulkQuery } from "./operations.server";
 import {
-  isBulkStatus,
-  isTerminal,
+  needsRefresh,
   resultUrlExpiresAt,
   type BulkErrorCode,
   type BulkStatus,
@@ -70,16 +69,13 @@ export async function applySnapshot(operationId: string, snapshot: BulkOperation
 }
 
 /**
- * Polling fallback: refreshes unfinished jobs from GraphQL. The webhook
- * usually gets there first; this covers missed or delayed deliveries.
+ * Polling fallback: refreshes jobs that are running or incomplete. The
+ * webhook usually gets there first; this covers missed or delayed deliveries.
  */
-export async function refreshUnfinishedJobs(graphql: AdminGraphql, shop: string) {
+export async function refreshStaleJobs(graphql: AdminGraphql, shop: string) {
   const jobs = await prisma.bulkJob.findMany({ where: { shop } });
-  const unfinished = jobs.filter(
-    (job) => !isBulkStatus(job.status) || !isTerminal(job.status),
-  );
   await Promise.all(
-    unfinished.map(async (job) => {
+    jobs.filter(needsRefresh).map(async (job) => {
       const operation = await getBulkOperation(graphql, job.operationId);
       if (operation) {
         await applySnapshot(job.operationId, operation);

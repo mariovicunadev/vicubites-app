@@ -9,7 +9,7 @@ import { useAppBridge } from "@shopify/app-bridge-react";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 
 import { AdminApiError } from "../lib/admin/errors";
-import { createBulkJob, listBulkJobs, refreshUnfinishedJobs } from "../lib/bulk/jobs.server";
+import { createBulkJob, listBulkJobs, refreshStaleJobs } from "../lib/bulk/jobs.server";
 import { toJobView, type BulkJobView } from "../lib/bulk/job-view";
 import { CATALOG_EXPORT_QUERY } from "../lib/catalog/export";
 import { authenticate } from "../shopify.server";
@@ -21,7 +21,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   let refreshError: string | null = null;
   try {
-    await refreshUnfinishedJobs(admin.graphql, session.shop);
+    await refreshStaleJobs(admin.graphql, session.shop);
   } catch (error) {
     if (!(error instanceof AdminApiError)) throw error;
     refreshError = error.message;

@@ -58,6 +58,15 @@ export function parseWebhookErrorCode(
   return ERROR_CODES.has(upper) ? (upper as BulkErrorCode) : null;
 }
 
+/**
+ * A job needs GraphQL while it runs, and also when it finished without its
+ * details: the webhook payload has the status but no counts or URL.
+ */
+export function needsRefresh(job: { status: string; url: string | null }): boolean {
+  if (!isBulkStatus(job.status) || !isTerminal(job.status)) return true;
+  return job.status === "COMPLETED" && !job.url;
+}
+
 export function resultUrlExpiresAt(completedAt: Date): Date {
   return new Date(completedAt.getTime() + RESULT_URL_TTL_MS);
 }
