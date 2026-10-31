@@ -1,0 +1,21 @@
+query demoSources {
+  products(first: 1, query: "status:active") {
+    nodes {
+      media(first: 1) {
+        nodes {
+          ... on MediaImage {
+            image {
+              url
+            }
+          }
+        }
+      }
+    }
+  }
+  metaobjects(type: "ingredient", first: 4) {
+    nodes {
+      id
+      handle
+    }
+  }
+}

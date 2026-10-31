@@ -2,7 +2,7 @@
 
 | Field     | Value |
 |-----------|-------|
-| Status    | In progress |
+| Status    | Done |
 | Branch    | `feature/002-bulk-export` |
 | Estimate  | ~4.5 h (AI-assisted) · ~8.5 h manual |
 | Actual    | ~3.5 h |

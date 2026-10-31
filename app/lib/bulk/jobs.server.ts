@@ -12,8 +12,11 @@ import {
 
 type AdminGraphql = AdminApiContext["graphql"];
 
-/** What a job exports. New modules add their own kind (for example `orders`). */
-export type BulkJobKind = "catalog";
+/**
+ * What a job is for: a catalog CSV export or a Nutrition Data Health audit
+ * (same query, different consumer). New modules add their own kind.
+ */
+export type BulkJobKind = "catalog" | "audit";
 
 /** Fields of a bulk operation that a job mirrors, from GraphQL or the webhook. */
 export interface BulkOperationSnapshot {
@@ -91,11 +94,18 @@ export async function refreshJob(graphql: AdminGraphql, job: BulkJob): Promise<B
   return prisma.bulkJob.update({ where: { id: job.id }, data: jobUpdate(operation) });
 }
 
-export function listBulkJobs(shop: string, take = 20) {
+export function listBulkJobs(shop: string, kind: BulkJobKind, take = 20) {
   return prisma.bulkJob.findMany({
-    where: { shop },
+    where: { shop, kind },
     orderBy: { createdAt: "desc" },
     take,
+  });
+}
+
+export function latestBulkJob(shop: string, kind: BulkJobKind) {
+  return prisma.bulkJob.findFirst({
+    where: { shop, kind },
+    orderBy: { createdAt: "desc" },
   });
 }
 
