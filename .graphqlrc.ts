@@ -12,6 +12,8 @@ function getConfig() {
         documents: [
           "./app/**/*.{js,ts,jsx,tsx}",
           "./app/.server/**/*.{js,ts,jsx,tsx}",
+          // Test fixtures aren't real operations.
+          "!./app/**/*.test.{js,ts,jsx,tsx}",
         ],
         outputDir: "./app/types",
       }),

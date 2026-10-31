@@ -6,8 +6,8 @@ import { adminGraphql, operationName } from "./graphql.server";
 
 type AdminGraphql = AdminApiContext["graphql"];
 
-const QUERY = `#graphql
-  query shopOverview {
+const QUERY = `
+  query testShopName {
     shop {
       name
     }
@@ -21,7 +21,7 @@ function fakeGraphql(body: unknown): AdminGraphql {
 
 describe("operationName", () => {
   it("extracts the operation name from a tagged document", () => {
-    expect(operationName(QUERY)).toBe("shopOverview");
+    expect(operationName(QUERY)).toBe("testShopName");
     expect(operationName("mutation productUpdate($id: ID!) { x }")).toBe("productUpdate");
   });
 
@@ -45,7 +45,7 @@ describe("adminGraphql", () => {
 
     await expect(adminGraphql(graphql, QUERY)).rejects.toMatchObject({
       kind: "empty-response",
-      operation: "shopOverview",
+      operation: "testShopName",
     });
   });
 
