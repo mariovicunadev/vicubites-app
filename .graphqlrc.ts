@@ -8,10 +8,12 @@ function getConfig() {
     projects: {
       default: shopifyApiProject({
         apiType: ApiType.Admin,
-        apiVersion: ApiVersion.July26,
+        apiVersion: ApiVersion.October26,
         documents: [
           "./app/**/*.{js,ts,jsx,tsx}",
           "./app/.server/**/*.{js,ts,jsx,tsx}",
+          // Test fixtures aren't real operations.
+          "!./app/**/*.test.{js,ts,jsx,tsx}",
         ],
         outputDir: "./app/types",
       }),
