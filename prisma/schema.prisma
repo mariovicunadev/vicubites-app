@@ -32,3 +32,23 @@ model Session {
   refreshToken        String?
   refreshTokenExpires DateTime?
 }
+
+// One row per bulk operation the app starts. Shopify keeps result files for
+// seven days; this table keeps the history and the state the UI shows.
+model BulkJob {
+  id              String    @id @default(cuid())
+  shop            String
+  operationId     String    @unique
+  kind            String
+  status          String
+  errorCode       String?
+  objectCount     Int       @default(0)
+  rootObjectCount Int       @default(0)
+  url             String?
+  partialDataUrl  String?
+  urlExpiresAt    DateTime?
+  createdAt       DateTime  @default(now())
+  completedAt     DateTime?
+
+  @@index([shop, createdAt])
+}
