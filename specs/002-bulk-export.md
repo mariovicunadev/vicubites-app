@@ -5,7 +5,7 @@
 | Status    | In progress |
 | Branch    | `feature/002-bulk-export` |
 | Estimate  | ~4.5 h (AI-assisted) · ~8.5 h manual |
-| Actual    | — |
+| Actual    | ~3.5 h |
 
 ## Goal
 
@@ -52,9 +52,9 @@ Facts from the 2026-10 docs that shape the design:
 
 ## Acceptance criteria
 
-- [ ] "Export catalog" starts the operation and the job moves from `CREATED` to `COMPLETED`
+- [x] "Export catalog" starts the operation and the job moves from `CREATED` to `COMPLETED`
       without a manual reload.
-- [ ] The downloaded CSV has the 20 products and all their variants, with metafields and media
+- [x] The downloaded CSV has the 20 products and all their variants, with metafields and media
       alt text.
 - [x] A failed operation shows its error code and offers partial data when Shopify kept some.
 - [x] An expired result explains the seven-day limit instead of failing with a generic error.
@@ -100,3 +100,10 @@ images) → 72 CSV rows, 30 columns.
   export would write rows per product as soon as all its children have arrived.
 - On Windows, `prisma generate` fails while `shopify app dev` holds the query engine: stop the
   dev server first.
+
+## Verification
+
+- Dev store, through the app: two catalog exports completed (20 products, 462 objects each);
+  the CSV downloaded with 72 variant rows.
+- Webhook path on its own (no page open, so no polling): a job went from `CREATED` to
+  `COMPLETED` with counts and URL filled in by `bulk_operations/finish`.
