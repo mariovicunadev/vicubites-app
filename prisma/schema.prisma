@@ -49,6 +49,26 @@ model BulkJob {
   urlExpiresAt    DateTime?
   createdAt       DateTime  @default(now())
   completedAt     DateTime?
+  // Set once the result has been consumed (for example, an audit evaluated).
+  processedAt     DateTime?
 
-  @@index([shop, createdAt])
+  @@index([shop, kind, createdAt])
+}
+
+// Latest Nutrition Data Health result per product, replaced on every audit.
+model ProductHealth {
+  id          String   @id @default(cuid())
+  shop        String
+  productId   String
+  title       String
+  handle      String
+  status      String
+  score       Int
+  // JSON array of { ruleId, passed, missing } (SQLite has no JSON column type).
+  results     String
+  auditJobId  String
+  auditedAt   DateTime
+
+  @@unique([shop, productId])
+  @@index([shop, score])
 }

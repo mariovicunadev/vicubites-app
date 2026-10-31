@@ -27,7 +27,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     refreshError = error.message;
   }
 
-  const jobs = await listBulkJobs(session.shop);
+  const jobs = await listBulkJobs(session.shop, "catalog");
   return { jobs: jobs.map((job) => toJobView(job)), refreshError };
 };
 
