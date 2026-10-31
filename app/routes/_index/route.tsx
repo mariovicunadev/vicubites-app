@@ -30,9 +30,9 @@ export default function App() {
   return (
     <div className={styles.index}>
       <div className={styles.content}>
-        <h1 className={styles.heading}>A short heading about [your app]</h1>
+        <h1 className={styles.heading}>Vicubites Ops</h1>
         <p className={styles.text}>
-          A tagline about [your app] that describes your value proposition.
+          Catalog data quality and replenishment tools for the Vicubites store.
         </p>
         {showForm && (
           <Form className={styles.form} method="post">
@@ -48,16 +48,12 @@ export default function App() {
         )}
         <ul className={styles.list}>
           <li>
-            <strong>Product feature</strong>. Some detail about your feature and
-            its benefit to your customer.
+            <strong>Nutrition Data Health</strong>. Scores every product on the
+            completeness of its nutrition data and fixes gaps in bulk.
           </li>
           <li>
-            <strong>Product feature</strong>. Some detail about your feature and
-            its benefit to your customer.
-          </li>
-          <li>
-            <strong>Product feature</strong>. Some detail about your feature and
-            its benefit to your customer.
+            <strong>Refill Radar</strong>. Predicts when each customer runs out
+            of food and triggers a timely reorder reminder.
           </li>
         </ul>
       </div>
