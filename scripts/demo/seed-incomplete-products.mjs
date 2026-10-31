@@ -6,6 +6,10 @@
 // Runs through Shopify CLI's store auth (`shopify store execute`), not the
 // app's access scopes. Safe to re-run: productSet upserts by handle.
 //
+// Images are uploaded as new files. Passing the CDN URL of an existing file
+// to productSet links that same file, and alt text lives on the file, so a
+// demo product would rewrite the alt text of a live product's image.
+//
 // Usage: node scripts/demo/seed-incomplete-products.mjs [--store <domain>]
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, writeFileSync } from "node:fs";
@@ -52,7 +56,37 @@ const ingredientIds = sources.metaobjects.nodes.map((node) => node.id);
 if (!imageUrl || ingredientIds.length < 2) {
   throw new Error("Expected an active product image and at least two ingredient entries.");
 }
-const image = (alt) => ({ originalSource: imageUrl, alt, contentType: "IMAGE" });
+// Products declare `{ alt }`; each one gets its own uploaded copy before productSet.
+const image = (alt) => ({ alt });
+
+const source = await fetch(imageUrl);
+if (!source.ok) throw new Error(`Image download failed with HTTP ${source.status}`);
+const imageBytes = new Uint8Array(await source.arrayBuffer());
+const imageType = source.headers.get("content-type") ?? "image/jpeg";
+const imageExtension = imageType.split("/")[1]?.split(";")[0] ?? "jpg";
+
+/** Uploads a copy of the source image through a staged upload; returns its resource URL. */
+async function uploadCopy(filename) {
+  const { stagedUploadsCreate } = gql("staged-upload.graphql", {
+    input: [{
+      filename,
+      mimeType: imageType,
+      httpMethod: "POST",
+      resource: "IMAGE",
+      fileSize: String(imageBytes.byteLength),
+    }],
+  });
+  if (stagedUploadsCreate.userErrors.length > 0) {
+    throw new Error(`stagedUploadsCreate: ${JSON.stringify(stagedUploadsCreate.userErrors)}`);
+  }
+  const [target] = stagedUploadsCreate.stagedTargets;
+  const form = new FormData();
+  for (const { name, value } of target.parameters) form.append(name, value);
+  form.append("file", new Blob([imageBytes], { type: imageType }), filename);
+  const upload = await fetch(target.url, { method: "POST", body: form });
+  if (!upload.ok) throw new Error(`Upload of ${filename} failed with HTTP ${upload.status}`);
+  return target.resourceUrl;
+}
 const sizes = (...variants) => ({
   productOptions: [{ name: "Size", values: variants.map(([size]) => ({ name: size })) }],
   variants: variants.map(([size, price, sku]) => ({
@@ -145,8 +179,20 @@ const PRODUCTS = [
   },
 ];
 
-for (const { handle, ...product } of PRODUCTS) {
-  const input = { ...product, handle, status: "DRAFT", vendor: "Vicubites", tags: [TAG] };
+for (const { handle, files, ...product } of PRODUCTS) {
+  const uploaded = [];
+  for (const [index, { alt }] of files.entries()) {
+    const originalSource = await uploadCopy(`${handle}-${index + 1}.${imageExtension}`);
+    uploaded.push({ originalSource, alt, contentType: "IMAGE" });
+  }
+  const input = {
+    ...product,
+    handle,
+    files: uploaded,
+    status: "DRAFT",
+    vendor: "Vicubites",
+    tags: [TAG],
+  };
   const { productSet } = gql("seed-draft-product.graphql", { identifier: { handle }, input });
   if (productSet.userErrors.length > 0) {
     throw new Error(`${handle}: ${JSON.stringify(productSet.userErrors)}`);
