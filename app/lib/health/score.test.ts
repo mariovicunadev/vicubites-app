@@ -78,6 +78,9 @@ describe("rules", () => {
       { id: "gid://shopify/MediaImage/3", alt: null },
     ];
     expect(missingFor(product({ media }), "image-alt")).toEqual(["Alt text on 2 of 3 images"]);
+    expect(
+      missingFor(product({ media: [{ id: "gid://shopify/MediaImage/9", alt: "" }] }), "image-alt"),
+    ).toEqual(["Alt text on 1 of 1 image"]);
   });
 
   it("name the variants without a SKU", () => {

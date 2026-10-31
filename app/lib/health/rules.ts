@@ -77,7 +77,10 @@ export const RULES = [
     weight: 10,
     check: (product) => {
       const missing = product.media.filter((media) => !media.alt?.trim()).length;
-      return missing > 0 ? [`Alt text on ${missing} of ${product.media.length} images`] : [];
+      const total = product.media.length;
+      return missing > 0
+        ? [`Alt text on ${missing} of ${total} ${total === 1 ? "image" : "images"}`]
+        : [];
     },
   },
   {

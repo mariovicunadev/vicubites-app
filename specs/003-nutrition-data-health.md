@@ -2,10 +2,10 @@
 
 | Field     | Value |
 |-----------|-------|
-| Status    | In progress |
+| Status    | Done |
 | Branch    | `feature/003-nutrition-data-health` |
 | Estimate  | 6–8 h · ~4 h (AI-assisted) · ~8 h manual |
-| Actual    | — |
+| Actual    | ~3.5 h (+ ~0.5 h incident) |
 
 ## Goal
 
@@ -46,7 +46,7 @@ way recipes come in from a supplier feed. Drafts stay off the storefront.
 
 ## Acceptance criteria
 
-- [ ] The 20 live products score 100; the five drafts score 15, 50, 65, 85 and 90 with the right
+- [x] The 20 live products score 100; the five drafts score 15, 50, 65, 85 and 90 with the right
       rules flagged.
 - [x] Tests: each rule passing and failing, weighted score, summary, edge cases (no variants,
       blank values, `[]` ingredient list, malformed list), weights add up to 100.
@@ -85,3 +85,9 @@ with alt text, and each draft has its own files.
 - Scores depend on metafield keys from the theme project; a renamed key would show as missing
   everywhere. The rules list the keys in one place.
 - An audit replaces all results at once. History over time would need a snapshot table.
+
+## Verification
+
+Audit from the app on the dev store, after the incident fix: 25 products, average score 92,
+5 needing attention. Drafts: Kitten Turkey 15, Grain-Free Beef 50, Senior Salmon Pâté 65,
+Freeze-Dried Liver Bites 85, Large Breed Puppy Lamb 90. All 20 live products score 100.
