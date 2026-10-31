@@ -1,0 +1,14 @@
+mutation seedDraftProduct($identifier: ProductSetIdentifiers!, $input: ProductSetInput!) {
+  productSet(identifier: $identifier, input: $input, synchronous: true) {
+    product {
+      id
+      handle
+      status
+    }
+    userErrors {
+      field
+      message
+      code
+    }
+  }
+}
