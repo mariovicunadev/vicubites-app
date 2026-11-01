@@ -1,3 +1,6 @@
+/** Uploads larger than this are rejected before parsing (checked in the browser and on the server). */
+export const MAX_CSV_BYTES = 1024 * 1024;
+
 export interface CsvRow {
   /** 1-based line where the row starts, as a spreadsheet numbers it. */
   line: number;

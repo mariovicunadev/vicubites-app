@@ -15,8 +15,6 @@ import { joinFixResults, type FixOutcome } from "./results";
 
 type AdminGraphql = AdminApiContext["graphql"];
 
-/** Uploads larger than this are rejected before parsing. */
-export const MAX_CSV_BYTES = 1024 * 1024;
 /** `nodes(ids:)` accepts up to 250 IDs per call. */
 const NODES_PER_QUERY = 250;
 
