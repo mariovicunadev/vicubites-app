@@ -27,7 +27,10 @@ function numericId(gid: string): string {
 async function fetchHealth(productId: string): Promise<ProductHealth> {
   // Relative URLs resolve against the app URL, and the admin adds an ID token
   // in the Authorization header.
-  const response = await fetch(`/api/health/${numericId(productId)}`);
+  const response = await fetch(`/api/health/${numericId(productId)}`).catch(() => {
+    // Network or CORS failure: the browser gives no details ("Failed to fetch").
+    throw new Error("The app couldn't be reached. Try again in a moment.");
+  });
   const body: unknown = await response.json().catch(() => null);
   if (!response.ok) {
     const error = (body as { error?: string } | null)?.error;
