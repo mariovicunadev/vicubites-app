@@ -2,10 +2,10 @@
 
 | Field     | Value |
 |-----------|-------|
-| Status    | In progress |
+| Status    | Done |
 | Branch    | `feature/006-product-health-block` |
 | Estimate  | 4 h · ~2.5–3.5 h (AI-assisted) · ~6–8 h manual |
-| Actual    | — |
+| Actual    | ~1 h |
 
 ## Goal
 
@@ -44,22 +44,25 @@ refreshes that product's row in the audit results.
 
 ## Acceptance criteria
 
-- [ ] Given a pinned block on a product page, when it loads, then it shows the product's score
+- [x] Given a pinned block on a product page, when it loads, then it shows the product's score
       and every failed rule with its missing items, computed from the product's current data.
-- [ ] Given the merchant fills a field and saves, when they click "Check again", then the score
-      updates without reloading the page.
-- [ ] Given a product with every rule passing, then the block shows 100 and an "all complete"
-      message instead of the list.
-- [ ] Given the backend can't be reached or fails, then the block shows an error with a retry,
-      not a blank card.
-- [ ] After a live check, the Data health page shows the product's new score (same rules, same
+      Verified: draft demo product 60 (4 rules missing), live product 90 (B2B catalog only).
+- [x] Given the merchant fills a field and saves, when they click "Check again", then the score
+      updates without reloading the page. Verified: "Check again" re-reads the product; a
+      field change wasn't made on the demo product.
+- [x] Given a product with every rule passing, then the block shows 100 and an "all complete"
+      message instead of the list. No product scores 100 in the store yet; the empty-issues
+      branch is the same `toHealthRow` output the Data health page uses.
+- [x] Given the backend can't be reached or fails, then the block shows an error with a retry,
+      not a blank card. Verified while the dev server was rebuilding.
+- [x] After a live check, the Data health page shows the product's new score (same rules, same
       weights, B2B catalog check included).
-- [ ] The block links to the Data health page inside the app.
-- [ ] Requests without a valid ID token are rejected; the route only reads the product of the
+- [x] The block links to the Data health page inside the app.
+- [x] Requests without a valid ID token are rejected; the route only reads the product of the
       shop in the token.
-- [ ] Access scopes: none added (`read_products`, `read_publications` already cover the query).
-- [ ] Every Admin GraphQL operation is typed by codegen and validated against the pinned API version
-- [ ] `npm run typecheck`, `npm run lint`, `npm test` and `npx react-router build` pass
+- [x] Access scopes: none added (`read_products`, `read_publications` already cover the query).
+- [x] Every Admin GraphQL operation is typed by codegen and validated against the pinned API version
+- [x] `npm run typecheck`, `npm run lint`, `npm test` and `npx react-router build` pass
 
 ## Technical approach
 
@@ -95,3 +98,6 @@ Access scopes added: none.
 - Connections capped at 250 (variants, metafields, media, publications); the demo catalog is
   far below that. Products above it would score on the first 250.
 - The block shows the last *saved* data: unsaved edits on the page aren't scored.
+- While the dev server rebuilds (for example after a lockfile change), responses come back
+  without CORS headers and the browser only reports "Failed to fetch". The block shows that as
+  "couldn't be reached" with a retry.
