@@ -2,10 +2,10 @@
 
 | Field     | Value |
 |-----------|-------|
-| Status    | Approved |
+| Status    | Done |
 | Branch    | `feature/004-b2b-catalog-coverage` |
 | Estimate  | 4–5 h · ~2.5–3 h (AI-assisted) · ~5–6 h manual |
-| Actual    | — |
+| Actual    | ~1.5 h |
 
 ## Goal
 
@@ -52,16 +52,17 @@ view of that. The audit already reads the whole catalog through the bulk engine
 
 ## Acceptance criteria
 
-- [ ] With the demo company's catalog (two products), those two score the B2B rule; live
-      products outside it are flagged "Not in any B2B catalog"; subscription-only products pass.
-- [ ] With no company location catalogs, the rule passes for every product and the bulk query
+- [x] With the demo company's catalog (two products), those two pass the B2B rule; live
+      products outside it are flagged "Not in any B2B catalog"; subscription-only products pass
+      (unit tested: no live product requires a selling plan).
+- [x] With no company location catalogs, the rule passes for every product and the bulk query
       has no `publishedOnPublication` fields.
-- [ ] Tests: rule passing, failing, selling plan exemption, no catalogs; query builder (aliases,
+- [x] Tests: rule passing, failing, selling plan exemption, no catalogs; query builder (aliases,
       ID escaping, no catalogs); node parsing of `b2b_*` fields; weights add up to 100.
-- [ ] Access scopes: `read_products`, `read_metaobject_definitions`, plus `read_publications`
-      only if the API requires it (see Risks).
-- [ ] Every Admin GraphQL operation is typed by codegen and validated against 2026-10.
-- [ ] `npm run typecheck`, `npm run lint` and `npm test` pass.
+- [x] Access scopes: `read_products`, `read_metaobject_definitions`, `read_publications`
+      (required, see Risks).
+- [x] Every Admin GraphQL operation is typed by codegen and validated against 2026-10.
+- [x] `npm run typecheck`, `npm run lint` and `npm test` pass (62 tests).
 
 ## Technical approach
 
@@ -85,10 +86,19 @@ view of that. The audit already reads the whole catalog through the bulk engine
 
 ## Risks and open questions
 
-- **Scope.** The publishing guide lists `read_publications`; schema validation reports only
-  `read_products` for both queries. Verify against the store with the current scopes first and
-  add `read_publications` only if the API returns an access error.
+- **Scope (resolved).** The publishing guide lists `read_publications`; schema validation
+  reported only `read_products`. Verified against the store: without `read_publications`,
+  `Catalog.publication` returns `ACCESS_DENIED`. The scope is added; on the dev store the managed
+  install granted it on the next load, without a consent screen.
 - The average score drops when this rule lands: the demo catalog covers two products. Expected,
   and documented in the PR.
 - One aliased field per catalog: fine for a handful of catalogs; a store with hundreds would
   need a different approach (per-publication product lists).
+
+## Verification
+
+Audit from the app on the dev store: one active B2B catalog (one company location, two
+products). 25 products, average score 84 (was 92), 23 needing attention. The two products in the
+catalog score 100; the other 18 live products score 90, missing only the B2B catalog. Drafts:
+Kitten Turkey 15, Grain-Free Beef 45, Senior Salmon Pâté 60, Freeze-Dried Liver Bites 75, Large
+Breed Puppy Lamb 80 (new weights, plus B2B).
