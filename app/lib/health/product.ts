@@ -1,4 +1,5 @@
 import type { BulkNode } from "../bulk/jsonl";
+import { B2B_FIELD_PREFIX } from "../catalog/export";
 
 /** The product fields the health rules read, flattened from a bulk export node. */
 export interface ProductData {
@@ -6,6 +7,10 @@ export interface ProductData {
   title: string;
   handle: string;
   status: string;
+  /** Subscription-only products can't be sold to B2B buyers. */
+  requiresSellingPlan: boolean;
+  /** Whether the product is in each B2B catalog checked; empty when none was. */
+  b2bPublished: readonly boolean[];
   /** Metafield values keyed by `namespace.key`. */
   metafields: Readonly<Record<string, string>>;
   variants: readonly { id: string; title: string; sku: string | null }[];
@@ -34,6 +39,10 @@ export function productFromNode(node: BulkNode): ProductData {
     title: text(record.title),
     handle: text(record.handle),
     status: text(record.status),
+    requiresSellingPlan: record.requiresSellingPlan === true,
+    b2bPublished: Object.entries(record)
+      .filter(([key]) => key.startsWith(B2B_FIELD_PREFIX))
+      .map(([, published]) => published === true),
     metafields,
     variants: (children.ProductVariant ?? []).map(({ record: variant }) => ({
       id: text(variant.id),

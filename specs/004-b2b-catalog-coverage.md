@@ -39,7 +39,8 @@ view of that. The audit already reads the whole catalog through the bulk engine
   - the store has no active company location catalog with a publication (availability is then
     decided by the sales channel, per the docs).
 - New weights (sum 100): guaranteed analysis 20, ingredients **15** (was 20), calories 15,
-  classification 15, images 10, image alt text 10, **B2B catalog 10**, search listing 5, SKUs 5.
+  classification **10** (was 15), images 10, image alt text 10, **B2B catalog 10**, search
+  listing 5, SKUs 5.
 - The Data health page shows the new rule's bar and per-product gap with no layout changes.
 
 **Out of scope**

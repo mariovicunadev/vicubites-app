@@ -40,7 +40,7 @@ export const RULES = [
     id: "ingredients",
     label: "Ingredients",
     reason: "Shoppers filter and compare recipes by their ingredients.",
-    weight: 20,
+    weight: 15,
     check: (product) => missingMetafields(product, { "custom.ingredients": "Ingredient list" }),
   },
   {
@@ -54,7 +54,7 @@ export const RULES = [
     id: "classification",
     label: "Classification",
     reason: "Collection filters use species, life stage, food type and main protein.",
-    weight: 15,
+    weight: 10,
     check: (product) =>
       missingMetafields(product, {
         "custom.species": "Species",
@@ -82,6 +82,20 @@ export const RULES = [
         ? [`Alt text on ${missing} of ${total} ${total === 1 ? "image" : "images"}`]
         : [];
     },
+  },
+  {
+    id: "b2b-catalog",
+    label: "B2B catalog",
+    reason: "Clinics, pet shops and groomers can only order products in their B2B catalog.",
+    weight: 10,
+    // Doesn't apply to subscription-only products (B2B can't buy them) or
+    // when no B2B catalog has a publication (the sales channel decides).
+    check: (product) =>
+      product.requiresSellingPlan ||
+      product.b2bPublished.length === 0 ||
+      product.b2bPublished.includes(true)
+        ? []
+        : ["Not in any B2B catalog"],
   },
   {
     id: "seo",
