@@ -26,6 +26,8 @@ function product(overrides: Partial<ProductData> = {}): ProductData {
     title: "Puppy Chicken & Oat Recipe",
     handle: "puppy-chicken",
     status: "ACTIVE",
+    requiresSellingPlan: false,
+    b2bPublished: [true],
     metafields: COMPLETE_METAFIELDS,
     variants: [{ id: "gid://shopify/ProductVariant/1", title: "2 kg", sku: "VB-020" }],
     media: [{ id: "gid://shopify/MediaImage/1", alt: "Front of the bag" }],
@@ -95,22 +97,38 @@ describe("rules", () => {
   it("pass the SKU rule for a product without variants", () => {
     expect(missingFor(product({ variants: [] }), "sku")).toEqual([]);
   });
+
+  it("require the product in at least one B2B catalog", () => {
+    expect(missingFor(product({ b2bPublished: [false, true] }), "b2b-catalog")).toEqual([]);
+    expect(missingFor(product({ b2bPublished: [false, false] }), "b2b-catalog")).toEqual([
+      "Not in any B2B catalog",
+    ]);
+  });
+
+  it("skip the B2B rule for subscription-only products and stores without B2B catalogs", () => {
+    const subscriptionOnly = product({ requiresSellingPlan: true, b2bPublished: [false] });
+
+    expect(missingFor(subscriptionOnly, "b2b-catalog")).toEqual([]);
+    expect(missingFor(product({ b2bPublished: [] }), "b2b-catalog")).toEqual([]);
+  });
 });
 
 describe("evaluateProduct", () => {
   it("adds up the weights of the passing rules", () => {
-    // Missing ingredients (20) and SEO (5).
+    // Missing ingredients (15) and SEO (5).
     const p = product({
       metafields: without("custom.ingredients", "global.title_tag"),
     });
     const result = evaluateProduct(p);
 
-    expect(result.score).toBe(75);
+    expect(result.score).toBe(80);
     expect(failedRules(result)).toEqual(["ingredients", "seo"]);
   });
 
   it("scores a product with no data at all", () => {
-    const result = evaluateProduct(product({ metafields: {}, media: [], variants: [] }));
+    const result = evaluateProduct(
+      product({ metafields: {}, media: [], variants: [], b2bPublished: [false] }),
+    );
 
     // Only "image-alt" and "sku" pass (nothing to check): 10 + 5.
     expect(result.score).toBe(15);
@@ -140,7 +158,15 @@ describe("summarize", () => {
 describe("productFromNode", () => {
   it("flattens a bulk export node", () => {
     const node: BulkNode = {
-      record: { id: "gid://shopify/Product/9", title: "Wet Stew", handle: "stew", status: "DRAFT" },
+      record: {
+        id: "gid://shopify/Product/9",
+        title: "Wet Stew",
+        handle: "stew",
+        status: "DRAFT",
+        requiresSellingPlan: false,
+        b2b_111: false,
+        b2b_222: true,
+      },
       children: {
         Metafield: [
           { record: { namespace: "custom", key: "species", value: "Dog" }, children: {} },
@@ -159,6 +185,8 @@ describe("productFromNode", () => {
       title: "Wet Stew",
       handle: "stew",
       status: "DRAFT",
+      requiresSellingPlan: false,
+      b2bPublished: [false, true],
       metafields: { "custom.species": "Dog" },
       variants: [{ id: "gid://shopify/ProductVariant/1", title: "Can", sku: null }],
       media: [{ id: "gid://shopify/MediaImage/1", alt: null }],

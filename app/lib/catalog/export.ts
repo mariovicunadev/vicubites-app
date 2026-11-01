@@ -1,12 +1,31 @@
 import type { BulkNode } from "../bulk/jsonl";
 import { csvRow } from "../bulk/csv";
 
+/** Prefix of the aliased `publishedOnPublication` fields, one per B2B catalog. */
+export const B2B_FIELD_PREFIX = "b2b_";
+
+const PUBLICATION_GID = /^gid:\/\/shopify\/Publication\/(\d+)$/;
+
+export interface CatalogQueryOptions {
+  /** Publications of the B2B catalogs to check each product against. */
+  b2bPublicationIds?: readonly string[];
+}
+
 /**
  * Bulk query for the full catalog: products with their variants, metafields
  * and media. Four connections, two levels deep (bulk limits: five and two).
- * Plain string, not `#graphql`: it runs inside `bulkOperationRunQuery`.
+ * Plain string, not `#graphql`: it runs inside `bulkOperationRunQuery`, which
+ * takes no variables, so publication IDs are validated and inlined. Each one
+ * adds a scalar field (`b2b_<id>: publishedOnPublication`), not a connection.
  */
-export const CATALOG_EXPORT_QUERY = `{
+export function catalogQuery({ b2bPublicationIds = [] }: CatalogQueryOptions = {}): string {
+  const b2bFields = b2bPublicationIds.map((id) => {
+    const match = PUBLICATION_GID.exec(id);
+    if (!match) throw new Error(`Not a publication ID: ${id}`);
+    return `\n        ${B2B_FIELD_PREFIX}${match[1]}: publishedOnPublication(publicationId: "${id}")`;
+  });
+
+  return `{
   products {
     edges {
       node {
@@ -16,6 +35,7 @@ export const CATALOG_EXPORT_QUERY = `{
         status
         productType
         vendor
+        requiresSellingPlan${b2bFields.join("")}
         variants {
           edges {
             node {
@@ -50,6 +70,9 @@ export const CATALOG_EXPORT_QUERY = `{
     }
   }
 }`;
+}
+
+export const CATALOG_EXPORT_QUERY = catalogQuery();
 
 const BASE_COLUMNS = [
   "product_id",

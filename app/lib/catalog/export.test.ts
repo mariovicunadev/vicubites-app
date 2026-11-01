@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { csvField } from "../bulk/csv";
 import type { BulkNode } from "../bulk/jsonl";
-import { catalogCsv } from "./export";
+import { CATALOG_EXPORT_QUERY, catalogCsv, catalogQuery } from "./export";
 
 function node(record: BulkNode["record"], children: BulkNode["children"] = {}): BulkNode {
   return { record, children };
@@ -73,5 +73,33 @@ describe("catalogCsv", () => {
   it("keeps products without variants as a single row", () => {
     expect(lines[3]).toBe("gid://shopify/Product/2,sample,Sample,DRAFT,,,,,,,0,0,Wet,");
     expect(lines).toHaveLength(4);
+  });
+});
+
+describe("catalogQuery", () => {
+  it("has no B2B fields when there are no catalogs to check", () => {
+    expect(catalogQuery()).toBe(CATALOG_EXPORT_QUERY);
+    expect(CATALOG_EXPORT_QUERY).not.toContain("publishedOnPublication");
+    expect(CATALOG_EXPORT_QUERY).toContain("requiresSellingPlan");
+  });
+
+  it("adds one aliased field per publication", () => {
+    const query = catalogQuery({
+      b2bPublicationIds: ["gid://shopify/Publication/111", "gid://shopify/Publication/222"],
+    });
+
+    expect(query).toContain(
+      'b2b_111: publishedOnPublication(publicationId: "gid://shopify/Publication/111")',
+    );
+    expect(query).toContain(
+      'b2b_222: publishedOnPublication(publicationId: "gid://shopify/Publication/222")',
+    );
+  });
+
+  it("rejects anything that isn't a publication ID", () => {
+    expect(() =>
+      catalogQuery({ b2bPublicationIds: ['gid://shopify/Publication/1") { id } x: shop("'] }),
+    ).toThrow("Not a publication ID");
+    expect(() => catalogQuery({ b2bPublicationIds: ["gid://shopify/Product/1"] })).toThrow();
   });
 });
