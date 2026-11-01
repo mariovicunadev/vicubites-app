@@ -51,6 +51,7 @@ model BulkJob {
   completedAt     DateTime?
   // Set once the result has been consumed (for example, an audit evaluated).
   processedAt     DateTime?
+  fixRun          FixRun?
 
   @@index([shop, kind, createdAt])
 }
@@ -71,4 +72,20 @@ model ProductHealth {
 
   @@unique([shop, productId])
   @@index([shop, score])
+}
+
+// A bulk fix: the plan reviewed in the preview, then the job that applied it.
+// The plan's product order is the JSONL line order, so result lines map back.
+model FixRun {
+  id        String   @id @default(cuid())
+  shop      String
+  // JSON FixPlan (products with their changes, skipped rows).
+  plan      String
+  jobId     String?  @unique
+  job       BulkJob? @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  // JSON array of FixOutcome, set once the job's result is processed.
+  results   String?
+  createdAt DateTime @default(now())
+
+  @@index([shop, createdAt])
 }

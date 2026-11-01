@@ -8,7 +8,7 @@ name = "vicubites-app"
 [access_scopes]
 # Least privilege: each feature adds only the scopes it needs.
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "read_products,read_metaobject_definitions,read_publications"
+scopes = "read_products,write_products,read_metaobject_definitions,read_publications"
 
 [webhooks]
 api_version = "2026-10"
