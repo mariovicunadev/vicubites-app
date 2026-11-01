@@ -1,5 +1,7 @@
 {
   "include": ["env.d.ts", "**/*.ts", "**/*.tsx", ".react-router/types/**/*"],
+  // Extensions compile on their own (Preact JSX, extension globals): see their tsconfig.
+  "exclude": ["extensions/**"],
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "strict": true,
