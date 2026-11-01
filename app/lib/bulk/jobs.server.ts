@@ -2,7 +2,12 @@ import type { AdminApiContext } from "@shopify/shopify-app-react-router/server";
 import type { BulkJob } from "@prisma/client";
 
 import prisma from "../../db.server";
-import { getBulkOperation, startBulkQuery } from "./operations.server";
+import {
+  getBulkOperation,
+  stageBulkVariables,
+  startBulkMutation,
+  startBulkQuery,
+} from "./operations.server";
 import {
   needsRefresh,
   resultUrlExpiresAt,
@@ -14,9 +19,10 @@ type AdminGraphql = AdminApiContext["graphql"];
 
 /**
  * What a job is for: a catalog CSV export or a Nutrition Data Health audit
- * (same query, different consumer). New modules add their own kind.
+ * (same query, different consumer), or a bulk fix (a mutation). New modules
+ * add their own kind.
  */
-export type BulkJobKind = "catalog" | "audit";
+export type BulkJobKind = "catalog" | "audit" | "fix";
 
 /** Fields of a bulk operation that a job mirrors, from GraphQL or the webhook. */
 export interface BulkOperationSnapshot {
@@ -36,6 +42,23 @@ export async function createBulkJob(
   query: string,
 ): Promise<BulkJob> {
   const operation = await startBulkQuery(graphql, query);
+  return recordJob(shop, kind, operation);
+}
+
+/** Uploads one line of variables per execution, then starts the bulk mutation. */
+export async function createBulkMutationJob(
+  graphql: AdminGraphql,
+  shop: string,
+  kind: BulkJobKind,
+  mutation: string,
+  variablesJsonl: string,
+): Promise<BulkJob> {
+  const stagedUploadPath = await stageBulkVariables(graphql, variablesJsonl);
+  const operation = await startBulkMutation(graphql, mutation, stagedUploadPath);
+  return recordJob(shop, kind, operation);
+}
+
+function recordJob(shop: string, kind: BulkJobKind, operation: { id: string; status: string }) {
   return prisma.bulkJob.create({
     data: {
       shop,
