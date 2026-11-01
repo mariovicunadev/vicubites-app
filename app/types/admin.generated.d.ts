@@ -66,6 +66,16 @@ export type B2bCatalogsQuery = { catalogs: { nodes: Array<(
       & { publication?: AdminTypes.Maybe<Pick<AdminTypes.Publication, 'id'>> }
     )> } };
 
+export type ProductHealthDataQueryVariables = AdminTypes.Exact<{
+  id: AdminTypes.Scalars['ID']['input'];
+}>;
+
+
+export type ProductHealthDataQuery = { product?: AdminTypes.Maybe<(
+    Pick<AdminTypes.Product, 'id' | 'title' | 'handle' | 'status' | 'requiresSellingPlan'>
+    & { variants: { nodes: Array<Pick<AdminTypes.ProductVariant, 'id' | 'title' | 'sku'>> }, metafields: { nodes: Array<Pick<AdminTypes.Metafield, 'namespace' | 'key' | 'value'>> }, media: { nodes: Array<Pick<AdminTypes.ExternalVideo, 'id' | 'alt'> | Pick<AdminTypes.MediaImage, 'id' | 'alt'> | Pick<AdminTypes.Model3d, 'id' | 'alt'> | Pick<AdminTypes.Video, 'id' | 'alt'>> }, resourcePublicationsV2: { nodes: Array<{ publication: Pick<AdminTypes.Publication, 'id'> }> } }
+  )> };
+
 export type ShopOverviewQueryVariables = AdminTypes.Exact<{ [key: string]: never; }>;
 
 
@@ -76,6 +86,7 @@ interface GeneratedQueryTypes {
   "#graphql\n  query fixCurrentProducts($ids: [ID!]!, $keys: [String!]) {\n    nodes(ids: $ids) {\n      ... on Product {\n        id\n        title\n        handle\n        metafields(first: 20, keys: $keys) {\n          nodes {\n            namespace\n            key\n            value\n          }\n        }\n      }\n    }\n  }\n": {return: FixCurrentProductsQuery, variables: FixCurrentProductsQueryVariables},
   "#graphql\n  query fixChoiceDefinitions {\n    metafieldDefinitions(first: 50, ownerType: PRODUCT, namespace: \"custom\") {\n      nodes {\n        namespace\n        key\n        validations {\n          name\n          value\n        }\n      }\n    }\n  }\n": {return: FixChoiceDefinitionsQuery, variables: FixChoiceDefinitionsQueryVariables},
   "#graphql\n  query b2bCatalogs {\n    catalogs(first: 50, type: COMPANY_LOCATION) {\n      nodes {\n        id\n        status\n        publication {\n          id\n        }\n      }\n    }\n  }\n": {return: B2bCatalogsQuery, variables: B2bCatalogsQueryVariables},
+  "#graphql\n  query productHealthData($id: ID!) {\n    product(id: $id) {\n      id\n      title\n      handle\n      status\n      requiresSellingPlan\n      variants(first: 250) {\n        nodes {\n          id\n          title\n          sku\n        }\n      }\n      metafields(first: 250) {\n        nodes {\n          namespace\n          key\n          value\n        }\n      }\n      media(first: 250) {\n        nodes {\n          id\n          alt\n        }\n      }\n      resourcePublicationsV2(first: 250, onlyPublished: true) {\n        nodes {\n          publication {\n            id\n          }\n        }\n      }\n    }\n  }\n": {return: ProductHealthDataQuery, variables: ProductHealthDataQueryVariables},
   "#graphql\n  query shopOverview {\n    shop {\n      name\n      myshopifyDomain\n    }\n    productsCount {\n      count\n      precision\n    }\n    ingredientDefinition: metaobjectDefinitionByType(type: \"ingredient\") {\n      name\n      metaobjectsCount\n    }\n  }\n": {return: ShopOverviewQuery, variables: ShopOverviewQueryVariables},
 }
 
