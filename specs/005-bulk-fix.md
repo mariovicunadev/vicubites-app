@@ -2,10 +2,10 @@
 
 | Field     | Value |
 |-----------|-------|
-| Status    | Approved |
+| Status    | Done |
 | Branch    | `feature/005-bulk-fix` |
 | Estimate  | 5–6 h · ~4–5 h (AI-assisted) · ~9–11 h manual |
-| Actual    | — |
+| Actual    | ~1.5 h |
 
 ## Goal
 
@@ -60,20 +60,20 @@ returns one result per input line. It reuses the bulk engine from
 
 ## Acceptance criteria
 
-- [ ] The template lists only products failing guaranteed analysis, calories or classification,
+- [x] The template lists only products failing guaranteed analysis, calories or classification,
       with current values filled in.
-- [ ] A CSV with invalid numbers, unknown choices, unknown product IDs or unknown columns shows
+- [x] A CSV with invalid numbers, unknown choices, unknown product IDs or unknown columns shows
       those errors in the preview and nothing is written for those rows.
-- [ ] Applying a valid CSV to the demo drafts updates their metafields; each product shows
+- [x] Applying a valid CSV to the demo drafts updates their metafields; each product shows
       "applied" or the error Shopify returned; a new audit raises their scores.
-- [ ] The JSONL and the preview never include products or fields that aren't in the CSV.
-- [ ] Tests: CSV parser (quotes, commas, line breaks, BOM, CRLF), validation, change plan,
+- [x] The JSONL and the preview never include products or fields that aren't in the CSV.
+- [x] Tests: CSV parser (quotes, commas, line breaks, BOM, CRLF), validation, change plan,
       JSONL lines, result join by `__lineNumber` (success, `userErrors`, top-level `errors`,
       missing lines).
-- [ ] Access scopes: `read_products`, `write_products`, `read_metaobject_definitions`,
+- [x] Access scopes: `read_products`, `write_products`, `read_metaobject_definitions`,
       `read_publications`.
-- [ ] Every Admin GraphQL operation is typed by codegen and validated against 2026-10.
-- [ ] `npm run typecheck`, `npm run lint` and `npm test` pass.
+- [x] Every Admin GraphQL operation is typed by codegen and validated against 2026-10.
+- [x] `npm run typecheck`, `npm run lint`, `npm test` (76 tests) and `react-router build` pass.
 
 ## Technical approach
 
@@ -105,3 +105,23 @@ returns one result per input line. It reuses the bulk engine from
   product). Apply uses the plan from the preview; the results show what Shopify accepted.
 - The demo seed may not restore the drafts' gaps after a fix (`productSet` doesn't remove
   metafields it doesn't list); resetting demo data could need a cleanup step.
+
+## Issues found during implementation
+
+- **Metafield keys.** On the same product, `metafields(keys: [...])` returns `key` prefixed with
+  the namespace (`custom.species`) and `metafields(namespace:)` returns the bare key
+  (`species`). `metafieldKey()` accepts both; found while building demo data from the live API.
+- **Generated enums** are declarations without a runtime value, so the staged upload input is
+  written as literals in the operation (it never changes).
+- **Server-only import.** The page imported the upload size limit from `run.server.ts`; React
+  Router strips `.server` modules from the client bundle and the page failed to load. The limit
+  moved to `csv-parse.ts`. Typecheck doesn't catch this; `react-router build` does, so it is now
+  part of the checks before testing in the store.
+
+## Verification
+
+On the dev store, with a CSV covering the five demo drafts: the preview listed three products
+to change, skipped the row with main protein "Duck" (not one of the store's choices) and counted
+one row as unchanged. Applied as a bulk mutation (3 lines): 3 applied, 0 failed. A new audit
+moved Kitten Turkey 15 → 60, Grain-Free Beef 45 → 65 and Senior Salmon Pâté 60 → 85; average
+84 → 87. Guaranteed analysis, calories and classification now pass for 25 of 25 products.
