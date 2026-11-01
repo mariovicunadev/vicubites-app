@@ -81,6 +81,9 @@ export default function DataHealth() {
       >
         Run audit
       </s-button>
+      <s-button slot="secondary-actions" href="/app/health/fix">
+        Fix in bulk
+      </s-button>
 
       {error && (
         <s-banner heading="The audit could not be updated" tone="critical">
