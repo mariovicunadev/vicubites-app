@@ -4,15 +4,20 @@ import type { BulkJob } from "@prisma/client";
 import prisma from "../../db.server";
 import { createBulkJob, latestBulkJob, refreshJob } from "../bulk/jobs.server";
 import { downloadBulkResult } from "../bulk/operations.server";
-import { CATALOG_EXPORT_QUERY } from "../catalog/export";
+import { catalogQuery } from "../catalog/export";
+import { loadB2bPublicationIds } from "./b2b.server";
 import { productFromNode } from "./product";
 import { evaluateProduct, type ProductHealthResult, type RuleResult } from "./score";
 
 type AdminGraphql = AdminApiContext["graphql"];
 
-/** An audit is a catalog bulk export whose result is scored instead of downloaded. */
-export function startAudit(graphql: AdminGraphql, shop: string) {
-  return createBulkJob(graphql, shop, "audit", CATALOG_EXPORT_QUERY);
+/**
+ * An audit is a catalog bulk export whose result is scored instead of
+ * downloaded. It also checks each product against the B2B catalogs.
+ */
+export async function startAudit(graphql: AdminGraphql, shop: string) {
+  const b2bPublicationIds = await loadB2bPublicationIds(graphql);
+  return createBulkJob(graphql, shop, "audit", catalogQuery({ b2bPublicationIds }));
 }
 
 /**

@@ -17,6 +17,20 @@ export type BulkOperationStatusQueryVariables = AdminTypes.Exact<{
 
 export type BulkOperationStatusQuery = { bulkOperation?: AdminTypes.Maybe<Pick<AdminTypes.BulkOperation, 'id' | 'status' | 'errorCode' | 'objectCount' | 'rootObjectCount' | 'url' | 'partialDataUrl' | 'createdAt' | 'completedAt'>> };
 
+export type B2bCatalogsQueryVariables = AdminTypes.Exact<{ [key: string]: never; }>;
+
+
+export type B2bCatalogsQuery = { catalogs: { nodes: Array<(
+      Pick<AdminTypes.AppCatalog, 'id' | 'status'>
+      & { publication?: AdminTypes.Maybe<Pick<AdminTypes.Publication, 'id'>> }
+    ) | (
+      Pick<AdminTypes.CompanyLocationCatalog, 'id' | 'status'>
+      & { publication?: AdminTypes.Maybe<Pick<AdminTypes.Publication, 'id'>> }
+    ) | (
+      Pick<AdminTypes.MarketCatalog, 'id' | 'status'>
+      & { publication?: AdminTypes.Maybe<Pick<AdminTypes.Publication, 'id'>> }
+    )> } };
+
 export type ShopOverviewQueryVariables = AdminTypes.Exact<{ [key: string]: never; }>;
 
 
@@ -24,6 +38,7 @@ export type ShopOverviewQuery = { shop: Pick<AdminTypes.Shop, 'name' | 'myshopif
 
 interface GeneratedQueryTypes {
   "#graphql\n  query bulkOperationStatus($id: ID!) {\n    bulkOperation(id: $id) {\n      id\n      status\n      errorCode\n      objectCount\n      rootObjectCount\n      url\n      partialDataUrl\n      createdAt\n      completedAt\n    }\n  }\n": {return: BulkOperationStatusQuery, variables: BulkOperationStatusQueryVariables},
+  "#graphql\n  query b2bCatalogs {\n    catalogs(first: 50, type: COMPANY_LOCATION) {\n      nodes {\n        id\n        status\n        publication {\n          id\n        }\n      }\n    }\n  }\n": {return: B2bCatalogsQuery, variables: B2bCatalogsQueryVariables},
   "#graphql\n  query shopOverview {\n    shop {\n      name\n      myshopifyDomain\n    }\n    productsCount {\n      count\n      precision\n    }\n    ingredientDefinition: metaobjectDefinitionByType(type: \"ingredient\") {\n      name\n      metaobjectsCount\n    }\n  }\n": {return: ShopOverviewQuery, variables: ShopOverviewQueryVariables},
 }
 

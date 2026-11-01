@@ -62,7 +62,7 @@ const { shop, productsCount } = await adminGraphql(admin.graphql, SHOP_OVERVIEW_
 returned. Re-authentication redirects (a thrown `Response`) pass through untouched.
 
 **Least privilege.** Each feature adds only the access scopes it needs. Current scopes:
-`read_products`, `read_metaobject_definitions`.
+`read_products`, `read_metaobject_definitions`, `read_publications` (B2B catalog coverage).
 
 ## Getting started
 
