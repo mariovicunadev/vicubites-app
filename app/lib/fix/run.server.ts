@@ -8,7 +8,7 @@ import { downloadBulkRecords } from "../bulk/operations.server";
 import { isTerminal, type BulkStatus } from "../bulk/status";
 import type { RuleResult } from "../health/score";
 import { csvRecords } from "./csv-parse";
-import { FIXABLE_RULES, FIX_FIELDS } from "./fields";
+import { FIXABLE_RULES, FIX_FIELDS, metafieldKey } from "./fields";
 import { FIX_METAFIELDS_MUTATION, fixVariablesJsonl } from "./jsonl";
 import { planFix, type CurrentProduct, type FixPlan } from "./plan";
 import { joinFixResults, type FixOutcome } from "./results";
@@ -74,7 +74,7 @@ export async function loadCurrentProducts(
         title: node.title,
         handle: node.handle,
         metafields: Object.fromEntries(
-          node.metafields.nodes.map((m) => [`${m.namespace}.${m.key}`, m.value]),
+          node.metafields.nodes.map((m) => [metafieldKey(m.namespace, m.key), m.value]),
         ),
       });
     }

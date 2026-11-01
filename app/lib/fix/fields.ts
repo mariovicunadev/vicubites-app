@@ -39,4 +39,13 @@ export const FIXABLE_RULES: ReadonlySet<RuleId> = new Set(FIX_FIELDS.map((field)
 /** Columns that identify the product; `handle` and `title` are for the person editing. */
 export const ID_COLUMNS = ["product_id", "handle", "title"] as const;
 
+/**
+ * `namespace.key` for a metafield node. Filtering a connection with
+ * `metafields(keys: [...])` returns `key` already prefixed with the
+ * namespace, while `metafields(namespace:)` returns the bare key.
+ */
+export function metafieldKey(namespace: string, key: string): string {
+  return key.startsWith(`${namespace}.`) ? key : `${namespace}.${key}`;
+}
+
 export const TEMPLATE_COLUMNS = [...ID_COLUMNS, ...FIX_FIELDS.map((field) => field.key)];

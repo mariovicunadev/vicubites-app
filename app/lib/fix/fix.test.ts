@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { csvRecords, parseCsv } from "./csv-parse";
-import { FIX_FIELDS, TEMPLATE_COLUMNS } from "./fields";
+import { FIX_FIELDS, TEMPLATE_COLUMNS, metafieldKey } from "./fields";
 import { fixVariablesJsonl } from "./jsonl";
 import { planFix, type CurrentProduct, type PlannedProduct } from "./plan";
 import { countOutcomes, joinFixResults } from "./results";
@@ -214,6 +214,13 @@ describe("joinFixResults", () => {
       status: "failed",
       messages: ["Variable $metafields was provided invalid value"],
     });
+  });
+});
+
+describe("metafieldKey", () => {
+  it("accepts keys with or without the namespace prefix", () => {
+    expect(metafieldKey("custom", "species")).toBe("custom.species");
+    expect(metafieldKey("custom", "custom.species")).toBe("custom.species");
   });
 });
 
