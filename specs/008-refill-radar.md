@@ -2,7 +2,7 @@
 
 | Field     | Value |
 |-----------|-------|
-| Status    | Approved |
+| Status    | In progress |
 | Branch    | `feature/008-refill-radar` |
 | Estimate  | 8–10 h · ~4.5–5.5 h (AI-assisted) · ~9–11 h manual |
 | Actual    | — |
@@ -69,8 +69,11 @@ after that. This spec builds the data they read.
 
 ## Acceptance criteria
 
-- [ ] With the new scopes, a query for an order's customer ID succeeds on the store (the
+- [x] With the new scopes, a query for an order's customer ID succeeds on the store (the
       protected customer data check); the result is noted in this spec.
+      *Result: denied (`ACCESS_DENIED`, "not approved to access the Customer object") until the
+      app's distribution method was set to custom distribution for `vicubites.myshopify.com`;
+      with it, level 1 access is available without a review and the query succeeds.*
 - [ ] The seed creates the demo customers and orders tagged `demo-refill-radar`, sends no
       email, and running it twice creates no duplicates.
 - [ ] Given a customer with one order of a 7 kg dog bag, then the forecast's basis is
