@@ -13,7 +13,7 @@
 -%}
 
 {%- if forecasts != blank or sample -%}
-  <div class="vb-refill" {{ block.shopify_attributes }}>
+  <div class="vb-refill"{% unless sample %} data-refill-live{% endunless %} {{ block.shopify_attributes }}>
     {%- if block.settings.heading != blank -%}
       <h2 class="vb-refill__heading">{{ block.settings.heading | escape }}</h2>
     {%- endif -%}
@@ -57,6 +57,7 @@
   "name": "Refill reminder",
   "target": "content",
   "stylesheet": "refill-reminder.css",
+  "javascript": "refill-reminder.js",
   "enabled_on": {
     "templates": ["index", "product", "collection", "cart", "page"]
   },

@@ -10,7 +10,10 @@ import { boundary } from "@shopify/shopify-app-react-router/server";
 import { AdminApiError } from "../lib/admin/errors";
 import { refreshStaleJobs } from "../lib/bulk/jobs.server";
 import { toJobView } from "../lib/bulk/job-view";
+import { FUNNEL_DAYS } from "../lib/refill/events";
+import { loadReminderFunnel } from "../lib/refill/events.server";
 import { DUE_SOON_DAYS, REFERENCE_DAILY_KCAL } from "../lib/refill/forecast";
+import { connectRefillPixel, findRefillPixel } from "../lib/refill/pixel.server";
 import { loadForecasts, processLatestRefillLoad, startRefillLoad } from "../lib/refill/store.server";
 import { toRefillRow, type RefillRow } from "../lib/refill/view";
 import { authenticate } from "../shopify.server";
@@ -22,9 +25,11 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   let error: string | null = null;
   let load = null;
+  let pixelConnected = false;
   try {
     await refreshStaleJobs(admin.graphql, session.shop);
     load = await processLatestRefillLoad(admin.graphql, session.shop);
+    pixelConnected = (await findRefillPixel(admin.graphql)) !== null;
   } catch (caught) {
     if (!(caught instanceof AdminApiError)) throw caught;
     error = caught.message;
@@ -42,13 +47,17 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     },
     dueSoon: rows.filter((row) => row.dueSoon),
     later: rows.filter((row) => !row.dueSoon),
+    pixelConnected,
+    funnel: await loadReminderFunnel(session.shop),
   };
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const { admin, session } = await authenticate.admin(request);
+  const intent = (await request.formData()).get("intent");
   try {
-    await startRefillLoad(admin.graphql, session.shop);
+    if (intent === "connect-pixel") await connectRefillPixel(admin.graphql);
+    else await startRefillLoad(admin.graphql, session.shop);
     return { error: null };
   } catch (error) {
     if (error instanceof AdminApiError) return { error: error.message };
@@ -57,11 +66,12 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 };
 
 export default function RefillRadar() {
-  const { load, dueSoon, later, error: loadError } = useLoaderData<typeof loader>();
+  const { load, dueSoon, later, pixelConnected, funnel, error: loadError } = useLoaderData<typeof loader>();
   const fetcher = useFetcher<typeof action>();
+  const pixelFetcher = useFetcher<typeof action>();
   const revalidator = useRevalidator();
   const running = fetcher.state !== "idle" || Boolean(load?.running);
-  const error = fetcher.data?.error ?? loadError;
+  const error = fetcher.data?.error ?? pixelFetcher.data?.error ?? loadError;
   const total = dueSoon.length + later.length;
 
   useEffect(() => {
@@ -77,7 +87,7 @@ export default function RefillRadar() {
       <s-button
         slot="primary-action"
         variant="primary"
-        onClick={() => fetcher.submit({}, { method: "post" })}
+        onClick={() => fetcher.submit({ intent: "rebuild" }, { method: "post" })}
         {...(running ? { disabled: true } : {})}
       >
         Rebuild from orders
@@ -123,6 +133,29 @@ export default function RefillRadar() {
             ) : (
               <ForecastTable rows={later} />
             )}
+          </s-section>
+          <s-section heading={`Storefront reminders, last ${FUNNEL_DAYS} days`}>
+            <s-stack direction="block" gap="base">
+              <s-paragraph>
+                Browsers that saw a reminder: {funnel.viewed} · clicked Reorder: {funnel.clicked} ·
+                dry food reorders after a reminder: {funnel.reorders}.
+              </s-paragraph>
+              <s-stack direction="inline" gap="small-200">
+                <s-badge tone={pixelConnected ? "success" : "warning"}>
+                  {pixelConnected ? "Pixel connected" : "Pixel not connected"}
+                </s-badge>
+                <s-button
+                  onClick={() => pixelFetcher.submit({ intent: "connect-pixel" }, { method: "post" })}
+                  {...(pixelFetcher.state !== "idle" ? { disabled: true } : {})}
+                >
+                  {pixelConnected ? "Reconnect pixel" : "Connect pixel"}
+                </s-button>
+              </s-stack>
+              <s-text color="subdued">
+                The pixel loads only for visitors who allow analytics, and sends no customer
+                details: views and checkouts are linked by the browser, not by the customer.
+              </s-text>
+            </s-stack>
           </s-section>
           <s-section heading="How forecasts work">
             <s-paragraph>
