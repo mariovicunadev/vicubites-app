@@ -15,6 +15,8 @@ export const FUNNEL_DAYS = 30;
 export const MAX_PIXEL_BODY_BYTES = 1024;
 
 export interface PixelEvent {
+  /** The shop's myshopify domain, from the pixel's init data; checked against installed shops. */
+  shop: string;
   name: PixelEventName;
   clientId: string;
   species: Species | null;
@@ -24,6 +26,7 @@ export interface PixelEvent {
 }
 
 const CLIENT_ID = /^[\w-]{1,64}$/;
+const SHOP_DOMAIN = /^[a-z0-9][a-z0-9-]*\.myshopify\.com$/;
 
 function isOneOf<T extends string>(values: readonly T[], value: unknown): value is T {
   return typeof value === "string" && (values as readonly string[]).includes(value);
@@ -50,17 +53,19 @@ export function parsePixelEvent(body: string): PixelEvent | null {
   }
   if (typeof data !== "object" || data === null) return null;
   const fields = data as Record<string, unknown>;
+  if (typeof fields.shop !== "string" || !SHOP_DOMAIN.test(fields.shop)) return null;
   if (!isOneOf(PIXEL_EVENT_NAMES, fields.name)) return null;
   if (typeof fields.clientId !== "string" || !CLIENT_ID.test(fields.clientId)) return null;
 
   if (fields.name === "checkout_completed") {
     const orderId = orderNumber(fields.orderId);
     if (!orderId) return null;
-    return { name: fields.name, clientId: fields.clientId, species: null, bucket: null, orderId };
+    return { shop: fields.shop, name: fields.name, clientId: fields.clientId, species: null, bucket: null, orderId };
   }
   const species = typeof fields.species === "string" ? speciesFrom(fields.species) : null;
   if (!species) return null;
   return {
+    shop: fields.shop,
     name: fields.name,
     clientId: fields.clientId,
     species,

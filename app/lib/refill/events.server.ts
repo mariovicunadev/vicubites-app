@@ -6,10 +6,16 @@ export const EVENT_RETENTION_DAYS = 90;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+/** Whether the app is installed on the shop (it holds an offline session for it). */
+export async function isInstalledShop(shop: string): Promise<boolean> {
+  return (await prisma.session.count({ where: { shop, isOnline: false } })) > 0;
+}
+
 /** Stores one pixel event and deletes the shop's events past retention. */
-export async function recordPixelEvent(shop: string, event: PixelEvent, now = new Date()) {
+export async function recordPixelEvent(event: PixelEvent, now = new Date()) {
+  const { shop } = event;
   await prisma.$transaction([
-    prisma.refillEvent.create({ data: { shop, ...event } }),
+    prisma.refillEvent.create({ data: event }),
     prisma.refillEvent.deleteMany({
       where: { shop, createdAt: { lt: new Date(now.getTime() - EVENT_RETENTION_DAYS * DAY_MS) } },
     }),

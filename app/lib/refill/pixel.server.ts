@@ -5,18 +5,19 @@ import { AdminApiError, assertNoUserErrors } from "../admin/errors";
 
 type AdminGraphql = AdminApiContext["graphql"];
 
-/**
- * The pixel's only setting: where to post, on the shop's own domain. Matches
- * `[app_proxy]` in shopify.app.toml (prefix + subpath) and the
- * `apps.refill.events` route.
- */
-export const PIXEL_ENDPOINT_PATH = "/apps/vicubites-refill/events";
-const PIXEL_SETTINGS = JSON.stringify({ endpoint_path: PIXEL_ENDPOINT_PATH });
+/** The `pixel.refill.events` route. */
+const PIXEL_ENDPOINT_PATH = "/pixel/refill/events";
+
+/** The pixel's only setting: the app's endpoint URL, which changes with the app's host. */
+export function pixelSettings(appUrl: string) {
+  return JSON.stringify({ endpoint: new URL(PIXEL_ENDPOINT_PATH, appUrl).toString() });
+}
 
 const REFILL_PIXEL_QUERY = `#graphql
   query refillPixel {
     webPixel {
       id
+      settings
     }
   }
 `;
@@ -51,11 +52,19 @@ const REFILL_PIXEL_UPDATE = `#graphql
   }
 `;
 
+interface RefillPixel {
+  id: string;
+  /** The settings JSON as Shopify stores it. */
+  settings: string;
+}
+
 /** The app's web pixel on this shop, or null when it isn't connected yet. */
-export async function findRefillPixel(graphql: AdminGraphql): Promise<string | null> {
+export async function findRefillPixel(graphql: AdminGraphql): Promise<RefillPixel | null> {
   try {
     const { webPixel } = await adminGraphql(graphql, REFILL_PIXEL_QUERY);
-    return webPixel?.id ?? null;
+    if (!webPixel) return null;
+    const settings: unknown = webPixel.settings;
+    return { id: webPixel.id, settings: typeof settings === "string" ? settings : JSON.stringify(settings) };
   } catch (error) {
     // Without a pixel the query answers with a "not found" error rather than null.
     if (error instanceof AdminApiError && error.kind === "graphql" && /not.?found|no web pixel/i.test(error.message)) {
@@ -65,18 +74,25 @@ export async function findRefillPixel(graphql: AdminGraphql): Promise<string | n
   }
 }
 
-/** Creates the pixel record, or refreshes it when it exists; both are idempotent. */
-export async function connectRefillPixel(graphql: AdminGraphql): Promise<string> {
-  const id = await findRefillPixel(graphql);
-  if (id) {
-    const { webPixelUpdate } = await adminGraphql(graphql, REFILL_PIXEL_UPDATE, {
-      variables: { id, settings: PIXEL_SETTINGS },
-    });
-    assertNoUserErrors("webPixelUpdate", webPixelUpdate?.userErrors);
-    return id;
+/** Points an existing pixel at the app's current URL; does nothing when it already does. */
+export async function syncRefillPixel(graphql: AdminGraphql, pixel: RefillPixel, appUrl: string) {
+  const settings = pixelSettings(appUrl);
+  if (pixel.settings === settings) return;
+  const { webPixelUpdate } = await adminGraphql(graphql, REFILL_PIXEL_UPDATE, {
+    variables: { id: pixel.id, settings },
+  });
+  assertNoUserErrors("webPixelUpdate", webPixelUpdate?.userErrors);
+}
+
+/** Creates the pixel record, or points the existing one at the app's current URL. */
+export async function connectRefillPixel(graphql: AdminGraphql, appUrl: string): Promise<string> {
+  const pixel = await findRefillPixel(graphql);
+  if (pixel) {
+    await syncRefillPixel(graphql, pixel, appUrl);
+    return pixel.id;
   }
   const { webPixelCreate } = await adminGraphql(graphql, REFILL_PIXEL_CREATE, {
-    variables: { settings: PIXEL_SETTINGS },
+    variables: { settings: pixelSettings(appUrl) },
   });
   assertNoUserErrors("webPixelCreate", webPixelCreate?.userErrors);
   if (!webPixelCreate?.webPixel) throw new AdminApiError("empty-response", "webPixelCreate", []);

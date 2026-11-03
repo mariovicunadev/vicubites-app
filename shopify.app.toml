@@ -50,11 +50,6 @@ name = "Refill last bags"
 description = "Last dry food variant bought per species, for the storefront reorder button (Refill Radar)."
 access.admin = "merchant_read"
 
-[app_proxy]
-url = "/apps/refill"
-prefix = "apps"
-subpath = "vicubites-refill"
-
 [auth]
 redirect_urls = [ "https://example.com/api/auth" ]
 

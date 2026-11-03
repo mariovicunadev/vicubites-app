@@ -4,13 +4,13 @@ import { register } from "@shopify/web-pixels-extension";
 const REMINDER_EVENTS = ["reminder_viewed", "reminder_clicked"] as const;
 
 register(({ analytics, init, settings }) => {
-  // The app sets the app proxy path when it connects the pixel; requests stay on the shop's domain.
-  const origin = init.data.shop.storefrontUrl ?? `https://${init.data.shop.myshopifyDomain}`;
-  const endpoint = new URL(String(settings.endpoint_path), origin).toString();
+  // The app keeps its endpoint URL in the pixel settings; the shop domain tells it whose event this is.
+  const endpoint = String(settings.endpoint);
+  const shop = init.data.shop.myshopifyDomain;
 
   // A plain-text body keeps the request simple (no CORS preflight); no customer data is sent.
   const send = (payload: Record<string, unknown>) => {
-    fetch(endpoint, { method: "POST", body: JSON.stringify(payload), keepalive: true }).catch(() => {});
+    fetch(endpoint, { method: "POST", body: JSON.stringify({ shop, ...payload }), keepalive: true }).catch(() => {});
   };
 
   for (const name of REMINDER_EVENTS) {

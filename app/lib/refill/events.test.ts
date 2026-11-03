@@ -2,11 +2,13 @@ import { describe, expect, it } from "vitest";
 
 import { orderNumber, parsePixelEvent, reminderFunnel, type StoredEvent } from "./events";
 
-const body = (fields: Record<string, unknown>) => JSON.stringify(fields);
+const SHOP = "vicubites.myshopify.com";
+const body = (fields: Record<string, unknown>) => JSON.stringify({ shop: SHOP, ...fields });
 
 describe("parsePixelEvent", () => {
   it("accepts a reminder event and normalizes the species", () => {
     expect(parsePixelEvent(body({ name: "reminder_viewed", clientId: "abc-123", species: "Dog", bucket: "0-7" }))).toEqual({
+      shop: SHOP,
       name: "reminder_viewed",
       clientId: "abc-123",
       species: "dog",
@@ -31,6 +33,7 @@ describe("parsePixelEvent", () => {
     expect(parsePixelEvent(body({ name: "reminder_viewed", clientId: "abc", species: "fish" }))).toBeNull();
     expect(parsePixelEvent(body({ name: "checkout_completed", clientId: "abc" }))).toBeNull();
     expect(parsePixelEvent("{not json")).toBeNull();
+    expect(parsePixelEvent(body({ shop: "evil.example.com", name: "reminder_viewed", clientId: "abc", species: "dog" }))).toBeNull();
     expect(parsePixelEvent(body({ name: "reminder_viewed", clientId: "abc", species: "dog", pad: "x".repeat(2000) }))).toBeNull();
   });
 });

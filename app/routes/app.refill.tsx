@@ -13,7 +13,7 @@ import { toJobView } from "../lib/bulk/job-view";
 import { FUNNEL_DAYS } from "../lib/refill/events";
 import { loadReminderFunnel } from "../lib/refill/events.server";
 import { DUE_SOON_DAYS, REFERENCE_DAILY_KCAL } from "../lib/refill/forecast";
-import { connectRefillPixel, findRefillPixel } from "../lib/refill/pixel.server";
+import { connectRefillPixel, findRefillPixel, syncRefillPixel } from "../lib/refill/pixel.server";
 import { loadForecasts, processLatestRefillLoad, startRefillLoad } from "../lib/refill/store.server";
 import { toRefillRow, type RefillRow } from "../lib/refill/view";
 import { authenticate } from "../shopify.server";
@@ -29,7 +29,10 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   try {
     await refreshStaleJobs(admin.graphql, session.shop);
     load = await processLatestRefillLoad(admin.graphql, session.shop);
-    pixelConnected = (await findRefillPixel(admin.graphql)) !== null;
+    const pixel = await findRefillPixel(admin.graphql);
+    // The app's URL changes with each development tunnel: keep the pixel pointed at it.
+    if (pixel) await syncRefillPixel(admin.graphql, pixel, process.env.SHOPIFY_APP_URL ?? "");
+    pixelConnected = pixel !== null;
   } catch (caught) {
     if (!(caught instanceof AdminApiError)) throw caught;
     error = caught.message;
@@ -56,7 +59,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const { admin, session } = await authenticate.admin(request);
   const intent = (await request.formData()).get("intent");
   try {
-    if (intent === "connect-pixel") await connectRefillPixel(admin.graphql);
+    if (intent === "connect-pixel") await connectRefillPixel(admin.graphql, process.env.SHOPIFY_APP_URL ?? "");
     else await startRefillLoad(admin.graphql, session.shop);
     return { error: null };
   } catch (error) {
