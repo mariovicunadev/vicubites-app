@@ -1,0 +1,21 @@
+query RefillDemoSources($productQuery: String!, $orderQuery: String!) {
+  products(first: 20, query: $productQuery) {
+    nodes {
+      handle
+      variants(first: 10) {
+        nodes {
+          id
+          selectedOptions {
+            name
+            value
+          }
+        }
+      }
+    }
+  }
+  orders(first: 50, query: $orderQuery) {
+    nodes {
+      sourceIdentifier
+    }
+  }
+}

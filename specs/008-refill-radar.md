@@ -44,8 +44,7 @@ after that. This spec builds the data they read.
 - Protected customer data check: confirm with the new scopes that the app can read the order's
   customer ID on this store, before building on it. Only level 1 data: no name, email, phone or
   address is requested.
-- Demo seed (`scripts/demo/seed-refill-orders.mjs`, Shopify CLI store auth, not the app's scopes):
-  about 6 demo customers and 15 paid orders with past `processedAt` dates, all tagged
+- Demo seed (`scripts/demo/seed-refill-orders.mjs`): 6 demo customers and 13 paid orders with past `processedAt` dates, all tagged
   `demo-refill-radar`, no emails sent, inventory bypassed. Mixes single-order customers, regular
   reorderers, one due soon, one overdue and one dog-and-cat home. Safe to re-run.
 - Initial load: one bulk operation over orders (line items with variant, quantity, product
@@ -128,7 +127,10 @@ Access scopes added: `read_orders`, `write_customers`.
 - Protected customer data on a custom-distribution app: if the customer ID comes back redacted
   or denied, the spec is blocked until access is granted; the first criterion checks it before
   any other work.
-- The seed needs the CLI's store auth with `write_orders` and `write_customers`: a one-time
-  step by the store owner.
+- `orderCreate` only accepts offline tokens, and Shopify CLI's `store auth` stores an online one,
+  so the seed runs through the app's own token (`shopify app execute`). The app doesn't request
+  `write_orders`: it is added to `shopify.app.toml` locally while seeding, never committed, and
+  removed afterwards (checked with `currentAppInstallation`). Development stores throttle order
+  creation ("Too many attempts"): the seed waits and retries.
 - Webhook delivery in development depends on the tunnel; a test order is created through the
   seed script, not the checkout.
