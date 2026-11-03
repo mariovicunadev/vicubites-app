@@ -5,7 +5,7 @@ import { adminGraphql } from "../admin/graphql.server";
 import { assertNoUserErrors } from "../admin/errors";
 import { createBulkJob, latestBulkJob, refreshJob } from "../bulk/jobs.server";
 import { downloadBulkResult } from "../bulk/operations.server";
-import { forecastCustomer, type Forecast, type Purchase, type Species } from "./forecast";
+import { forecastCustomer, lastVariants, type Forecast, type Purchase, type Species } from "./forecast";
 import {
   orderFromBulkNode,
   orderFromQuery,
@@ -32,6 +32,7 @@ const REFILL_ORDER_QUERY = `#graphql
         nodes {
           quantity
           variant {
+            id
             selectedOptions {
               name
               value
@@ -80,7 +81,12 @@ export async function recordOrder(shop: string, order: OrderData): Promise<Purch
       prisma.refillPurchase.upsert({
         where: { shop_orderId_species: { shop, orderId: purchase.orderId, species: purchase.species } },
         create: { shop, customerId, ...purchase, processedAt: new Date(purchase.processedAt) },
-        update: { customerId, kcal: purchase.kcal, processedAt: new Date(purchase.processedAt) },
+        update: {
+          customerId,
+          kcal: purchase.kcal,
+          variantId: purchase.variantId,
+          processedAt: new Date(purchase.processedAt),
+        },
       }),
     ),
   );
@@ -93,24 +99,29 @@ export async function recordOrder(shop: string, order: OrderData): Promise<Purch
  */
 export async function refreshCustomer(graphql: AdminGraphql, shop: string, customerId: string) {
   const rows = await prisma.refillPurchase.findMany({ where: { shop, customerId } });
-  const forecasts = forecastCustomer(
-    rows.map((row) => ({
-      orderId: row.orderId,
-      processedAt: row.processedAt.toISOString(),
-      species: row.species as Species,
-      kcal: row.kcal,
-    })),
-  );
+  const purchases: Purchase[] = rows.map((row) => ({
+    orderId: row.orderId,
+    processedAt: row.processedAt.toISOString(),
+    species: row.species as Species,
+    kcal: row.kcal,
+    variantId: row.variantId,
+  }));
+  const forecasts = forecastCustomer(purchases);
 
   await prisma.$transaction([
     prisma.refillForecast.deleteMany({ where: { shop, customerId } }),
     ...forecasts.map((forecast) => prisma.refillForecast.create({ data: { shop, customerId, ...forecast } })),
   ]);
-  if (forecasts.length > 0) await writeMetafields(graphql, customerId, forecasts);
+  if (forecasts.length > 0) await writeMetafields(graphql, customerId, forecasts, lastVariants(purchases));
   return forecasts;
 }
 
-async function writeMetafields(graphql: AdminGraphql, customerId: string, forecasts: Forecast[]) {
+async function writeMetafields(
+  graphql: AdminGraphql,
+  customerId: string,
+  forecasts: Forecast[],
+  variantIds: string[],
+) {
   const { metafieldsSet } = await adminGraphql(graphql, REFILL_METAFIELDS_SET, {
     variables: {
       metafields: [
@@ -129,6 +140,18 @@ async function writeMetafields(graphql: AdminGraphql, customerId: string, foreca
           type: "json",
           value: JSON.stringify(forecasts),
         },
+        // A list metafield can't be empty: skipped when no purchase has a variant left.
+        ...(variantIds.length > 0
+          ? [
+              {
+                ownerId: customerId,
+                namespace: "$app",
+                key: "refill_variants",
+                type: "list.variant_reference",
+                value: JSON.stringify(variantIds),
+              },
+            ]
+          : []),
       ],
     },
   });

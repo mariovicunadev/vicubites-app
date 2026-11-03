@@ -99,6 +99,8 @@ model RefillPurchase {
   orderId     String
   species     String
   kcal        Float
+  // Main dry food variant of the purchase, for the storefront reorder button.
+  variantId   String?
   processedAt DateTime
 
   @@unique([shop, orderId, species])

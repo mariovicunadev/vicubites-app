@@ -14,6 +14,7 @@ const ORDER_FIELDS = `
 const LINE_ITEM_FIELDS = `
   quantity
   variant {
+    id
     selectedOptions { name value }
     product {
       species: metafield(namespace: "custom", key: "species") { value }
@@ -43,6 +44,7 @@ export const REFILL_ORDERS_BULK_QUERY = `{
 
 export interface OrderLine {
   quantity: number;
+  variantId: string | null;
   /** Variant option values keyed by option name. */
   options: Readonly<Record<string, string>>;
   species: string | null;
@@ -62,6 +64,7 @@ export interface OrderData {
 interface LineFields {
   quantity?: unknown;
   variant?: {
+    id?: string;
     selectedOptions?: { name: string; value: string }[];
     product?: { species?: { value: string } | null; kcalPerKg?: { value: string } | null } | null;
   } | null;
@@ -79,6 +82,7 @@ function lineFrom(fields: LineFields): OrderLine {
   for (const { name, value } of fields.variant?.selectedOptions ?? []) options[name] = value;
   return {
     quantity: typeof fields.quantity === "number" ? fields.quantity : 0,
+    variantId: fields.variant?.id ?? null,
     options,
     species: fields.variant?.product?.species?.value ?? null,
     kcalPerKg: fields.variant?.product?.kcalPerKg?.value ?? null,
@@ -109,23 +113,32 @@ export function orderFromQuery(order: OrderFields & { lineItems: { nodes: LineFi
 /**
  * The dry food in an order, one purchase per species. Lines without a bag
  * size, species or calories (wet food, treats, incomplete products) are
- * skipped, and so are B2B orders and orders without a customer.
+ * skipped, and so are B2B orders and orders without a customer. The
+ * purchase's variant is the line with the most calories: the main bag.
  */
 export function purchasesFromOrder(order: OrderData): Purchase[] {
   if (!order.customerId || order.isCompanyPurchase) return [];
-  const kcalBySpecies = new Map<Species, number>();
+  const bySpecies = new Map<Species, { kcal: number; mainKcal: number; variantId: string | null }>();
   for (const line of order.lines) {
     const size = line.options[SIZE_OPTION];
     const grams = size ? bagGrams(size) : null;
     const species = speciesFrom(line.species);
     const kcalPerKg = Number(line.kcalPerKg);
     if (!grams || !species || !Number.isFinite(kcalPerKg) || kcalPerKg <= 0 || line.quantity <= 0) continue;
-    kcalBySpecies.set(species, (kcalBySpecies.get(species) ?? 0) + bagKcal(grams, kcalPerKg, line.quantity));
+    const lineKcal = bagKcal(grams, kcalPerKg, line.quantity);
+    const current = bySpecies.get(species) ?? { kcal: 0, mainKcal: 0, variantId: null };
+    const isMain = lineKcal > current.mainKcal;
+    bySpecies.set(species, {
+      kcal: current.kcal + lineKcal,
+      mainKcal: isMain ? lineKcal : current.mainKcal,
+      variantId: isMain ? line.variantId : current.variantId,
+    });
   }
-  return [...kcalBySpecies].map(([species, kcal]) => ({
+  return [...bySpecies].map(([species, { kcal, variantId }]) => ({
     orderId: order.id,
     processedAt: order.processedAt,
     species,
     kcal,
+    variantId,
   }));
 }

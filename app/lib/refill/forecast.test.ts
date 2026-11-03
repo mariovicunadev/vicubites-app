@@ -8,13 +8,21 @@ import {
   forecastCustomer,
   forecastSpecies,
   isDueSoon,
+  lastVariants,
   median,
   speciesFrom,
   type Purchase,
 } from "./forecast";
 
 function purchase(processedAt: string, overrides: Partial<Purchase> = {}): Purchase {
-  return { orderId: `gid://shopify/Order/${processedAt}`, processedAt, species: "dog", kcal: 25_900, ...overrides };
+  return {
+    orderId: `gid://shopify/Order/${processedAt}`,
+    processedAt,
+    species: "dog",
+    kcal: 25_900,
+    variantId: "gid://shopify/ProductVariant/1",
+    ...overrides,
+  };
 }
 
 describe("bagGrams", () => {
@@ -108,6 +116,24 @@ describe("forecastCustomer", () => {
       ["dog", "2026-11-06"],
       ["cat", "2026-12-09"],
     ]);
+  });
+});
+
+describe("lastVariants", () => {
+  it("keeps the latest purchase's variant per species", () => {
+    expect(
+      lastVariants([
+        purchase("2026-10-28T00:00:00Z", { variantId: "gid://shopify/ProductVariant/2" }),
+        purchase("2026-09-30T00:00:00Z"),
+        purchase("2026-10-04T00:00:00Z", { species: "cat", variantId: "gid://shopify/ProductVariant/7" }),
+      ]).sort(),
+    ).toEqual(["gid://shopify/ProductVariant/2", "gid://shopify/ProductVariant/7"]);
+  });
+
+  it("falls back to an older purchase when the latest has no variant left", () => {
+    expect(
+      lastVariants([purchase("2026-10-28T00:00:00Z", { variantId: null }), purchase("2026-09-30T00:00:00Z")]),
+    ).toEqual(["gid://shopify/ProductVariant/1"]);
   });
 });
 

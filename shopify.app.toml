@@ -44,6 +44,12 @@ name = "Refill forecast"
 description = "Refill Radar forecast per species: basis, days of food, last order and run-out dates."
 access.admin = "merchant_read"
 
+[customer.metafields.app.refill_variants]
+type = "list.variant_reference"
+name = "Refill last bags"
+description = "Last dry food variant bought per species, for the storefront reorder button (Refill Radar)."
+access.admin = "merchant_read"
+
 [auth]
 redirect_urls = [ "https://example.com/api/auth" ]
 

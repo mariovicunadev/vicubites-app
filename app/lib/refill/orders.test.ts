@@ -3,10 +3,14 @@ import { describe, expect, it } from "vitest";
 import type { BulkNode } from "../bulk/jsonl";
 import { orderFromBulkNode, orderFromQuery, purchasesFromOrder, type OrderData, type OrderLine } from "./orders";
 
-const DRY_DOG: OrderLine = { quantity: 1, options: { Size: "7 kg" }, species: "Dog", kcalPerKg: "3700" };
-const DRY_CAT: OrderLine = { quantity: 2, options: { Size: "1.5 kg" }, species: "Cat", kcalPerKg: "3900" };
-const WET_DOG: OrderLine = { quantity: 1, options: { Flavor: "Chicken", Pack: "12 cans" }, species: "Dog", kcalPerKg: "1000" };
-const TREATS: OrderLine = { quantity: 2, options: { Flavor: "Chicken" }, species: "Dog", kcalPerKg: "3300" };
+const line = (variant: number, rest: Omit<OrderLine, "variantId">): OrderLine => ({
+  variantId: `gid://shopify/ProductVariant/${variant}`,
+  ...rest,
+});
+const DRY_DOG = line(1, { quantity: 1, options: { Size: "7 kg" }, species: "Dog", kcalPerKg: "3700" });
+const DRY_CAT = line(2, { quantity: 2, options: { Size: "1.5 kg" }, species: "Cat", kcalPerKg: "3900" });
+const WET_DOG = line(3, { quantity: 1, options: { Flavor: "Chicken", Pack: "12 cans" }, species: "Dog", kcalPerKg: "1000" });
+const TREATS = line(4, { quantity: 2, options: { Flavor: "Chicken" }, species: "Dog", kcalPerKg: "3300" });
 
 function order(lines: OrderLine[], overrides: Partial<OrderData> = {}): OrderData {
   return {
@@ -22,8 +26,21 @@ function order(lines: OrderLine[], overrides: Partial<OrderData> = {}): OrderDat
 describe("purchasesFromOrder", () => {
   it("keeps dry food and skips wet food and treats", () => {
     expect(purchasesFromOrder(order([DRY_DOG, WET_DOG, TREATS]))).toEqual([
-      { orderId: "gid://shopify/Order/1", processedAt: "2026-10-14T10:00:00Z", species: "dog", kcal: 25_900 },
+      {
+        orderId: "gid://shopify/Order/1",
+        processedAt: "2026-10-14T10:00:00Z",
+        species: "dog",
+        kcal: 25_900,
+        variantId: "gid://shopify/ProductVariant/1",
+      },
     ]);
+  });
+
+  it("adds up the bags of one species and keeps the biggest one's variant", () => {
+    const smallBag = line(5, { quantity: 1, options: { Size: "2 kg" }, species: "Dog", kcalPerKg: "3900" });
+    const [purchase] = purchasesFromOrder(order([smallBag, DRY_DOG]));
+    expect(purchase.kcal).toBe(7_800 + 25_900);
+    expect(purchase.variantId).toBe("gid://shopify/ProductVariant/1");
   });
 
   it("gives one purchase per species and multiplies by quantity", () => {
@@ -47,6 +64,7 @@ describe("purchasesFromOrder", () => {
 const LINE_FIELDS = {
   quantity: 1,
   variant: {
+    id: "gid://shopify/ProductVariant/1",
     selectedOptions: [{ name: "Size", value: "7 kg" }],
     product: { species: { value: "Dog" }, kcalPerKg: { value: "3700" } },
   },
