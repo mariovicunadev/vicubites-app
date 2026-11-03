@@ -1,0 +1,37 @@
+{% doc %}
+  One Refill Radar forecast line.
+
+  @param {string} species - 'dog' or 'cat'
+  @param {string} run_out_on - Run-out date, YYYY-MM-DD
+  @param {string} basis - 'estimate' or 'cadence'
+  @param {string} [url] - Where the shop link points; no link when blank
+{% enddoc %}
+{%- liquid
+  if species == 'cat'
+    assign pet = 'refill.pets.cat' | t
+  else
+    assign pet = 'refill.pets.dog' | t
+  endif
+  if basis == 'cadence'
+    assign basis_text = 'refill.basis.cadence' | t
+  else
+    assign basis_text = 'refill.basis.estimate' | t
+  endif
+  assign run_out_date = run_out_on | date: '%B %-d'
+  assign today_s = 'now' | date: '%Y-%m-%d' | date: '%s' | plus: 0
+  assign run_out_s = run_out_on | date: '%s' | plus: 0
+  assign days_left = run_out_s | minus: today_s | divided_by: 86400
+-%}
+<li class="vb-refill__item">
+  <p class="vb-refill__date">
+    {%- if days_left < 0 -%}
+      {{ 'refill.ran_out_html' | t: pet: pet, date: run_out_date }}
+    {%- else -%}
+      {{ 'refill.runs_out_html' | t: pet: pet, date: run_out_date }}
+    {%- endif -%}
+  </p>
+  <p class="vb-refill__basis">{{ basis_text }}</p>
+  {%- if url != blank -%}
+    <a class="vb-refill__link" href="{{ url }}">{{ 'refill.shop_link' | t: pet: pet }}</a>
+  {%- endif -%}
+</li>

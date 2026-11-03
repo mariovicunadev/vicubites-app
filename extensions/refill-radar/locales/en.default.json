@@ -1,0 +1,16 @@
+{
+  "refill": {
+    "pets": {
+      "dog": "dog",
+      "cat": "cat"
+    },
+    "runs_out_html": "Your {{ pet }}'s food is expected to run out around <strong>{{ date }}</strong>.",
+    "ran_out_html": "Your {{ pet }}'s food may have run out on <strong>{{ date }}</strong>.",
+    "basis": {
+      "estimate": "Estimated from the bag size.",
+      "cadence": "Based on how often you reorder."
+    },
+    "shop_link": "Shop {{ pet }} food",
+    "note": "An estimate to help you reorder in time, not feeding advice."
+  }
+}

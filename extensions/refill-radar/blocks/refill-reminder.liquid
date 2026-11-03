@@ -1,0 +1,79 @@
+{% doc %}
+  Refill reminder: when the signed-in customer's dry food is expected to run out, per species.
+  Reads the app-owned metafield written by Refill Radar; renders nothing without a forecast.
+  In the theme editor it shows a sample so the block can be placed and styled.
+{% enddoc %}
+{%- liquid
+  assign forecasts = customer.metafields['$app'].refill_forecast.value
+  assign sample = false
+  if forecasts == blank and request.design_mode
+    assign sample = true
+  endif
+-%}
+
+{%- if forecasts != blank or sample -%}
+  <div class="vb-refill" {{ block.shopify_attributes }}>
+    {%- if block.settings.heading != blank -%}
+      <h2 class="vb-refill__heading">{{ block.settings.heading | escape }}</h2>
+    {%- endif -%}
+    <ul class="vb-refill__list" role="list">
+      {%- if sample -%}
+        {%- assign sample_run_out = 'now' | date: '%s' | plus: 432000 | date: '%Y-%m-%d' -%}
+        {%- render 'refill-line',
+          species: 'dog',
+          run_out_on: sample_run_out,
+          basis: 'estimate',
+          url: block.settings.dog_url
+        -%}
+      {%- else -%}
+        {%- for forecast in forecasts -%}
+          {%- liquid
+            if forecast.species == 'cat'
+              assign shop_url = block.settings.cat_url
+            else
+              assign shop_url = block.settings.dog_url
+            endif
+          -%}
+          {%- render 'refill-line',
+            species: forecast.species,
+            run_out_on: forecast.runOutOn,
+            basis: forecast.basis,
+            url: shop_url
+          -%}
+        {%- endfor -%}
+      {%- endif -%}
+    </ul>
+    <p class="vb-refill__note">{{ 'refill.note' | t }}</p>
+  </div>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Refill reminder",
+  "target": "content",
+  "stylesheet": "refill-reminder.css",
+  "enabled_on": {
+    "templates": ["index", "product", "collection", "cart", "page"]
+  },
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Time to restock?"
+    },
+    {
+      "type": "url",
+      "id": "dog_url",
+      "label": "Dog food link",
+      "info": "Usually the dog food collection"
+    },
+    {
+      "type": "url",
+      "id": "cat_url",
+      "label": "Cat food link",
+      "info": "Usually the cat food collection"
+    }
+  ]
+}
+{% endschema %}
