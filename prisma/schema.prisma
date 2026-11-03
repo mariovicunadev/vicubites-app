@@ -89,3 +89,35 @@ model FixRun {
 
   @@index([shop, createdAt])
 }
+
+// Dry food bought per order and species: what Refill Radar forecasts from.
+// Unique per order and species, so a repeated webhook delivery is a no-op.
+model RefillPurchase {
+  id          String   @id @default(cuid())
+  shop        String
+  customerId  String
+  orderId     String
+  species     String
+  kcal        Float
+  processedAt DateTime
+
+  @@unique([shop, orderId, species])
+  @@index([shop, customerId])
+}
+
+// Latest Refill Radar forecast per customer and species, recomputed from
+// their purchases. Dates are `YYYY-MM-DD`, which sort as text.
+model RefillForecast {
+  id          String   @id @default(cuid())
+  shop        String
+  customerId  String
+  species     String
+  basis       String
+  daysOfFood  Int
+  lastOrderOn String
+  runOutOn    String
+  updatedAt   DateTime @updatedAt
+
+  @@unique([shop, customerId, species])
+  @@index([shop, runOutOn])
+}

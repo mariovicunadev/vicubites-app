@@ -25,6 +25,25 @@ api_version = "2026-10"
   uri = "/webhooks/bulk_operations/finish"
   topics = [ "bulk_operations/finish" ]
 
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/orders/create"
+  topics = [ "orders/create" ]
+
+# Refill Radar forecast, owned by the app ($app namespace). Merchants can read
+# it on the customer; storefront and customer account access come with the
+# surfaces that need them.
+[customer.metafields.app.refill_run_out]
+type = "date"
+name = "Refill run-out date"
+description = "Earliest date this customer's dry food is expected to run out (Refill Radar)."
+access.admin = "merchant_read"
+
+[customer.metafields.app.refill_forecast]
+type = "json"
+name = "Refill forecast"
+description = "Refill Radar forecast per species: basis, days of food, last order and run-out dates."
+access.admin = "merchant_read"
+
 [auth]
 redirect_urls = [ "https://example.com/api/auth" ]
 
