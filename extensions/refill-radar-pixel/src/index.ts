@@ -1,14 +1,12 @@
 import { register } from "@shopify/web-pixels-extension";
 
-/** The app proxy path on the shop's own domain (`[app_proxy]` in shopify.app.toml). */
-const ENDPOINT_PATH = "/apps/vicubites-refill/events";
-
 /** Custom events published by the Refill reminder block. */
 const REMINDER_EVENTS = ["reminder_viewed", "reminder_clicked"] as const;
 
-register(({ analytics, init }) => {
+register(({ analytics, init, settings }) => {
+  // The app sets the app proxy path when it connects the pixel; requests stay on the shop's domain.
   const origin = init.data.shop.storefrontUrl ?? `https://${init.data.shop.myshopifyDomain}`;
-  const endpoint = new URL(ENDPOINT_PATH, origin).toString();
+  const endpoint = new URL(String(settings.endpoint_path), origin).toString();
 
   // A plain-text body keeps the request simple (no CORS preflight); no customer data is sent.
   const send = (payload: Record<string, unknown>) => {

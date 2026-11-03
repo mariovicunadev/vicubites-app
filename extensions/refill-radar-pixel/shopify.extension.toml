@@ -14,3 +14,12 @@ sale_of_data = "disabled"
 
 [settings]
 type = "object"
+
+# Set by the app when it connects the pixel: the app proxy path on the shop's domain.
+[settings.fields.endpoint_path]
+name = "Endpoint path"
+description = "App proxy path that receives the events, for example /apps/vicubites-refill/events."
+type = "single_line_text_field"
+validations = [
+  { name = "min", value = "1" }
+]

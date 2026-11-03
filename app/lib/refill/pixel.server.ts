@@ -5,8 +5,13 @@ import { AdminApiError, assertNoUserErrors } from "../admin/errors";
 
 type AdminGraphql = AdminApiContext["graphql"];
 
-/** The pixel has no settings: it finds the app proxy on the shop's own domain. */
-const PIXEL_SETTINGS = "{}";
+/**
+ * The pixel's only setting: where to post, on the shop's own domain. Matches
+ * `[app_proxy]` in shopify.app.toml (prefix + subpath) and the
+ * `apps.refill.events` route.
+ */
+export const PIXEL_ENDPOINT_PATH = "/apps/vicubites-refill/events";
+const PIXEL_SETTINGS = JSON.stringify({ endpoint_path: PIXEL_ENDPOINT_PATH });
 
 const REFILL_PIXEL_QUERY = `#graphql
   query refillPixel {
