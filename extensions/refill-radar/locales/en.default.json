@@ -10,7 +10,9 @@
       "estimate": "Estimated from the bag size.",
       "cadence": "Based on how often you reorder."
     },
-    "shop_link": "Shop {{ pet }} food",
+    "sample_bag": "Chicken & Rice · 7 kg",
+    "reorder": "Reorder",
+    "view_product": "View product",
     "note": "An estimate to help you reorder in time, not feeding advice."
   }
 }

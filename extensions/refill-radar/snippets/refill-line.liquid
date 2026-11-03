@@ -1,10 +1,11 @@
 {% doc %}
-  One Refill Radar forecast line.
+  One Refill Radar forecast line, with the bag last bought and a way to buy it again.
 
   @param {string} species - 'dog' or 'cat'
   @param {string} run_out_on - Run-out date, YYYY-MM-DD
   @param {string} basis - 'estimate' or 'cadence'
-  @param {string} [url] - Where the shop link points; no link when blank
+  @param {variant} [variant] - Last bag bought; no action when blank
+  @param {boolean} [sample] - Theme editor sample: placeholder bag, inert button
 {% enddoc %}
 {%- liquid
   if species == 'cat'
@@ -21,6 +22,12 @@
   assign today_s = 'now' | date: '%Y-%m-%d' | date: '%s' | plus: 0
   assign run_out_s = run_out_on | date: '%s' | plus: 0
   assign days_left = run_out_s | minus: today_s | divided_by: 86400
+
+  if sample
+    assign bag_name = 'refill.sample_bag' | t
+  elsif variant != blank
+    assign bag_name = variant.product.title | append: ' · ' | append: variant.title
+  endif
 -%}
 <li class="vb-refill__item">
   <p class="vb-refill__date">
@@ -30,8 +37,25 @@
       {{ 'refill.runs_out_html' | t: pet: pet, date: run_out_date }}
     {%- endif -%}
   </p>
+  {%- if bag_name != blank -%}
+    <p class="vb-refill__bag">{{ bag_name | escape }}</p>
+  {%- endif -%}
   <p class="vb-refill__basis">{{ basis_text }}</p>
-  {%- if url != blank -%}
-    <a class="vb-refill__link" href="{{ url }}">{{ 'refill.shop_link' | t: pet: pet }}</a>
+  {%- if sample -%}
+    <button type="button" class="vb-refill__button">{{ 'refill.reorder' | t }}</button>
+  {%- elsif variant.available -%}
+    <form action="{{ routes.cart_add_url }}" method="post" class="vb-refill__form">
+      <input type="hidden" name="id" value="{{ variant.id }}">
+      <input type="hidden" name="quantity" value="1">
+      <button type="submit" class="vb-refill__button" data-refill-species="{{ species | escape }}">
+        {{- 'refill.reorder' | t -}}
+        <span class="vb-refill__hidden"> {{ bag_name | escape }}</span>
+      </button>
+    </form>
+  {%- elsif variant != blank -%}
+    <a class="vb-refill__link" href="{{ variant.product.url }}">
+      {{- 'refill.view_product' | t -}}
+      <span class="vb-refill__hidden"> {{ bag_name | escape }}</span>
+    </a>
   {%- endif -%}
 </li>

@@ -5,6 +5,7 @@
 {% enddoc %}
 {%- liquid
   assign forecasts = customer.metafields['$app'].refill_forecast.value
+  assign variants = customer.metafields['$app'].refill_variants.value
   assign sample = false
   if forecasts == blank and request.design_mode
     assign sample = true
@@ -23,22 +24,26 @@
           species: 'dog',
           run_out_on: sample_run_out,
           basis: 'estimate',
-          url: block.settings.dog_url
+          sample: true
         -%}
       {%- else -%}
         {%- for forecast in forecasts -%}
           {%- liquid
-            if forecast.species == 'cat'
-              assign shop_url = block.settings.cat_url
-            else
-              assign shop_url = block.settings.dog_url
-            endif
+            # Matched by the product's species, not by position: a deleted variant drops out of the list.
+            assign bag = nil
+            for variant in variants
+              assign variant_species = variant.product.metafields.custom.species.value | downcase
+              if variant_species == forecast.species
+                assign bag = variant
+                break
+              endif
+            endfor
           -%}
           {%- render 'refill-line',
             species: forecast.species,
             run_out_on: forecast.runOutOn,
             basis: forecast.basis,
-            url: shop_url
+            variant: bag
           -%}
         {%- endfor -%}
       {%- endif -%}
@@ -61,18 +66,6 @@
       "id": "heading",
       "label": "Heading",
       "default": "Time to restock?"
-    },
-    {
-      "type": "url",
-      "id": "dog_url",
-      "label": "Dog food link",
-      "info": "Usually the dog food collection"
-    },
-    {
-      "type": "url",
-      "id": "cat_url",
-      "label": "Cat food link",
-      "info": "Usually the cat food collection"
     }
   ]
 }
