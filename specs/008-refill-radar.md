@@ -2,7 +2,7 @@
 
 | Field     | Value |
 |-----------|-------|
-| Status    | In review |
+| Status    | Done |
 | Branch    | `feature/008-refill-radar` |
 | Estimate  | 8–10 h · ~4.5–5.5 h (AI-assisted) · ~9–11 h manual |
 | Actual    | ~1.3 h |
