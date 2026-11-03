@@ -4,13 +4,13 @@
 |-----------|-------|
 | Status    | Approved |
 | Branch    | `feature/009-refill-radar-reminders` |
-| Estimate  | 6–8 h · ~3–4 h (AI-assisted) · ~14–18 h manual |
+| Estimate  | 6–8 h · ~4–5 h (AI-assisted) · ~15–19 h manual |
 | Actual    | — |
 
 ## Goal
 
-Logged-in B2C customers see on the storefront when their dry food is expected to run out, with a
-link to buy more. Merchants see whether those reminders lead to reorders, and every customer who
+Logged-in B2C customers see on the storefront when their dry food is expected to run out, with
+the bag they last bought and a button to reorder it. Merchants see whether those reminders lead to reorders, and every customer who
 is due soon reaches Klaviyo as a `Refill Due` event that a Klaviyo flow can turn into an email.
 
 ## Context
@@ -20,9 +20,12 @@ and as the app-owned customer metafields `$app.refill_run_out` and `$app.refill_
 spec puts that data to work in three places:
 
 - **Storefront:** a theme app extension block, so the merchant places it from the theme editor
-  and it survives a theme change. Liquid can read any metafield whatever its storefront access
-  setting, so both metafields keep `storefront` and `customer_account` access at `none`: the
-  Storefront API and the Customer Account API never need them.
+  and it survives a theme change. The app owns the data (what each customer bought and when it
+  runs out); the theme editor owns the presentation (heading, placement). The last bag bought per
+  species is stored as a variant reference list, which Liquid resolves to full variant objects
+  (title, image, price, availability) with no extra query. Liquid can read any metafield whatever
+  its storefront access setting, so the metafields keep `storefront` and `customer_account`
+  access at `none`: the Storefront API and the Customer Account API never need them.
 - **Measurement:** an app web pixel. It loads only when the visitor has granted analytics
   permission (declared in `shopify.extension.toml`), and it sends no customer identity: the
   customer fields of the pixel `init` data need protected data the pixel doesn't use. Events are
@@ -35,12 +38,19 @@ spec puts that data to work in three places:
 ## Scope
 
 **In scope**
+- Last bag per species: purchases store the variant ID, and each recompute writes a third
+  app-owned metafield, `$app.refill_variants` (`list.variant_reference`, the last dry-food variant
+  bought per species), in the same `metafieldsSet` call. A Prisma migration adds the column; the
+  existing "Rebuild from orders" action backfills it.
 - Theme app extension `refill-radar` with one app block, `Refill reminder`:
   - Renders only for a logged-in customer with a forecast; renders nothing otherwise.
-  - One line per species, earliest first: "Your dog's food is expected to run out around
-    November 20" (or "may have run out on …" when past), the basis ("estimate from the bag size"
-    or "based on how often you reorder") and a link to the collection the merchant picks per
-    species in the block settings.
+  - One line per species, earliest first: "Your dog's food (Chicken & Rice · 7 kg) is expected to
+    run out around November 20" (or "may have run out on …" when past), the basis ("estimated
+    from the bag size" or "based on how often you reorder") and a "Reorder" button that adds
+    that variant to the cart. A sold-out or missing variant shows a link to the product instead,
+    or no action when the product is gone. Variants are matched to forecasts by the product's
+    species, not by list position.
+  - Only setting: the heading.
   - In the theme editor (`request.design_mode`) it shows sample data, so the merchant can place
     and style it without a customer session.
   - Publishes the custom events `vicubites_refill:reminder_viewed` and
@@ -73,8 +83,7 @@ spec puts that data to work in three places:
   the end-to-end check (storefront login, block, pixel, test order, Klaviyo flow email).
 
 **Out of scope**
-- One-click reorder of the exact bag (would need the variant in the forecast); the link goes to
-  the species collection.
+- Quantity and subscription choices on the reorder button (it adds one unit, one-time).
 - A daily scheduler for Klaviyo sends; Shopify Flow trigger; customer account UI extension.
 - Email marketing consent sync: consent lives in Klaviyo (a production store would also install
   Klaviyo's Shopify integration, whose profiles the events merge into by email).
@@ -85,13 +94,15 @@ spec puts that data to work in three places:
 - [ ] Liquid in the block reads `customer.metafields["$app"].refill_run_out` and
       `refill_forecast` with storefront access left at `none` (checked first, before the rest of
       the block)
-- [ ] Given a logged-in demo customer with a dog forecast due in 5 days, then the block shows the
-      run-out date, the basis and the dog collection link; given a logged-out visitor or a
-      customer without a forecast, then it renders no markup
+- [ ] After "Rebuild from orders", every demo customer with a forecast has
+      `$app.refill_variants` holding the last dry-food variant bought per species
+- [ ] Given a logged-in demo customer with a dog forecast due in 3 days, then the block shows the
+      bag bought, the run-out date and the basis, and "Reorder" adds that variant to the cart;
+      given a logged-out visitor or a customer without a forecast, then it renders no markup
+- [ ] Given a sold-out variant, then the line links to the product instead of adding to the cart
 - [ ] Given a dog-and-cat home, then the block lists both species, earliest first
-- [ ] In the theme editor the block shows sample data and its settings (heading, one collection
-      per species)
-- [ ] Given analytics permission, when the block is viewed and its link clicked, then two events
+- [ ] In the theme editor the block shows sample data and a single setting (heading)
+- [ ] Given analytics permission, when the block is viewed and "Reorder" clicked, then two events
       reach the app through the app proxy and are stored; a forged post without a valid proxy
       signature is rejected
 - [ ] Given a test order by the demo customer after viewing the reminder, then the reminder card
@@ -102,7 +113,8 @@ spec puts that data to work in three places:
 - [ ] Given the Klaviyo flow on `Refill Due`, then the signed-in demo address receives the email
 - [ ] Without the key, the page shows Klaviyo as not connected and the webhook still succeeds
 - [ ] The app stores no customer email; events older than 90 days are deleted
-- [ ] Metafield access unchanged (`merchant_read`, no storefront or customer account access)
+- [ ] Metafield access: the three `$app.refill_*` definitions are `merchant_read`, with no
+      storefront or customer account access
 - [ ] Access scopes: only the ones this feature needs, listed below; protected data: email only
 - [ ] Every Admin GraphQL operation is typed by codegen and validated against the pinned API version
 - [ ] `npm run typecheck`, `npm run lint`, `npm test` and `npx react-router build` pass
@@ -110,10 +122,17 @@ spec puts that data to work in three places:
 
 ## Technical approach
 
+- `app/lib/refill/`: `orders.ts` keeps the variant ID on each purchase; `forecast.ts` picks the
+  last variant per species (pure, tested); `store.server.ts` writes the three metafields in one
+  `metafieldsSet`. Prisma: `RefillPurchase.variantId` (migration).
+- `shopify.app.toml`: `[customer.metafields.app.refill_variants]`, type
+  `list.variant_reference`.
 - `extensions/refill-radar/`: `blocks/refill-reminder.liquid` (schema with `enabled_on` for
-  index, product, collection, cart and page templates; `collection` settings per species),
+  index, product, collection, cart and page templates; heading setting only),
+  `snippets/refill-line.liquid` (one line, the reorder form posting to `routes.cart_add_url`),
   `assets/refill-reminder.css`, a small deferred `assets/refill-reminder.js` for the two events,
-  `locales/en.default.json`. Parsing the forecast JSON in Liquid, no API call.
+  `locales/en.default.json`. The forecast JSON and the variant references come resolved from
+  Liquid, no API call.
 - `extensions/refill-radar-pixel/`: `src/index.ts` with `register()` and
   `analytics.subscribe`, posting with `fetch` (`keepalive`) to the shop's proxy path.
 - `app/lib/refill/events.ts`: payload validation, days-left buckets and funnel counts (pure,
@@ -159,6 +178,8 @@ Access scopes added: `write_pixels`, `read_customer_events`. Protected customer 
   and the endpoint checks it against installed shops.
 - Custom events can be published from the browser console: the endpoint treats them as
   untrusted counts, never as orders or identities.
+- A variant deleted after the purchase drops out of the reference list; matching by species
+  (not by position) keeps the other lines right and that line falls back to no action.
 - Pixel settings must match the extension's settings schema; whether an empty schema is valid
   for `webPixelCreate` is checked first.
 - Klaviyo free plan limits (profiles and monthly sends) and sender verification may delay the
