@@ -84,24 +84,27 @@ spec puts that data to work in three places:
 
 **Out of scope**
 - Quantity and subscription choices on the reorder button (it adds one unit, one-time).
-- A daily scheduler for Klaviyo sends; Shopify Flow trigger; customer account UI extension.
+- A daily scheduler for Klaviyo sends, and running the initial load (and data backfills after a
+  schema change) automatically on install or deploy; both need background jobs, so they go
+  together in a later spec. Until then "Rebuild from orders" backfills by hand (idempotent).
+- Shopify Flow trigger; customer account UI extension.
 - Email marketing consent sync: consent lives in Klaviyo (a production store would also install
   Klaviyo's Shopify integration, whose profiles the events merge into by email).
 - Klaviyo templates and flows as code: the flow is built in Klaviyo and documented in the README.
 
 ## Acceptance criteria
 
-- [ ] Liquid in the block reads `customer.metafields["$app"].refill_run_out` and
+- [x] Liquid in the block reads `customer.metafields["$app"].refill_run_out` and
       `refill_forecast` with storefront access left at `none` (checked first, before the rest of
       the block)
-- [ ] After "Rebuild from orders", every demo customer with a forecast has
+- [x] After "Rebuild from orders", every demo customer with a forecast has
       `$app.refill_variants` holding the last dry-food variant bought per species
 - [ ] Given a logged-in demo customer with a dog forecast due in 3 days, then the block shows the
       bag bought, the run-out date and the basis, and "Reorder" adds that variant to the cart;
       given a logged-out visitor or a customer without a forecast, then it renders no markup
 - [ ] Given a sold-out variant, then the line links to the product instead of adding to the cart
-- [ ] Given a dog-and-cat home, then the block lists both species, earliest first
-- [ ] In the theme editor the block shows sample data and a single setting (heading)
+- [x] Given a dog-and-cat home, then the block lists both species, earliest first
+- [x] In the theme editor the block shows sample data and a single setting (heading)
 - [ ] Given analytics permission, when the block is viewed and "Reorder" clicked, then two events
       reach the app through the app proxy and are stored; a forged post without a valid proxy
       signature is rejected
