@@ -1,0 +1,16 @@
+mutation RefillDemoOrderCreate($order: OrderCreateOrderInput!, $options: OrderCreateOptionsInput) {
+  orderCreate(order: $order, options: $options) {
+    order {
+      id
+      name
+      processedAt
+      customer {
+        id
+      }
+    }
+    userErrors {
+      field
+      message
+    }
+  }
+}

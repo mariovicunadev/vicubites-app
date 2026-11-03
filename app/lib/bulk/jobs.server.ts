@@ -19,10 +19,10 @@ type AdminGraphql = AdminApiContext["graphql"];
 
 /**
  * What a job is for: a catalog CSV export or a Nutrition Data Health audit
- * (same query, different consumer), or a bulk fix (a mutation). New modules
- * add their own kind.
+ * (same query, different consumer), a bulk fix (a mutation) or a Refill Radar
+ * order load. New modules add their own kind.
  */
-export type BulkJobKind = "catalog" | "audit" | "fix";
+export type BulkJobKind = "catalog" | "audit" | "fix" | "refill";
 
 /** Fields of a bulk operation that a job mirrors, from GraphQL or the webhook. */
 export interface BulkOperationSnapshot {
