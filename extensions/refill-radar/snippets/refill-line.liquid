@@ -23,10 +23,11 @@
   assign run_out_s = run_out_on | date: '%s' | plus: 0
   assign days_left = run_out_s | minus: today_s | divided_by: 86400
 
+  # Escaped once here: the t filter already escapes the sample text.
   if sample
     assign bag_name = 'refill.sample_bag' | t
   elsif variant != blank
-    assign bag_name = variant.product.title | append: ' · ' | append: variant.title
+    assign bag_name = variant.product.title | append: ' · ' | append: variant.title | escape
   endif
 -%}
 <li class="vb-refill__item">
@@ -38,7 +39,7 @@
     {%- endif -%}
   </p>
   {%- if bag_name != blank -%}
-    <p class="vb-refill__bag">{{ bag_name | escape }}</p>
+    <p class="vb-refill__bag">{{ bag_name }}</p>
   {%- endif -%}
   <p class="vb-refill__basis">{{ basis_text }}</p>
   {%- if sample -%}
@@ -49,13 +50,13 @@
       <input type="hidden" name="quantity" value="1">
       <button type="submit" class="vb-refill__button" data-refill-species="{{ species | escape }}">
         {{- 'refill.reorder' | t -}}
-        <span class="vb-refill__hidden"> {{ bag_name | escape }}</span>
+        <span class="vb-refill__hidden"> {{ bag_name }}</span>
       </button>
     </form>
   {%- elsif variant != blank -%}
     <a class="vb-refill__link" href="{{ variant.product.url }}">
       {{- 'refill.view_product' | t -}}
-      <span class="vb-refill__hidden"> {{ bag_name | escape }}</span>
+      <span class="vb-refill__hidden"> {{ bag_name }}</span>
     </a>
   {%- endif -%}
 </li>
