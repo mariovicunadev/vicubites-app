@@ -2,10 +2,10 @@
 
 | Field     | Value |
 |-----------|-------|
-| Status    | In progress |
+| Status    | In review |
 | Branch    | `feature/008-refill-radar` |
 | Estimate  | 8–10 h · ~4.5–5.5 h (AI-assisted) · ~9–11 h manual |
-| Actual    | — |
+| Actual    | ~1.3 h |
 
 ## Goal
 
@@ -73,39 +73,48 @@ after that. This spec builds the data they read.
       *Result: denied (`ACCESS_DENIED`, "not approved to access the Customer object") until the
       app's distribution method was set to custom distribution for `vicubites.myshopify.com`;
       with it, level 1 access is available without a review and the query succeeds.*
-- [ ] The seed creates the demo customers and orders tagged `demo-refill-radar`, sends no
-      email, and running it twice creates no duplicates.
-- [ ] Given a customer with one order of a 7 kg dog bag, then the forecast's basis is
+- [x] The seed creates the demo customers and orders tagged `demo-refill-radar`, sends no
+      email, and running it twice creates no duplicates. *6 customers and 13 orders tagged; the
+      second run skipped the 5 orders the throttled first run had created.*
+- [x] Given a customer with one order of a 7 kg dog bag, then the forecast's basis is
       "estimate" and the days of food follow the formula above.
-- [ ] Given a customer with three orders of the same species, then the basis is "cadence" and
+- [x] Given a customer with three orders of the same species, then the basis is "cadence" and
       the days of food are the median interval.
-- [ ] Given a dog-and-cat home, then there are two forecasts and `refill_run_out` holds the
+- [x] Given a dog-and-cat home, then there are two forecasts and `refill_run_out` holds the
       earliest date.
-- [ ] Orders with only wet food or treats, B2B orders and orders without a customer create no
+- [x] Orders with only wet food or treats, B2B orders and orders without a customer create no
       forecast.
-- [ ] "Rebuild from orders" runs one bulk operation and, when it finishes, every demo customer
-      has a forecast in the app and the two metafields on the customer.
-- [ ] Given a new order for a demo customer, when `orders/create` arrives, then that customer's
+- [x] "Rebuild from orders" runs one bulk operation and, when it finishes, every demo customer
+      has a forecast in the app and the two metafields on the customer. *28 objects (13 orders,
+      15 line items) → 12 purchases, 6 forecasts for 5 customers; the wet-food buyer has none.
+      Dog-and-cat home: `refill_run_out` = the dog's date.*
+- [x] Given a new order for a demo customer, when `orders/create` arrives, then that customer's
       forecast and metafields update; a repeated delivery of the same webhook changes nothing.
-- [ ] The Refill Radar page lists due-soon customers first, links each to the admin and never
+      *Seed `--webhook-test`: the customer went from estimate (29 days) to cadence (20 days).
+      Recording the same order twice more left the purchases identical.*
+- [x] The Refill Radar page lists due-soon customers first, links each to the admin and never
       shows names or emails.
-- [ ] Access scopes: `read_orders` and `write_customers` only (to confirm with the validator),
-      declared in `shopify.app.toml`; no level 2 fields in any query.
-- [ ] Every Admin GraphQL operation is typed by codegen and validated against the pinned API version
-- [ ] `npm run typecheck`, `npm run lint`, `npm test` and `npx react-router build` pass
+- [x] Access scopes: `read_orders` and `write_customers` only (the validator lists
+      `read_customers` for the order's customer, included in `write_customers`), declared in
+      `shopify.app.toml`; no level 2 fields in any query.
+- [x] Every Admin GraphQL operation is typed by codegen and validated against the pinned API version
+- [x] `npm run typecheck`, `npm run lint`, `npm test` and `npx react-router build` pass (103 tests)
 
 ## Technical approach
 
 - `app/lib/refill/forecast.ts`: pure functions (bag grams from the option value, days of food,
   median interval, run-out date, due-soon), unit tested with Vitest.
-- `app/lib/refill/orders.server.ts`: one typed order shape (`RefillOrder`) built from both the
-  bulk JSONL rows and the single-order query, so the webhook and the bulk load share one parser.
+- `app/lib/refill/orders.ts`: one order shape (`OrderData`) built from both the bulk JSONL rows
+  and the single-order query, so the webhook and the bulk load share one parser; it turns an
+  order into purchases (dry food per species, in kcal).
 - `app/lib/refill/store.server.ts`: Prisma upserts and the metafield write (`metafieldsSet` on
   the customer, both keys in one call).
-- Prisma models: `RefillOrder` (shop, order ID unique, customer ID, processed at, species,
-  grams, kcal) and `RefillForecast` (shop, customer ID, species unique together, run-out date,
-  basis, days of food).
-- Bulk: a new job kind in the existing engine; `bulk_operations/finish` dispatches by kind.
+- `app/lib/refill/view.ts`: table rows (days left, due label, tone), unit tested.
+- Prisma models: `RefillPurchase` (shop, order ID and species unique together, customer ID,
+  processed at, kcal) and `RefillForecast` (shop, customer ID and species unique together,
+  run-out date, basis, days of food).
+- Bulk: a new `refill` job kind in the existing engine. Like the audit, the page consumes the
+  completed operation on load (claimed once with a conditional update).
 - Webhook route `webhooks.orders.create.tsx`, subscribed in `shopify.app.toml`.
 - Metafield definitions declared in `shopify.app.toml` (`[customer.metafields.app.refill_run_out]`,
   `[customer.metafields.app.refill_forecast]`); storefront access is decided in spec 009.

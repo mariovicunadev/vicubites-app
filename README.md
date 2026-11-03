@@ -11,7 +11,7 @@ It runs inside the Shopify admin as a custom app for the brand's store.
 | Module | Problem | Status |
 |---|---|---|
 | **Nutrition Data Health** | Pet food listings need complete nutrition data (guaranteed analysis, ingredients, feeding guide), accessible images and B2B catalog coverage. Gaps hurt search filters, SEO and wholesale buyers, and the admin has no single view of them. The module scores every product, flags what's missing and fixes it in bulk. | In development |
-| **Refill Radar** | Food runs out on a predictable schedule, but one-time buyers who aren't reminded often reorder elsewhere. The module predicts each customer's run-out date from bag size and daily portion (or their real reorder cadence) and triggers reminders through Shopify Flow and Klaviyo. | Planned |
+| **Refill Radar** | Food runs out on a predictable schedule, but one-time buyers who aren't reminded often reorder elsewhere. The module predicts each customer's run-out date from bag size and daily portion (or their real reorder cadence) and triggers reminders through Shopify Flow and Klaviyo. | In development: forecast, initial load, `orders/create` webhook and admin page done |
 
 ### Why an app
 
@@ -63,7 +63,13 @@ returned. Re-authentication redirects (a thrown `Response`) pass through untouch
 
 **Least privilege.** Each feature adds only the access scopes it needs. Current scopes:
 `read_products`, `write_products` (bulk fixes of nutrition metafields), `read_metaobject_definitions`,
-`read_publications` (B2B catalog coverage).
+`read_publications` (B2B catalog coverage), `read_orders` and `write_customers` (Refill Radar
+reads orders and stores the forecast on the customer).
+
+**Protected customer data.** Refill Radar reads only level 1 data: the order's customer ID, never
+a name, email or address, so the admin page shows customers by ID and links to them. The app uses
+custom distribution, which makes levels 1 and 2 available without a review. `read_orders` covers
+the last 60 days of orders; a store with a longer history would add `read_all_orders`.
 
 ## Getting started
 
