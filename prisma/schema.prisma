@@ -157,3 +157,21 @@ model RefillReminder {
 
   @@unique([shop, customerId, species, runOutOn, channel])
 }
+
+// One row per Shopify B2B object synced to HubSpot (spec 010). Contacts are
+// keyed by their CompanyContact GID: the app never stores their email.
+model CrmSyncRecord {
+  id         String   @id @default(cuid())
+  shop       String
+  // COMPANY or CONTACT
+  objectType String
+  shopifyId  String
+  hubspotId  String?
+  // SYNCED or FAILED
+  status     String
+  error      String?
+  syncedAt   DateTime @default(now())
+
+  @@unique([shop, objectType, shopifyId])
+  @@index([shop, syncedAt])
+}

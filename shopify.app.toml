@@ -29,6 +29,10 @@ api_version = "2026-10"
   uri = "/webhooks/orders/create"
   topics = [ "orders/create" ]
 
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/companies"
+  topics = [ "companies/create", "companies/update", "company_contacts/create", "company_contacts/update" ]
+
 # Refill Radar forecast, owned by the app ($app namespace). Merchants can read
 # it on the customer; storefront and customer account access come with the
 # surfaces that need them.

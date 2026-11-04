@@ -21,6 +21,7 @@ export default function App() {
         <s-link href="/app">Home</s-link>
         <s-link href="/app/health">Data health</s-link>
         <s-link href="/app/refill">Refill Radar</s-link>
+        <s-link href="/app/b2b-crm">B2B CRM</s-link>
         <s-link href="/app/exports">Exports</s-link>
       </s-app-nav>
       <Outlet />
