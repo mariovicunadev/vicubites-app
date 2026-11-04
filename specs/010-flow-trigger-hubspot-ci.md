@@ -121,7 +121,7 @@ contact's email address. No addresses, phone numbers, orders or prices.
 
 - **Flow trigger:** `extensions/refill-due-trigger/shopify.extension.toml`
   (`type = "flow_trigger"`, `handle = "refill-due"`). `app/lib/flow/` holds a pure
-  `refillDuePayload()` builder (tested) and `fireFlowTrigger()`, which calls `flowTriggerReceive`
+  `refillDuePayload()` builder (tested) and `fireRefillDue()`, which calls `flowTriggerReceive`
   through `adminGraphql()` and `assertNoUserErrors()`. The customer reference is sent as the
   numeric customer ID.
 - **Reminder channels:** `sendDueReminders()` becomes a dispatcher over two channels, `KLAVIYO`
@@ -132,9 +132,12 @@ contact's email address. No addresses, phone numbers, orders or prices.
 - **HubSpot:** `app/lib/hubspot/client.server.ts` (fetch with retries, token from the
   environment), `app/lib/hubspot/mappers.ts` (pure, tested), `app/lib/hubspot/sync.server.ts`
   (reads companies and contacts through GraphQL, upserts in batches, records results).
-  Endpoints: `POST /crm/v3/objects/companies/batch/upsert` with `idProperty: shopify_company_id`,
-  `POST /crm/v3/objects/contacts/batch/upsert` with `idProperty: email`, and the associations
-  API for contact → company. A `CrmSyncRecord` Prisma model keeps one row per Shopify object
+  HubSpot's CRM API is date-versioned (`2026-09` in the path): `POST
+  /crm/objects/2026-09/companies/batch/upsert` with `idProperty: shopify_company_id`,
+  `POST /crm/objects/2026-09/contacts/batch/upsert` with `idProperty: email`, and
+  `POST /crm/associations/2026-09/contact/company/batch/associate/default` (unlabeled
+  association, so no association type ID is hard-coded). The property is created once with
+  `POST /crm/properties/2026-09/companies` in the `companyinformation` group. A `CrmSyncRecord` Prisma model keeps one row per Shopify object
   (HubSpot ID, status, error, synced at).
 - **HubSpot app (owner):** a developer platform app with static auth and private distribution,
   scopes `crm.objects.companies.read`/`write`, `crm.objects.contacts.read`/`write` and
@@ -163,10 +166,11 @@ Access scopes added: none.
 
 ## Risks and open questions
 
-- `flowTriggerReceive` behaviour when the shop has no enabled workflow for the trigger: confirmed
-  during implementation (expected: accepted with no run).
-- Contact upsert by email does not support partial upserts: every contact upsert sends the full
-  (minimal) property set.
-- The contact → company association type ID is confirmed in the associations API before use.
-- The demo store has one B2B company; contacts may need to be added as tagged demo data
-  (announced to the owner first).
+- Resolved: `flowTriggerReceive` returns no user errors whether or not the shop has an enabled
+  workflow for the trigger.
+- Resolved: contacts are upserted by email with the full (minimal) property set, as partial
+  upserts by email aren't supported.
+- Resolved: default (unlabeled) associations need no association type ID.
+- Resolved: the demo company already had one contact with an email; no demo data was added.
+- Open: contacts beyond the first 50 per company are not read; larger accounts would paginate
+  them, and a catalog of thousands of companies would move to HubSpot's import API.
