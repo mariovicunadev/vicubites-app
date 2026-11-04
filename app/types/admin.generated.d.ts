@@ -52,6 +52,14 @@ export type FixChoiceDefinitionsQuery = { metafieldDefinitions: { nodes: Array<(
       & { validations: Array<Pick<AdminTypes.MetafieldDefinitionValidation, 'name' | 'value'>> }
     )> } };
 
+export type FlowTriggerRefillDueMutationVariables = AdminTypes.Exact<{
+  handle: AdminTypes.Scalars['String']['input'];
+  payload: AdminTypes.Scalars['JSON']['input'];
+}>;
+
+
+export type FlowTriggerRefillDueMutation = { flowTriggerReceive?: AdminTypes.Maybe<{ userErrors: Array<Pick<AdminTypes.UserError, 'field' | 'message'>> }> };
+
 export type B2bCatalogsQueryVariables = AdminTypes.Exact<{ [key: string]: never; }>;
 
 
@@ -150,6 +158,7 @@ interface GeneratedMutationTypes {
   "#graphql\n  mutation runBulkQuery($query: String!) {\n    bulkOperationRunQuery(query: $query) {\n      bulkOperation {\n        id\n        status\n        createdAt\n      }\n      userErrors {\n        field\n        message\n        code\n      }\n    }\n  }\n": {return: RunBulkQueryMutation, variables: RunBulkQueryMutationVariables},
   "#graphql\n  mutation stageBulkVariables {\n    stagedUploadsCreate(\n      input: {\n        resource: BULK_MUTATION_VARIABLES\n        filename: \"variables.jsonl\"\n        mimeType: \"text/jsonl\"\n        httpMethod: POST\n      }\n    ) {\n      stagedTargets {\n        url\n        parameters {\n          name\n          value\n        }\n      }\n      userErrors {\n        field\n        message\n      }\n    }\n  }\n": {return: StageBulkVariablesMutation, variables: StageBulkVariablesMutationVariables},
   "#graphql\n  mutation runBulkMutation($mutation: String!, $stagedUploadPath: String!) {\n    bulkOperationRunMutation(mutation: $mutation, stagedUploadPath: $stagedUploadPath) {\n      bulkOperation {\n        id\n        status\n        createdAt\n      }\n      userErrors {\n        field\n        message\n        code\n      }\n    }\n  }\n": {return: RunBulkMutationMutation, variables: RunBulkMutationMutationVariables},
+  "#graphql\n  mutation flowTriggerRefillDue($handle: String!, $payload: JSON!) {\n    flowTriggerReceive(handle: $handle, payload: $payload) {\n      userErrors {\n        field\n        message\n      }\n    }\n  }\n": {return: FlowTriggerRefillDueMutation, variables: FlowTriggerRefillDueMutationVariables},
   "#graphql\n  mutation refillPixelCreate($settings: JSON!) {\n    webPixelCreate(webPixel: { settings: $settings }) {\n      webPixel {\n        id\n      }\n      userErrors {\n        code\n        field\n        message\n      }\n    }\n  }\n": {return: RefillPixelCreateMutation, variables: RefillPixelCreateMutationVariables},
   "#graphql\n  mutation refillPixelUpdate($id: ID!, $settings: JSON!) {\n    webPixelUpdate(id: $id, webPixel: { settings: $settings }) {\n      webPixel {\n        id\n      }\n      userErrors {\n        code\n        field\n        message\n      }\n    }\n  }\n": {return: RefillPixelUpdateMutation, variables: RefillPixelUpdateMutationVariables},
   "#graphql\n  mutation refillMetafieldsSet($metafields: [MetafieldsSetInput!]!) {\n    metafieldsSet(metafields: $metafields) {\n      metafields {\n        key\n      }\n      userErrors {\n        field\n        message\n      }\n    }\n  }\n": {return: RefillMetafieldsSetMutation, variables: RefillMetafieldsSetMutationVariables},

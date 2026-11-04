@@ -1,0 +1,29 @@
+# Fired by the app when a customer's dry food is due to run out (Refill Radar).
+# Payload keys must match the field keys below; the customer reference arrives as `customer_id`.
+[[extensions]]
+name = "Refill due"
+handle = "refill-due"
+type = "flow_trigger"
+uid = "02b2b573-862f-4a2b-a031-be565a58ebbf52fa263b"
+description = "A customer's dry food is due to run out within 14 days, or already has."
+
+[settings]
+
+  [[settings.fields]]
+  type = "customer_reference"
+
+  [[settings.fields]]
+  type = "single_line_text_field"
+  key = "Species"
+
+  [[settings.fields]]
+  type = "single_line_text_field"
+  key = "Run out date"
+
+  [[settings.fields]]
+  type = "number_decimal"
+  key = "Days left"
+
+  [[settings.fields]]
+  type = "single_line_text_field"
+  key = "Forecast basis"
