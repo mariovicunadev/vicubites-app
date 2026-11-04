@@ -124,12 +124,16 @@ spec puts that data to work in three places:
       (verified with the flow's test send on the demo profile's event; the events sent before the
       flow existed don't re-trigger it, by design of `unique_id`)
 - [x] Without the key, the page shows Klaviyo as not connected and the webhook still succeeds
-- [ ] The app stores no customer email; events older than 90 days are deleted
-- [ ] Metafield access: the three `$app.refill_*` definitions are `merchant_read`, with no
+- [x] The app stores no customer email; events older than 90 days are deleted (checked on the
+      development database: a 91-day-old event is removed on the next write, an 89-day-old one
+      stays; no app table holds an email)
+- [x] Metafield access: the three `$app.refill_*` definitions are `merchant_read`, with no
       storefront or customer account access
-- [ ] Access scopes: only the ones this feature needs, listed below; protected data: email only
-- [ ] Every Admin GraphQL operation is typed by codegen and validated against the pinned API version
-- [ ] `npm run typecheck`, `npm run lint`, `npm test` and `npx react-router build` pass
+- [x] Access scopes: only the ones this feature needs, listed below; protected data: email only
+      (the installation holds the configured scopes plus the implied `read_customers` and
+      `read_pixels`; the app reads `defaultEmailAddress` only, the pixel no customer fields)
+- [x] Every Admin GraphQL operation is typed by codegen and validated against the pinned API version
+- [x] `npm run typecheck`, `npm run lint`, `npm test` and `npx react-router build` pass
 - [ ] One axe pass on a storefront page with the block (text checks for the rest)
 
 ## Technical approach
