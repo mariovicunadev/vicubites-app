@@ -26,10 +26,12 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   if (purchases.length > 0) {
     const forecasts = await refreshCustomer(admin.graphql, shop, order.customerId);
     console.info(`${topic} ${orderId}: ${forecasts.length} forecast(s) for ${order.customerId}`);
-    // Reminders are best effort: a Klaviyo outage must not fail the webhook (Shopify would retry it).
+    // Reminders are best effort: a Klaviyo or Flow outage must not fail the webhook (Shopify would retry it).
     try {
-      const run = await sendDueReminders(admin.graphql, shop, { customerId: order.customerId });
-      if (run.sent + run.failed > 0) console.info(`${topic} ${orderId}: reminders sent ${run.sent}, failed ${run.failed}`);
+      const runs = await sendDueReminders(admin.graphql, shop, { customerId: order.customerId });
+      for (const [channel, run] of Object.entries(runs)) {
+        if (run && run.sent + run.failed > 0) console.info(`${topic} ${orderId}: ${channel} reminders sent ${run.sent}, failed ${run.failed}`);
+      }
     } catch (error) {
       console.error(`${topic} ${orderId}: reminders not sent`, error instanceof Error ? error.message : error);
     }

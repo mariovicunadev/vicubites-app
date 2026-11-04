@@ -14,7 +14,7 @@ import { FUNNEL_DAYS } from "../lib/refill/events";
 import { loadReminderMetrics } from "../lib/refill/events.server";
 import { DUE_SOON_DAYS, REFERENCE_DAILY_KCAL } from "../lib/refill/forecast";
 import { connectRefillPixel, findRefillPixel, syncRefillPixel } from "../lib/refill/pixel.server";
-import { loadReminderStatus, sendDueReminders } from "../lib/refill/reminders.server";
+import { loadReminderStatus, sendDueReminders, type ChannelStatus } from "../lib/refill/reminders.server";
 import { loadForecasts, processLatestRefillLoad, startRefillLoad } from "../lib/refill/store.server";
 import { toRefillRow, type RefillRow } from "../lib/refill/view";
 import { authenticate } from "../shopify.server";
@@ -53,7 +53,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     later: rows.filter((row) => !row.dueSoon),
     pixelConnected,
     funnel: await loadReminderMetrics(session.shop),
-    klaviyo: await loadReminderStatus(session.shop),
+    reminders: await loadReminderStatus(session.shop),
   };
 };
 
@@ -62,7 +62,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const intent = (await request.formData()).get("intent");
   try {
     if (intent === "connect-pixel") await connectRefillPixel(admin.graphql, process.env.SHOPIFY_APP_URL ?? "");
-    else if (intent === "send-reminders") return { error: null, run: await sendDueReminders(admin.graphql, session.shop) };
+    else if (intent === "send-reminders") return { error: null, runs: await sendDueReminders(admin.graphql, session.shop) };
     else await startRefillLoad(admin.graphql, session.shop);
     return { error: null };
   } catch (error) {
@@ -72,11 +72,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 };
 
 export default function RefillRadar() {
-  const { load, dueSoon, later, pixelConnected, funnel, klaviyo, error: loadError } = useLoaderData<typeof loader>();
+  const { load, dueSoon, later, pixelConnected, funnel, reminders, error: loadError } = useLoaderData<typeof loader>();
   const fetcher = useFetcher<typeof action>();
   const pixelFetcher = useFetcher<typeof action>();
   const reminderFetcher = useFetcher<typeof action>();
-  const run = reminderFetcher.data && "run" in reminderFetcher.data ? reminderFetcher.data.run : null;
+  const runs = reminderFetcher.data && "runs" in reminderFetcher.data ? reminderFetcher.data.runs : null;
   const revalidator = useRevalidator();
   const running = fetcher.state !== "idle" || Boolean(load?.running);
   const error = fetcher.data?.error ?? pixelFetcher.data?.error ?? reminderFetcher.data?.error ?? loadError;
@@ -170,35 +170,36 @@ export default function RefillRadar() {
               </s-text>
             </s-stack>
           </s-section>
-          <s-section heading="Klaviyo reminders">
+          <s-section heading="Reminders">
             <s-stack direction="block" gap="base">
               <s-stack direction="inline" gap="small-200">
-                <s-badge tone={klaviyo.connected ? "success" : "warning"}>
-                  {klaviyo.connected ? "Klaviyo connected" : "Klaviyo not connected"}
+                <s-badge tone={reminders.KLAVIYO.connected ? "success" : "warning"}>
+                  {reminders.KLAVIYO.connected ? "Klaviyo connected" : "Klaviyo not connected"}
                 </s-badge>
-                {klaviyo.connected && (
-                  <s-button
-                    onClick={() => reminderFetcher.submit({ intent: "send-reminders" }, { method: "post" })}
-                    {...(reminderFetcher.state !== "idle" ? { disabled: true } : {})}
-                  >
-                    Send due reminders
-                  </s-button>
-                )}
+                <s-badge tone="success">Flow trigger on</s-badge>
+                <s-button
+                  onClick={() => reminderFetcher.submit({ intent: "send-reminders" }, { method: "post" })}
+                  {...(reminderFetcher.state !== "idle" ? { disabled: true } : {})}
+                >
+                  Send due reminders
+                </s-button>
               </s-stack>
-              {run && (
+              {runs && (
                 <s-paragraph>
-                  Sent {run.sent} · already sent {run.skipped} · failed {run.failed}.
+                  {runs.KLAVIYO
+                    ? `Klaviyo: sent ${runs.KLAVIYO.sent} · already sent ${runs.KLAVIYO.skipped} · failed ${runs.KLAVIYO.failed}. `
+                    : ""}
+                  Flow: sent {runs.FLOW?.sent ?? 0} · already sent {runs.FLOW?.skipped ?? 0} · failed{" "}
+                  {runs.FLOW?.failed ?? 0}.
                 </s-paragraph>
               )}
-              <s-paragraph>
-                {klaviyo.lastSentAt
-                  ? `Reminders sent: ${klaviyo.sent} · failed: ${klaviyo.failed} · last run ${klaviyo.lastSentAt.slice(0, 16).replace("T", " ")} UTC.`
-                  : "No reminder sent yet."}
-              </s-paragraph>
+              <s-paragraph>Klaviyo: {channelSummary(reminders.KLAVIYO)}</s-paragraph>
+              <s-paragraph>Flow: {channelSummary(reminders.FLOW)}</s-paragraph>
               <s-text color="subdued">
-                {klaviyo.connected
-                  ? `Every forecast due within ${DUE_SOON_DAYS} days becomes one "Refill Due" event in Klaviyo, once per run-out date, after each order and each rebuild. A Klaviyo flow on that event sends the email.`
-                  : "Set KLAVIYO_PRIVATE_KEY (scope events:write) in the app's environment to send a \"Refill Due\" event for each customer who is due soon."}
+                {`Every forecast due within ${DUE_SOON_DAYS} days is delivered once per run-out date on each channel, after each order and on demand. Flow: the "Refill due" trigger starts the store's own workflows. Klaviyo: one "Refill Due" event, which a Klaviyo flow turns into an email.`}
+                {reminders.KLAVIYO.connected
+                  ? ""
+                  : " Set KLAVIYO_PRIVATE_KEY (scope events:write) in the app's environment to send Klaviyo events."}
               </s-text>
             </s-stack>
           </s-section>
@@ -254,3 +255,9 @@ function ForecastTable({ rows }: { rows: RefillRow[] }) {
 export const headers: HeadersFunction = (headersArgs) => {
   return boundary.headers(headersArgs);
 };
+
+function channelSummary({ lastSentAt, sent, failed }: ChannelStatus): string {
+  return lastSentAt
+    ? `sent ${sent} · failed ${failed} · last run ${lastSentAt.slice(0, 16).replace("T", " ")} UTC.`
+    : "nothing sent yet.";
+}

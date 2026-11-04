@@ -148,10 +148,12 @@ model RefillReminder {
   customerId String
   species    String
   runOutOn   String
+  // KLAVIYO or FLOW: each channel is deduplicated on its own
+  channel    String   @default("KLAVIYO")
   // SENT or FAILED
   status     String
   error      String?
   sentAt     DateTime @default(now())
 
-  @@unique([shop, customerId, species, runOutOn])
+  @@unique([shop, customerId, species, runOutOn, channel])
 }
