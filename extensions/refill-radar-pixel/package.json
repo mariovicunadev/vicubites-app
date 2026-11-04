@@ -1,0 +1,9 @@
+{
+  "name": "refill-radar-pixel",
+  "private": true,
+  "version": "1.0.0",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@shopify/web-pixels-extension": "^2.10.0"
+  }
+}

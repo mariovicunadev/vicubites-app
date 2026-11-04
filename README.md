@@ -11,7 +11,7 @@ It runs inside the Shopify admin as a custom app for the brand's store.
 | Module | Problem | Status |
 |---|---|---|
 | **Nutrition Data Health** | Pet food listings need complete nutrition data (guaranteed analysis, ingredients, feeding guide), accessible images and B2B catalog coverage. Gaps hurt search filters, SEO and wholesale buyers, and the admin has no single view of them. The module scores every product, flags what's missing and fixes it in bulk. | In development |
-| **Refill Radar** | Food runs out on a predictable schedule, but one-time buyers who aren't reminded often reorder elsewhere. The module predicts each customer's run-out date from bag size and daily portion (or their real reorder cadence) and triggers reminders through Shopify Flow and Klaviyo. | In development: forecast, initial load, `orders/create` webhook and admin page done |
+| **Refill Radar** | Food runs out on a predictable schedule, but one-time buyers who aren't reminded often reorder elsewhere. The module predicts each customer's run-out date from bag size and daily portion (or their real reorder cadence) and triggers reminders through Shopify Flow and Klaviyo. | In development: forecast, webhook, admin page, storefront reminder, web pixel and Klaviyo events done |
 
 ### Why an app
 
@@ -64,12 +64,59 @@ returned. Re-authentication redirects (a thrown `Response`) pass through untouch
 **Least privilege.** Each feature adds only the access scopes it needs. Current scopes:
 `read_products`, `write_products` (bulk fixes of nutrition metafields), `read_metaobject_definitions`,
 `read_publications` (B2B catalog coverage), `read_orders` and `write_customers` (Refill Radar
-reads orders and stores the forecast on the customer).
+reads orders and stores the forecast on the customer), `write_pixels` and `read_customer_events`
+(Refill Radar's web pixel).
 
-**Protected customer data.** Refill Radar reads only level 1 data: the order's customer ID, never
-a name, email or address, so the admin page shows customers by ID and links to them. The app uses
-custom distribution, which makes levels 1 and 2 available without a review. `read_orders` covers
+**Protected customer data.** Refill Radar works on the order's customer ID (level 1). The one
+level 2 field it reads is the email of a customer who is due soon, at send time, to address the
+Klaviyo event; the app never stores it, so the admin page shows customers by ID and links to
+them. The app uses custom distribution, which makes levels 1 and 2 available without a review. `read_orders` covers
 the last 60 days of orders; a store with a longer history would add `read_all_orders`.
+
+## Refill Radar
+
+**Forecast.** Each dry food order (initial load from order history, then the `orders/create`
+webhook) updates one forecast per customer and species: from bag size and daily portion, or from
+the customer's real reorder cadence when their history shows one. The forecast is stored in the
+app database and in three app-owned customer metafields (`$app.refill_run_out`,
+`$app.refill_forecast`, `$app.refill_variants`), readable by the admin only.
+
+**Storefront reminder.** A theme app extension block (`extensions/refill-radar/`) shows a
+signed-in customer when each pet's food is expected to run out, the bag they last bought and a
+"Reorder" button that adds that variant to the cart. Liquid reads the app-owned metafields
+directly (no API call, no storefront access on the definitions). Visitors who aren't signed in,
+and customers without a forecast, get no markup; a sold-out bag links to its product instead.
+
+**Measurement in two layers.**
+
+| Layer | Source | What it counts | Limit |
+|---|---|---|---|
+| Reminder funnel | Web pixel (`extensions/refill-radar-pixel/`) posting to `/pixel/refill/events` | Reminder views, "Reorder" clicks, completed checkouts after a view | A minimum, never a total: the pixel runs only with analytics consent, and content blockers block its sandbox |
+| Reorders | `orders/create` webhook | Dry food reorders from returning customers | Counts every order, but doesn't know whether the customer saw the reminder |
+
+The admin page shows both for the last 30 days. Pixel events are untrusted counts (anyone can
+publish one from a browser console): never used as orders or identities, and deleted after 90
+days. The reminder itself (block, "Reorder", forecast updates, Klaviyo sends) runs on Liquid and
+webhooks, so blockers don't affect it; the app doesn't try to work around them.
+
+**Klaviyo.** For every forecast due within 14 days, the app sends a `Refill Due` event through
+Klaviyo's Create Event API (on each order webhook, and from "Send due reminders" on the admin
+page). The event carries the customer's email and the forecast (`species`, `run_out_on`,
+`days_left`, `basis`, `days_of_food`), with a `unique_id` built from customer, species and
+run-out date, so a resend never duplicates the event and a new forecast creates a new one. A
+Klaviyo flow triggered by the `Refill Due` metric sends the email; content and timing live in
+Klaviyo, where marketing can change them without a deploy. The demo flow allows re-entry (one
+email per forecast), turns off Smart Sending and adds UTM tracking. Without
+`KLAVIYO_PRIVATE_KEY` the admin page shows Klaviyo as not connected and the webhook still
+succeeds.
+
+A production setup would also:
+- send from the brand's own domain, authenticated with SPF, DKIM and DMARC (a free mailbox
+  address as sender lands in spam);
+- install Klaviyo's Shopify integration, so these events merge into profiles that carry email
+  consent;
+- run the due-soon check on a schedule: today a forecast that becomes due without a new order
+  waits for the next manual send.
 
 ## Getting started
 
@@ -80,6 +127,9 @@ development store.
 npm install
 shopify app dev          # links the app, starts a tunnel and opens it in the admin
 ```
+
+Optional: `KLAVIYO_PRIVATE_KEY` in `.env` at the app root (a Klaviyo private API key with
+`events:write`) turns on the Klaviyo events.
 
 | Script | What it does |
 |---|---|

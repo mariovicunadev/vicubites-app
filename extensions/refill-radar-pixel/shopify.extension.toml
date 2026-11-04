@@ -1,0 +1,25 @@
+name = "refill-radar-pixel"
+type = "web_pixel_extension"
+uid = "05e76219-0263-b967-f782-eba95a0f1defd456ce4f"
+
+runtime_context = "strict"
+
+# Loads only with analytics permission. It measures reminders for the merchant:
+# no ads, no personalization, no data sale, and no customer fields are read.
+[customer_privacy]
+analytics = true
+marketing = false
+preferences = false
+sale_of_data = "disabled"
+
+[settings]
+type = "object"
+
+# Set and kept current by the app: the URL of its pixel endpoint.
+[settings.fields.endpoint]
+name = "Endpoint"
+description = "App URL that receives the reminder events."
+type = "single_line_text_field"
+validations = [
+  { name = "min", value = "1" }
+]

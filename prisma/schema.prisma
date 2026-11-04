@@ -99,6 +99,8 @@ model RefillPurchase {
   orderId     String
   species     String
   kcal        Float
+  // Main dry food variant of the purchase, for the storefront reorder button.
+  variantId   String?
   processedAt DateTime
 
   @@unique([shop, orderId, species])
@@ -120,4 +122,36 @@ model RefillForecast {
 
   @@unique([shop, customerId, species])
   @@index([shop, runOutOn])
+}
+
+// Storefront reminder events from the Refill Radar web pixel. No customer
+// identity: the browser's client ID links a reminder to a later checkout.
+model RefillEvent {
+  id        String   @id @default(cuid())
+  shop      String
+  clientId  String
+  // reminder_viewed, reminder_clicked or checkout_completed
+  name      String
+  species   String?
+  bucket    String?
+  // Numeric order ID, on checkout_completed only.
+  orderId   String?
+  createdAt DateTime @default(now())
+
+  @@index([shop, createdAt])
+}
+
+// One Klaviyo `Refill Due` send per customer, species and run-out date.
+model RefillReminder {
+  id         String   @id @default(cuid())
+  shop       String
+  customerId String
+  species    String
+  runOutOn   String
+  // SENT or FAILED
+  status     String
+  error      String?
+  sentAt     DateTime @default(now())
+
+  @@unique([shop, customerId, species, runOutOn])
 }

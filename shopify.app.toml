@@ -8,7 +8,7 @@ name = "vicubites-app"
 [access_scopes]
 # Least privilege: each feature adds only the scopes it needs.
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "read_products,write_products,read_metaobject_definitions,read_publications,read_orders,write_customers"
+scopes = "read_products,write_products,read_metaobject_definitions,read_publications,read_orders,write_customers,write_pixels,read_customer_events"
 
 [webhooks]
 api_version = "2026-10"
@@ -42,6 +42,12 @@ access.admin = "merchant_read"
 type = "json"
 name = "Refill forecast"
 description = "Refill Radar forecast per species: basis, days of food, last order and run-out dates."
+access.admin = "merchant_read"
+
+[customer.metafields.app.refill_variants]
+type = "list.variant_reference"
+name = "Refill last bags"
+description = "Last dry food variant bought per species, for the storefront reorder button (Refill Radar)."
 access.admin = "merchant_read"
 
 [auth]

@@ -22,6 +22,8 @@ export interface Purchase {
   processedAt: string;
   species: Species;
   kcal: number;
+  /** The main dry food variant bought for this species, if it still existed. */
+  variantId: string | null;
 }
 
 export interface Forecast {
@@ -114,6 +116,20 @@ export function forecastCustomer(purchases: Purchase[]): Forecast[] {
     .map(forecastSpecies)
     .filter((forecast): forecast is Forecast => forecast !== null)
     .sort((a, b) => a.runOutOn.localeCompare(b.runOutOn));
+}
+
+/**
+ * The variant of each species' latest purchase that has one, for the
+ * storefront's reorder button. One ID per species, in no particular order.
+ */
+export function lastVariants(purchases: Purchase[]): string[] {
+  const latest = new Map<Species, Purchase>();
+  for (const purchase of purchases) {
+    if (!purchase.variantId) continue;
+    const current = latest.get(purchase.species);
+    if (!current || purchase.processedAt > current.processedAt) latest.set(purchase.species, purchase);
+  }
+  return [...latest.values()].map((purchase) => purchase.variantId as string);
 }
 
 export function daysLeft(forecast: Pick<Forecast, "runOutOn">, today: string): number {

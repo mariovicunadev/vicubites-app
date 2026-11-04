@@ -1,5 +1,6 @@
 import type { ActionFunctionArgs } from "react-router";
 
+import { sendDueReminders } from "../lib/refill/reminders.server";
 import { fetchOrder, recordOrder, refreshCustomer } from "../lib/refill/store.server";
 import { authenticate } from "../shopify.server";
 
@@ -25,6 +26,13 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   if (purchases.length > 0) {
     const forecasts = await refreshCustomer(admin.graphql, shop, order.customerId);
     console.info(`${topic} ${orderId}: ${forecasts.length} forecast(s) for ${order.customerId}`);
+    // Reminders are best effort: a Klaviyo outage must not fail the webhook (Shopify would retry it).
+    try {
+      const run = await sendDueReminders(admin.graphql, shop, { customerId: order.customerId });
+      if (run.sent + run.failed > 0) console.info(`${topic} ${orderId}: reminders sent ${run.sent}, failed ${run.failed}`);
+    } catch (error) {
+      console.error(`${topic} ${orderId}: reminders not sent`, error instanceof Error ? error.message : error);
+    }
   }
   return new Response();
 };
