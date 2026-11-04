@@ -166,11 +166,11 @@ Access scopes added: none.
 
 ## Risks and open questions
 
-- Resolved: `flowTriggerReceive` returns no user errors whether or not the shop has an enabled
-  workflow for the trigger.
 - Resolved: contacts are upserted by email with the full (minimal) property set, as partial
   upserts by email aren't supported.
 - Resolved: default (unlabeled) associations need no association type ID.
 - Resolved: the demo company already had one contact with an email; no demo data was added.
+- Open: `flowTriggerReceive` was only exercised with an enabled workflow; a call with none is
+  expected to succeed without a run (a failure would be recorded as a failed Flow reminder).
 - Open: contacts beyond the first 50 per company are not read; larger accounts would paginate
   them, and a catalog of thousands of companies would move to HubSpot's import API.
