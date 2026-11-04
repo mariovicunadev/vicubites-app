@@ -2,7 +2,7 @@
 
 | Field     | Value |
 |-----------|-------|
-| Status    | In progress |
+| Status    | In review |
 | Branch    | `feature/010-flow-hubspot-ci` |
 | Estimate  | 4–6 h · ~4–5.5 h (AI-assisted) · ~11–15 h manual |
 | Actual    | — |
