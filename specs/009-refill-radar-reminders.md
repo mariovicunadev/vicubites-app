@@ -118,10 +118,12 @@ spec puts that data to work in three places:
 - [x] The reorders card counts dry food reorders from returning customers from order webhooks,
       so visitors whose browser blocks the pixel are included
 - [x] The pixel declares only analytics permission and reads no customer fields
-- [ ] Given `KLAVIYO_PRIVATE_KEY`, when "Send due reminders" runs, then every due-soon forecast
+- [x] Given `KLAVIYO_PRIVATE_KEY`, when "Send due reminders" runs, then every due-soon forecast
       becomes one `Refill Due` event in Klaviyo; running it again creates no duplicates
-- [ ] Given the Klaviyo flow on `Refill Due`, then the signed-in demo address receives the email
-- [ ] Without the key, the page shows Klaviyo as not connected and the webhook still succeeds
+- [x] Given the Klaviyo flow on `Refill Due`, then the signed-in demo address receives the email
+      (verified with the flow's test send on the demo profile's event; the events sent before the
+      flow existed don't re-trigger it, by design of `unique_id`)
+- [x] Without the key, the page shows Klaviyo as not connected and the webhook still succeeds
 - [ ] The app stores no customer email; events older than 90 days are deleted
 - [ ] Metafield access: the three `$app.refill_*` definitions are `merchant_read`, with no
       storefront or customer account access
