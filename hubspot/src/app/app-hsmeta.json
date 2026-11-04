@@ -1,0 +1,27 @@
+{
+  "uid": "vicubites_b2b_sync",
+  "type": "app",
+  "config": {
+    "description": "Keeps Vicubites B2B companies and their contacts in sync from Shopify to HubSpot CRM.",
+    "name": "Vicubites B2B Sync",
+    "distribution": "private",
+    "auth": {
+      "type": "static",
+      "requiredScopes": [
+        "oauth",
+        "crm.objects.companies.read",
+        "crm.objects.companies.write",
+        "crm.objects.contacts.read",
+        "crm.objects.contacts.write",
+        "crm.schemas.companies.write"
+      ],
+      "optionalScopes": [],
+      "conditionallyRequiredScopes": []
+    },
+    "permittedUrls": {
+      "fetch": [],
+      "iframe": [],
+      "img": []
+    }
+  }
+}

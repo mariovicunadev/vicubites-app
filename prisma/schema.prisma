@@ -148,10 +148,30 @@ model RefillReminder {
   customerId String
   species    String
   runOutOn   String
+  // KLAVIYO or FLOW: each channel is deduplicated on its own
+  channel    String   @default("KLAVIYO")
   // SENT or FAILED
   status     String
   error      String?
   sentAt     DateTime @default(now())
 
-  @@unique([shop, customerId, species, runOutOn])
+  @@unique([shop, customerId, species, runOutOn, channel])
+}
+
+// One row per Shopify B2B object synced to HubSpot (spec 010). Contacts are
+// keyed by their CompanyContact GID: the app never stores their email.
+model CrmSyncRecord {
+  id         String   @id @default(cuid())
+  shop       String
+  // COMPANY or CONTACT
+  objectType String
+  shopifyId  String
+  hubspotId  String?
+  // SYNCED or FAILED
+  status     String
+  error      String?
+  syncedAt   DateTime @default(now())
+
+  @@unique([shop, objectType, shopifyId])
+  @@index([shop, syncedAt])
 }

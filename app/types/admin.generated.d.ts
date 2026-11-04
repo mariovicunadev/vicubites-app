@@ -52,6 +52,14 @@ export type FixChoiceDefinitionsQuery = { metafieldDefinitions: { nodes: Array<(
       & { validations: Array<Pick<AdminTypes.MetafieldDefinitionValidation, 'name' | 'value'>> }
     )> } };
 
+export type FlowTriggerRefillDueMutationVariables = AdminTypes.Exact<{
+  handle: AdminTypes.Scalars['String']['input'];
+  payload: AdminTypes.Scalars['JSON']['input'];
+}>;
+
+
+export type FlowTriggerRefillDueMutation = { flowTriggerReceive?: AdminTypes.Maybe<{ userErrors: Array<Pick<AdminTypes.UserError, 'field' | 'message'>> }> };
+
 export type B2bCatalogsQueryVariables = AdminTypes.Exact<{ [key: string]: never; }>;
 
 
@@ -75,6 +83,39 @@ export type ProductHealthDataQuery = { product?: AdminTypes.Maybe<(
     Pick<AdminTypes.Product, 'id' | 'title' | 'handle' | 'status' | 'requiresSellingPlan'>
     & { variants: { nodes: Array<Pick<AdminTypes.ProductVariant, 'id' | 'title' | 'sku'>> }, metafields: { nodes: Array<Pick<AdminTypes.Metafield, 'namespace' | 'key' | 'value'>> }, media: { nodes: Array<Pick<AdminTypes.ExternalVideo, 'id' | 'alt'> | Pick<AdminTypes.MediaImage, 'id' | 'alt'> | Pick<AdminTypes.Model3d, 'id' | 'alt'> | Pick<AdminTypes.Video, 'id' | 'alt'>> }, resourcePublicationsV2: { nodes: Array<{ publication: Pick<AdminTypes.Publication, 'id'> }> } }
   )> };
+
+export type HubspotCompaniesQueryVariables = AdminTypes.Exact<{
+  after?: AdminTypes.InputMaybe<AdminTypes.Scalars['String']['input']>;
+}>;
+
+
+export type HubspotCompaniesQuery = { companies: { pageInfo: Pick<AdminTypes.PageInfo, 'hasNextPage' | 'endCursor'>, nodes: Array<(
+      Pick<AdminTypes.Company, 'id' | 'name'>
+      & { contacts: { nodes: Array<(
+          Pick<AdminTypes.CompanyContact, 'id'>
+          & { customer: { defaultEmailAddress?: AdminTypes.Maybe<Pick<AdminTypes.CustomerEmailAddress, 'emailAddress'>> } }
+        )> } }
+    )> } };
+
+export type HubspotCompanyQueryVariables = AdminTypes.Exact<{
+  id: AdminTypes.Scalars['ID']['input'];
+}>;
+
+
+export type HubspotCompanyQuery = { company?: AdminTypes.Maybe<(
+    Pick<AdminTypes.Company, 'id' | 'name'>
+    & { contacts: { nodes: Array<(
+        Pick<AdminTypes.CompanyContact, 'id'>
+        & { customer: { defaultEmailAddress?: AdminTypes.Maybe<Pick<AdminTypes.CustomerEmailAddress, 'emailAddress'>> } }
+      )> } }
+  )> };
+
+export type HubspotCompanyOfContactQueryVariables = AdminTypes.Exact<{
+  id: AdminTypes.Scalars['ID']['input'];
+}>;
+
+
+export type HubspotCompanyOfContactQuery = { companyContact?: AdminTypes.Maybe<{ company: Pick<AdminTypes.Company, 'id'> }> };
 
 export type RefillPixelQueryVariables = AdminTypes.Exact<{ [key: string]: never; }>;
 
@@ -140,6 +181,9 @@ interface GeneratedQueryTypes {
   "#graphql\n  query fixChoiceDefinitions {\n    metafieldDefinitions(first: 50, ownerType: PRODUCT, namespace: \"custom\") {\n      nodes {\n        namespace\n        key\n        validations {\n          name\n          value\n        }\n      }\n    }\n  }\n": {return: FixChoiceDefinitionsQuery, variables: FixChoiceDefinitionsQueryVariables},
   "#graphql\n  query b2bCatalogs {\n    catalogs(first: 50, type: COMPANY_LOCATION) {\n      nodes {\n        id\n        status\n        publication {\n          id\n        }\n      }\n    }\n  }\n": {return: B2bCatalogsQuery, variables: B2bCatalogsQueryVariables},
   "#graphql\n  query productHealthData($id: ID!) {\n    product(id: $id) {\n      id\n      title\n      handle\n      status\n      requiresSellingPlan\n      variants(first: 250) {\n        nodes {\n          id\n          title\n          sku\n        }\n      }\n      metafields(first: 250) {\n        nodes {\n          namespace\n          key\n          value\n        }\n      }\n      media(first: 250) {\n        nodes {\n          id\n          alt\n        }\n      }\n      resourcePublicationsV2(first: 250, onlyPublished: true) {\n        nodes {\n          publication {\n            id\n          }\n        }\n      }\n    }\n  }\n": {return: ProductHealthDataQuery, variables: ProductHealthDataQueryVariables},
+  "#graphql\n  query hubspotCompanies($after: String) {\n    companies(first: 50, after: $after) {\n      pageInfo {\n        hasNextPage\n        endCursor\n      }\n      nodes {\n        id\n        name\n        contacts(first: 50) {\n          nodes {\n            id\n            customer {\n              defaultEmailAddress {\n                emailAddress\n              }\n            }\n          }\n        }\n      }\n    }\n  }\n": {return: HubspotCompaniesQuery, variables: HubspotCompaniesQueryVariables},
+  "#graphql\n  query hubspotCompany($id: ID!) {\n    company(id: $id) {\n      id\n      name\n      contacts(first: 50) {\n        nodes {\n          id\n          customer {\n            defaultEmailAddress {\n              emailAddress\n            }\n          }\n        }\n      }\n    }\n  }\n": {return: HubspotCompanyQuery, variables: HubspotCompanyQueryVariables},
+  "#graphql\n  query hubspotCompanyOfContact($id: ID!) {\n    companyContact(id: $id) {\n      company {\n        id\n      }\n    }\n  }\n": {return: HubspotCompanyOfContactQuery, variables: HubspotCompanyOfContactQueryVariables},
   "#graphql\n  query refillPixel {\n    webPixel {\n      id\n      settings\n    }\n  }\n": {return: RefillPixelQuery, variables: RefillPixelQueryVariables},
   "#graphql\n  query refillReminderEmails($ids: [ID!]!) {\n    nodes(ids: $ids) {\n      ... on Customer {\n        id\n        defaultEmailAddress {\n          emailAddress\n        }\n      }\n    }\n  }\n": {return: RefillReminderEmailsQuery, variables: RefillReminderEmailsQueryVariables},
   "#graphql\n  query refillOrder($id: ID!) {\n    order(id: $id) {\n      id\n      processedAt\n      customer {\n        id\n      }\n      purchasingEntity {\n        __typename\n      }\n      lineItems(first: 100) {\n        nodes {\n          quantity\n          variant {\n            id\n            selectedOptions {\n              name\n              value\n            }\n            product {\n              species: metafield(namespace: \"custom\", key: \"species\") {\n                value\n              }\n              kcalPerKg: metafield(namespace: \"custom\", key: \"kcal_per_kg\") {\n                value\n              }\n            }\n          }\n        }\n      }\n    }\n  }\n": {return: RefillOrderQuery, variables: RefillOrderQueryVariables},
@@ -150,6 +194,7 @@ interface GeneratedMutationTypes {
   "#graphql\n  mutation runBulkQuery($query: String!) {\n    bulkOperationRunQuery(query: $query) {\n      bulkOperation {\n        id\n        status\n        createdAt\n      }\n      userErrors {\n        field\n        message\n        code\n      }\n    }\n  }\n": {return: RunBulkQueryMutation, variables: RunBulkQueryMutationVariables},
   "#graphql\n  mutation stageBulkVariables {\n    stagedUploadsCreate(\n      input: {\n        resource: BULK_MUTATION_VARIABLES\n        filename: \"variables.jsonl\"\n        mimeType: \"text/jsonl\"\n        httpMethod: POST\n      }\n    ) {\n      stagedTargets {\n        url\n        parameters {\n          name\n          value\n        }\n      }\n      userErrors {\n        field\n        message\n      }\n    }\n  }\n": {return: StageBulkVariablesMutation, variables: StageBulkVariablesMutationVariables},
   "#graphql\n  mutation runBulkMutation($mutation: String!, $stagedUploadPath: String!) {\n    bulkOperationRunMutation(mutation: $mutation, stagedUploadPath: $stagedUploadPath) {\n      bulkOperation {\n        id\n        status\n        createdAt\n      }\n      userErrors {\n        field\n        message\n        code\n      }\n    }\n  }\n": {return: RunBulkMutationMutation, variables: RunBulkMutationMutationVariables},
+  "#graphql\n  mutation flowTriggerRefillDue($handle: String!, $payload: JSON!) {\n    flowTriggerReceive(handle: $handle, payload: $payload) {\n      userErrors {\n        field\n        message\n      }\n    }\n  }\n": {return: FlowTriggerRefillDueMutation, variables: FlowTriggerRefillDueMutationVariables},
   "#graphql\n  mutation refillPixelCreate($settings: JSON!) {\n    webPixelCreate(webPixel: { settings: $settings }) {\n      webPixel {\n        id\n      }\n      userErrors {\n        code\n        field\n        message\n      }\n    }\n  }\n": {return: RefillPixelCreateMutation, variables: RefillPixelCreateMutationVariables},
   "#graphql\n  mutation refillPixelUpdate($id: ID!, $settings: JSON!) {\n    webPixelUpdate(id: $id, webPixel: { settings: $settings }) {\n      webPixel {\n        id\n      }\n      userErrors {\n        code\n        field\n        message\n      }\n    }\n  }\n": {return: RefillPixelUpdateMutation, variables: RefillPixelUpdateMutationVariables},
   "#graphql\n  mutation refillMetafieldsSet($metafields: [MetafieldsSetInput!]!) {\n    metafieldsSet(metafields: $metafields) {\n      metafields {\n        key\n      }\n      userErrors {\n        field\n        message\n      }\n    }\n  }\n": {return: RefillMetafieldsSetMutation, variables: RefillMetafieldsSetMutationVariables},

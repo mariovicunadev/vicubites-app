@@ -1,11 +1,12 @@
+import { retryAfterSeconds, wait } from "../http/retry";
 import { KLAVIYO_REVISION, type KlaviyoEventBody } from "./event";
+
+export { retryAfterSeconds };
 
 const EVENTS_URL = "https://a.klaviyo.com/api/events";
 
 /** Attempts per event when Klaviyo answers 429 (rate limited). */
 const MAX_ATTEMPTS = 3;
-const DEFAULT_RETRY_SECONDS = 1;
-const MAX_RETRY_SECONDS = 10;
 
 export class KlaviyoError extends Error {
   constructor(
@@ -20,15 +21,6 @@ export class KlaviyoError extends Error {
 export interface KlaviyoClientOptions {
   fetch?: typeof fetch;
   sleep?: (ms: number) => Promise<void>;
-}
-
-const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
-
-/** Seconds to wait from a `Retry-After` header, capped; a default when it's missing or a date. */
-export function retryAfterSeconds(header: string | null): number {
-  const seconds = Number(header);
-  if (!header || !Number.isFinite(seconds) || seconds < 0) return DEFAULT_RETRY_SECONDS;
-  return Math.min(seconds, MAX_RETRY_SECONDS);
 }
 
 /**
