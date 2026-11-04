@@ -2,10 +2,10 @@
 
 | Field     | Value |
 |-----------|-------|
-| Status    | In review |
+| Status    | Done |
 | Branch    | `feature/009-refill-radar-reminders` |
 | Estimate  | 6–8 h · ~4–5 h (AI-assisted) · ~15–19 h manual |
-| Actual    | — |
+| Actual    | ~6.5 h |
 
 ## Goal
 
