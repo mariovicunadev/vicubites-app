@@ -107,7 +107,8 @@ spec puts that data to work in three places:
 - [ ] Given a logged-in demo customer with a dog forecast due in 3 days, then the block shows the
       bag bought, the run-out date and the basis, and "Reorder" adds that variant to the cart;
       given a logged-out visitor or a customer without a forecast, then it renders no markup
-- [ ] Given a sold-out variant, then the line links to the product instead of adding to the cart
+- [x] Given a sold-out variant, then the line links to the product instead of adding to the cart
+      (checked by setting the demo cat bag to 0 available, then back to 57)
 - [x] Given a dog-and-cat home, then the block lists both species, earliest first
 - [x] In the theme editor the block shows sample data and a single setting (heading)
 - [x] Given analytics permission, when the block is viewed and "Reorder" clicked, then the events
