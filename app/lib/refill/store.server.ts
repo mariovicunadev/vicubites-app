@@ -6,6 +6,7 @@ import { assertNoUserErrors } from "../admin/errors";
 import { createBulkJob, latestBulkJob, refreshJob } from "../bulk/jobs.server";
 import { downloadBulkResult } from "../bulk/operations.server";
 import { forecastCustomer, lastVariants, type Forecast, type Purchase, type Species } from "./forecast";
+import { sendDueReminders } from "./reminders.server";
 import {
   orderFromBulkNode,
   orderFromQuery,
@@ -201,6 +202,12 @@ export async function processLatestRefillLoad(graphql: AdminGraphql, shop: strin
     // Release the claim so the next page load retries.
     await prisma.bulkJob.update({ where: { id: job.id }, data: { processedAt: null } });
     throw error;
+  }
+  // After the claim: a Klaviyo failure must not reprocess the load. Results are recorded per reminder.
+  try {
+    await sendDueReminders(graphql, shop);
+  } catch (error) {
+    console.error("Refill load: reminders not sent", error instanceof Error ? error.message : error);
   }
   return prisma.bulkJob.findUnique({ where: { id: job.id } });
 }

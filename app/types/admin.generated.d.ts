@@ -96,6 +96,16 @@ export type RefillPixelUpdateMutationVariables = AdminTypes.Exact<{
 
 export type RefillPixelUpdateMutation = { webPixelUpdate?: AdminTypes.Maybe<{ webPixel?: AdminTypes.Maybe<Pick<AdminTypes.WebPixel, 'id'>>, userErrors: Array<Pick<AdminTypes.ErrorsWebPixelUserError, 'code' | 'field' | 'message'>> }> };
 
+export type RefillReminderEmailsQueryVariables = AdminTypes.Exact<{
+  ids: Array<AdminTypes.Scalars['ID']['input']> | AdminTypes.Scalars['ID']['input'];
+}>;
+
+
+export type RefillReminderEmailsQuery = { nodes: Array<AdminTypes.Maybe<(
+    Pick<AdminTypes.Customer, 'id'>
+    & { defaultEmailAddress?: AdminTypes.Maybe<Pick<AdminTypes.CustomerEmailAddress, 'emailAddress'>> }
+  )>> };
+
 export type RefillOrderQueryVariables = AdminTypes.Exact<{
   id: AdminTypes.Scalars['ID']['input'];
 }>;
@@ -131,6 +141,7 @@ interface GeneratedQueryTypes {
   "#graphql\n  query b2bCatalogs {\n    catalogs(first: 50, type: COMPANY_LOCATION) {\n      nodes {\n        id\n        status\n        publication {\n          id\n        }\n      }\n    }\n  }\n": {return: B2bCatalogsQuery, variables: B2bCatalogsQueryVariables},
   "#graphql\n  query productHealthData($id: ID!) {\n    product(id: $id) {\n      id\n      title\n      handle\n      status\n      requiresSellingPlan\n      variants(first: 250) {\n        nodes {\n          id\n          title\n          sku\n        }\n      }\n      metafields(first: 250) {\n        nodes {\n          namespace\n          key\n          value\n        }\n      }\n      media(first: 250) {\n        nodes {\n          id\n          alt\n        }\n      }\n      resourcePublicationsV2(first: 250, onlyPublished: true) {\n        nodes {\n          publication {\n            id\n          }\n        }\n      }\n    }\n  }\n": {return: ProductHealthDataQuery, variables: ProductHealthDataQueryVariables},
   "#graphql\n  query refillPixel {\n    webPixel {\n      id\n      settings\n    }\n  }\n": {return: RefillPixelQuery, variables: RefillPixelQueryVariables},
+  "#graphql\n  query refillReminderEmails($ids: [ID!]!) {\n    nodes(ids: $ids) {\n      ... on Customer {\n        id\n        defaultEmailAddress {\n          emailAddress\n        }\n      }\n    }\n  }\n": {return: RefillReminderEmailsQuery, variables: RefillReminderEmailsQueryVariables},
   "#graphql\n  query refillOrder($id: ID!) {\n    order(id: $id) {\n      id\n      processedAt\n      customer {\n        id\n      }\n      purchasingEntity {\n        __typename\n      }\n      lineItems(first: 100) {\n        nodes {\n          quantity\n          variant {\n            id\n            selectedOptions {\n              name\n              value\n            }\n            product {\n              species: metafield(namespace: \"custom\", key: \"species\") {\n                value\n              }\n              kcalPerKg: metafield(namespace: \"custom\", key: \"kcal_per_kg\") {\n                value\n              }\n            }\n          }\n        }\n      }\n    }\n  }\n": {return: RefillOrderQuery, variables: RefillOrderQueryVariables},
   "#graphql\n  query shopOverview {\n    shop {\n      name\n      myshopifyDomain\n    }\n    productsCount {\n      count\n      precision\n    }\n    ingredientDefinition: metaobjectDefinitionByType(type: \"ingredient\") {\n      name\n      metaobjectsCount\n    }\n  }\n": {return: ShopOverviewQuery, variables: ShopOverviewQueryVariables},
 }

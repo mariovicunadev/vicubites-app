@@ -14,6 +14,7 @@ import { FUNNEL_DAYS } from "../lib/refill/events";
 import { loadReminderMetrics } from "../lib/refill/events.server";
 import { DUE_SOON_DAYS, REFERENCE_DAILY_KCAL } from "../lib/refill/forecast";
 import { connectRefillPixel, findRefillPixel, syncRefillPixel } from "../lib/refill/pixel.server";
+import { loadReminderStatus, sendDueReminders } from "../lib/refill/reminders.server";
 import { loadForecasts, processLatestRefillLoad, startRefillLoad } from "../lib/refill/store.server";
 import { toRefillRow, type RefillRow } from "../lib/refill/view";
 import { authenticate } from "../shopify.server";
@@ -52,6 +53,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     later: rows.filter((row) => !row.dueSoon),
     pixelConnected,
     funnel: await loadReminderMetrics(session.shop),
+    klaviyo: await loadReminderStatus(session.shop),
   };
 };
 
@@ -60,6 +62,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const intent = (await request.formData()).get("intent");
   try {
     if (intent === "connect-pixel") await connectRefillPixel(admin.graphql, process.env.SHOPIFY_APP_URL ?? "");
+    else if (intent === "send-reminders") return { error: null, run: await sendDueReminders(admin.graphql, session.shop) };
     else await startRefillLoad(admin.graphql, session.shop);
     return { error: null };
   } catch (error) {
@@ -69,12 +72,14 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 };
 
 export default function RefillRadar() {
-  const { load, dueSoon, later, pixelConnected, funnel, error: loadError } = useLoaderData<typeof loader>();
+  const { load, dueSoon, later, pixelConnected, funnel, klaviyo, error: loadError } = useLoaderData<typeof loader>();
   const fetcher = useFetcher<typeof action>();
   const pixelFetcher = useFetcher<typeof action>();
+  const reminderFetcher = useFetcher<typeof action>();
+  const run = reminderFetcher.data && "run" in reminderFetcher.data ? reminderFetcher.data.run : null;
   const revalidator = useRevalidator();
   const running = fetcher.state !== "idle" || Boolean(load?.running);
-  const error = fetcher.data?.error ?? pixelFetcher.data?.error ?? loadError;
+  const error = fetcher.data?.error ?? pixelFetcher.data?.error ?? reminderFetcher.data?.error ?? loadError;
   const total = dueSoon.length + later.length;
 
   useEffect(() => {
@@ -162,6 +167,38 @@ export default function RefillRadar() {
                 from the pixel, which loads only for visitors who allow analytics and isn&apos;t
                 blocked by their browser, so read them as a minimum. The pixel sends no customer
                 details: views and checkouts are linked by the browser, not by the customer.
+              </s-text>
+            </s-stack>
+          </s-section>
+          <s-section heading="Klaviyo reminders">
+            <s-stack direction="block" gap="base">
+              <s-stack direction="inline" gap="small-200">
+                <s-badge tone={klaviyo.connected ? "success" : "warning"}>
+                  {klaviyo.connected ? "Klaviyo connected" : "Klaviyo not connected"}
+                </s-badge>
+                {klaviyo.connected && (
+                  <s-button
+                    onClick={() => reminderFetcher.submit({ intent: "send-reminders" }, { method: "post" })}
+                    {...(reminderFetcher.state !== "idle" ? { disabled: true } : {})}
+                  >
+                    Send due reminders
+                  </s-button>
+                )}
+              </s-stack>
+              {run && (
+                <s-paragraph>
+                  Sent {run.sent} · already sent {run.skipped} · failed {run.failed}.
+                </s-paragraph>
+              )}
+              <s-paragraph>
+                {klaviyo.lastSentAt
+                  ? `Reminders sent: ${klaviyo.sent} · failed: ${klaviyo.failed} · last run ${klaviyo.lastSentAt.slice(0, 16).replace("T", " ")} UTC.`
+                  : "No reminder sent yet."}
+              </s-paragraph>
+              <s-text color="subdued">
+                {klaviyo.connected
+                  ? `Every forecast due within ${DUE_SOON_DAYS} days becomes one "Refill Due" event in Klaviyo, once per run-out date, after each order and each rebuild. A Klaviyo flow on that event sends the email.`
+                  : "Set KLAVIYO_PRIVATE_KEY (scope events:write) in the app's environment to send a \"Refill Due\" event for each customer who is due soon."}
               </s-text>
             </s-stack>
           </s-section>
