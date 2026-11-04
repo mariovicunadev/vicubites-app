@@ -11,7 +11,7 @@ import { AdminApiError } from "../lib/admin/errors";
 import { refreshStaleJobs } from "../lib/bulk/jobs.server";
 import { toJobView } from "../lib/bulk/job-view";
 import { FUNNEL_DAYS } from "../lib/refill/events";
-import { loadReminderFunnel } from "../lib/refill/events.server";
+import { loadReminderMetrics } from "../lib/refill/events.server";
 import { DUE_SOON_DAYS, REFERENCE_DAILY_KCAL } from "../lib/refill/forecast";
 import { connectRefillPixel, findRefillPixel, syncRefillPixel } from "../lib/refill/pixel.server";
 import { loadForecasts, processLatestRefillLoad, startRefillLoad } from "../lib/refill/store.server";
@@ -51,7 +51,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     dueSoon: rows.filter((row) => row.dueSoon),
     later: rows.filter((row) => !row.dueSoon),
     pixelConnected,
-    funnel: await loadReminderFunnel(session.shop),
+    funnel: await loadReminderMetrics(session.shop),
   };
 };
 
@@ -137,11 +137,14 @@ export default function RefillRadar() {
               <ForecastTable rows={later} />
             )}
           </s-section>
-          <s-section heading={`Storefront reminders, last ${FUNNEL_DAYS} days`}>
+          <s-section heading={`Reorders, last ${FUNNEL_DAYS} days`}>
             <s-stack direction="block" gap="base">
               <s-paragraph>
-                Browsers that saw a reminder: {funnel.viewed} · clicked Reorder: {funnel.clicked} ·
-                dry food reorders after a reminder: {funnel.reorders}.
+                Dry food reorders from returning customers: {funnel.repeatOrders}.
+              </s-paragraph>
+              <s-paragraph>
+                Storefront reminders: browsers that saw one: {funnel.viewed} · clicked Reorder:{" "}
+                {funnel.clicked} · reordered after a reminder: {funnel.reorders}.
               </s-paragraph>
               <s-stack direction="inline" gap="small-200">
                 <s-badge tone={pixelConnected ? "success" : "warning"}>
@@ -155,7 +158,9 @@ export default function RefillRadar() {
                 </s-button>
               </s-stack>
               <s-text color="subdued">
-                The pixel loads only for visitors who allow analytics, and sends no customer
+                Reorders come from order webhooks and include every customer. Reminder figures come
+                from the pixel, which loads only for visitors who allow analytics and isn&apos;t
+                blocked by their browser, so read them as a minimum. The pixel sends no customer
                 details: views and checkouts are linked by the browser, not by the customer.
               </s-text>
             </s-stack>

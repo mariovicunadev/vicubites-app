@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { orderNumber, parsePixelEvent, reminderFunnel, type StoredEvent } from "./events";
+import { orderNumber, parsePixelEvent, reminderFunnel, repeatOrders, type StoredEvent } from "./events";
 
 const SHOP = "vicubites.myshopify.com";
 const body = (fields: Record<string, unknown>) => JSON.stringify({ shop: SHOP, ...fields });
@@ -78,5 +78,30 @@ describe("reminderFunnel", () => {
       new Set(["100"]),
     );
     expect(funnel.reorders).toBe(0);
+  });
+});
+
+describe("repeatOrders", () => {
+  const day = (n: number) => new Date(Date.UTC(2026, 10, n));
+  const purchase = (customerId: string, orderId: string, n: number) => ({ customerId, orderId, processedAt: day(n) });
+
+  it("counts orders from customers who bought dry food before, once per order", () => {
+    const firsts = new Map([
+      ["ana", day(1)],
+      ["bruno", day(10)],
+    ]);
+    const purchases = [
+      // Ana's dog and cat bags in one order are a single reorder.
+      purchase("ana", "o2", 12),
+      purchase("ana", "o2", 12),
+      // Bruno's first purchase falls inside the window: not a reorder.
+      purchase("bruno", "o3", 10),
+      purchase("bruno", "o4", 20),
+    ];
+    expect(repeatOrders(purchases, firsts)).toBe(2);
+  });
+
+  it("ignores customers without a known first purchase", () => {
+    expect(repeatOrders([purchase("carla", "o5", 5)], new Map())).toBe(0);
   });
 });

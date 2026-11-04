@@ -81,6 +81,26 @@ export interface StoredEvent {
   createdAt: Date;
 }
 
+export interface WindowPurchase {
+  customerId: string;
+  orderId: string;
+  processedAt: Date;
+}
+
+/**
+ * Dry food reorders measured on the server: orders from customers who had
+ * bought dry food before (so they had a forecast). Order webhooks see every
+ * order, so this includes visitors whose browser blocks the pixel.
+ */
+export function repeatOrders(purchases: readonly WindowPurchase[], firstPurchaseAt: ReadonlyMap<string, Date>): number {
+  const orders = new Set<string>();
+  for (const purchase of purchases) {
+    const first = firstPurchaseAt.get(purchase.customerId);
+    if (first && first.getTime() < purchase.processedAt.getTime()) orders.add(purchase.orderId);
+  }
+  return orders.size;
+}
+
 export interface ReminderFunnel {
   /** Browsers that saw at least one reminder. */
   viewed: number;

@@ -30,7 +30,9 @@ spec puts that data to work in three places:
   permission (declared in `shopify.extension.toml`), and it sends no customer identity: the
   customer fields of the pixel `init` data need protected data the pixel doesn't use. Events are
   keyed by the browser's `clientId`; the order ID from `checkout_completed` links a reminder to a
-  reorder the app already knows from the `orders/create` webhook.
+  reorder the app already knows from the `orders/create` webhook. Content blockers stop the pixel
+  sandbox for many visitors, so its figures are a minimum; a server-side count of reorders, from
+  the same webhook, covers every customer.
 - **Messaging:** Klaviyo, through its Events API. Klaviyo identifies a profile by email, so this
   spec is the first to read a level 2 protected customer field (email), only to send the event.
   The email is never stored by the app.
@@ -61,13 +63,16 @@ spec puts that data to work in three places:
   `[customer_privacy]` analytics `true`, marketing `false`, preferences `false`, sale of data
   `"disabled"`. Subscribes to the two custom events and to `checkout_completed`, and posts a
   minimal payload (event name, `clientId`, timestamp, species, bucket, order ID) to the app.
-- App proxy `/apps/vicubites-refill/events`: receives the pixel's posts, signed by Shopify, so
-  the pixel carries no app URL and the endpoint knows which shop sent them. Validates event name,
-  shape and size; stores them in `RefillEvent`; deletes events older than 90 days.
+- Pixel endpoint `/pixel/refill/events` on the app: receives the pixel's posts with the shop's
+  myshopify domain from the pixel `init` data and accepts only shops with the app installed.
+  Validates event name, shape and size; stores them in `RefillEvent`; deletes events older than
+  90 days. (An app proxy was the first choice; see Risks.)
 - "Connect pixel" action on `/app/refill` (`webPixelCreate`, then `webPixelUpdate` when it
-  exists) and the pixel's status.
-- Reminder card on `/app/refill` (last 30 days): reminders viewed, clicked, and reorders of dry
-  food by a browser that viewed a reminder before the order.
+  exists) and the pixel's status. The endpoint URL lives in the pixel settings; the page re-syncs
+  it when the app URL changes.
+- Reorders card on `/app/refill` (last 30 days): dry food reorders from returning customers
+  (server-side, every customer), then the pixel funnel: reminders viewed, clicked, and reorders
+  of dry food by a browser that viewed a reminder before the order.
 - Klaviyo:
   - `Refill Due` event (`POST /api/events`, pinned revision) for every forecast that is due soon
     (run-out within 14 days or past), with properties species, run-out date, days left, basis
@@ -105,12 +110,14 @@ spec puts that data to work in three places:
 - [ ] Given a sold-out variant, then the line links to the product instead of adding to the cart
 - [x] Given a dog-and-cat home, then the block lists both species, earliest first
 - [x] In the theme editor the block shows sample data and a single setting (heading)
-- [ ] Given analytics permission, when the block is viewed and "Reorder" clicked, then two events
-      reach the app through the app proxy and are stored; a forged post without a valid proxy
-      signature is rejected
-- [ ] Given a test order by the demo customer after viewing the reminder, then the reminder card
+- [x] Given analytics permission, when the block is viewed and "Reorder" clicked, then the events
+      reach the app's pixel endpoint and are stored; a post for a shop without the app, or with a
+      malformed body, is rejected
+- [x] Given a test order by the demo customer after viewing the reminder, then the reorders card
       counts one view, one click and one reorder
-- [ ] The pixel declares only analytics permission and reads no customer fields
+- [x] The reorders card counts dry food reorders from returning customers from order webhooks,
+      so visitors whose browser blocks the pixel are included
+- [x] The pixel declares only analytics permission and reads no customer fields
 - [ ] Given `KLAVIYO_PRIVATE_KEY`, when "Send due reminders" runs, then every due-soon forecast
       becomes one `Refill Due` event in Klaviyo; running it again creates no duplicates
 - [ ] Given the Klaviyo flow on `Refill Due`, then the signed-in demo address receives the email
@@ -137,19 +144,20 @@ spec puts that data to work in three places:
   `locales/en.default.json`. The forecast JSON and the variant references come resolved from
   Liquid, no API call.
 - `extensions/refill-radar-pixel/`: `src/index.ts` with `register()` and
-  `analytics.subscribe`, posting with `fetch` (`keepalive`) to the shop's proxy path.
+  `analytics.subscribe`, posting with `fetch` (`keepalive`) to the endpoint URL in its settings.
 - `app/lib/refill/events.ts`: payload validation, days-left buckets and funnel counts (pure,
-  tested). `app/lib/refill/events.server.ts`: Prisma writes and retention.
+  tested), and server-side repeat orders. `app/lib/refill/events.server.ts`: Prisma writes,
+  retention and the card's metrics.
 - `app/lib/klaviyo/`: `event.ts` builds the request body and `unique_id` (pure, tested);
   `client.server.ts` sends it (revision header, `Klaviyo-API-Key` auth, retry on 429).
   `app/lib/refill/reminders.server.ts`: picks due-soon forecasts, reads each email by ID, sends,
   records `RefillReminder`.
-- Routes: `apps.refill.events.tsx` (`authenticate.public.appProxy`); `app.refill.tsx` gains the
-  pixel and Klaviyo actions and the reminder card.
+- Routes: `pixel.refill.events.tsx` (public, CORS, POST only); `app.refill.tsx` gains the pixel
+  and Klaviyo actions and the reorders card.
 - Prisma: `RefillEvent` (shop, client ID, name, species, bucket, order ID, created at) and
   `RefillReminder` (shop, customer ID, species and run-out date unique together, sent at,
   status).
-- `shopify.app.toml`: `[app_proxy]`, scopes below. Email access: level 2 is always available to
+- `shopify.app.toml`: scopes below. Email access: level 2 is always available to
   custom-distribution apps; checked with a read of one demo customer's email before building on
   it.
 
@@ -178,7 +186,12 @@ Access scopes added: `write_pixels`, `read_customer_events`. Protected customer 
   sub-namespace and spec 008's metafield write follows.
 - The pixel sandbox posting to the app proxy (cross-origin `fetch` from a worker) is not covered
   by the docs; if blocked, the pixel posts straight to the app with the shop domain from `init`
-  and the endpoint checks it against installed shops.
+  and the endpoint checks it against installed shops. **Resolved:** on a password-protected
+  storefront the proxy redirects to the password page, and the sandbox sends no cookies, so the
+  pixel posts straight to the app.
+- Content blockers (uBlock Origin and similar lists) block the web pixel sandbox and Shopify's
+  own analytics: the pixel funnel is a minimum, never a total. The feature itself (block,
+  "Reorder", forecast updates, Klaviyo sends) runs on Liquid and webhooks and is unaffected.
 - Custom events can be published from the browser console: the endpoint treats them as
   untrusted counts, never as orders or identities.
 - A variant deleted after the purchase drops out of the reference list; matching by species
