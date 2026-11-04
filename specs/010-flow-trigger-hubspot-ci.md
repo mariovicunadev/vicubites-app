@@ -89,27 +89,30 @@ contact's email address. No addresses, phone numbers, orders or prices.
 
 ## Acceptance criteria
 
-- [ ] With `app dev` running, the `Refill due` trigger appears (draft) in the Flow editor of the
+- [x] With `app dev` running, the `Refill due` trigger appears (draft) in the Flow editor of the
       dev store with its five fields.
-- [ ] Given a due-soon forecast, when reminders run, then the workflow built on the trigger runs
+- [x] Given a due-soon forecast, when reminders run, then the workflow built on the trigger runs
       once for that customer, species and run-out date, and running reminders again does not
-      fire it a second time.
-- [ ] Flow fires even when `KLAVIYO_PRIVATE_KEY` is not set, and a failed Flow call does not stop
-      the Klaviyo event (and vice versa).
-- [ ] Given the demo B2B company, when "Sync B2B to HubSpot" runs, then HubSpot shows the company
+      fire it a second time. Verified: two due-soon demo customers, two workflow runs (customer
+      tagged `refill-due`); the second run reported "Flow: sent 0 · already sent 2".
+- [x] Flow fires even when `KLAVIYO_PRIVATE_KEY` is not set, and a failed Flow call does not stop
+      the Klaviyo event (and vice versa). Verified by unit tests of `sendDueReminders` with Prisma,
+      Flow and Klaviyo mocked.
+- [x] Given the demo B2B company, when "Sync B2B to HubSpot" runs, then HubSpot shows the company
       (name and `shopify_company_id`) and its contacts (email) associated with it.
-- [ ] Running the sync twice creates no duplicates in HubSpot.
-- [ ] Renaming the demo company in Shopify updates its name in HubSpot through the
+- [x] Running the sync twice creates no duplicates in HubSpot.
+- [x] Renaming the demo company in Shopify updates its name in HubSpot through the
       `companies/update` webhook.
-- [ ] Without `HUBSPOT_ACCESS_TOKEN`, the B2B CRM page shows "Not connected" and the webhooks
-      return 200 without calling HubSpot.
-- [ ] Only the fields listed under data minimization reach HubSpot (checked in the request
-      bodies of the tests and in the HubSpot record).
-- [ ] Access scopes: none added (`write_customers` already grants the `read_customers` that
+- [x] Without `HUBSPOT_ACCESS_TOKEN`, the B2B CRM page shows "Not connected" and the webhooks
+      return 200 without calling HubSpot. Verified by a unit test (no request is sent) and by
+      reading the page and webhook code; not exercised in the store, where the token is set.
+- [x] Only the fields listed under data minimization reach HubSpot (checked in the request
+      bodies of the tests and in the HubSpot record: phone, city and domain are empty).
+- [x] Access scopes: none added (`write_customers` already grants the `read_customers` that
       companies, company contacts, their webhooks and the trigger's customer reference need).
-- [ ] Every Admin GraphQL operation is typed by codegen and validated against 2026-10.
+- [x] Every Admin GraphQL operation is typed by codegen and validated against 2026-10.
 - [ ] `npm run typecheck`, `npm run lint`, `npm test` and `npx react-router build` pass locally,
-      and the CI workflow passes on the pull request.
+      and the CI workflow passes on the pull request. (Local checks pass; CI pending on the PR.)
 - [ ] One announced axe pass on the new B2B CRM page.
 
 ## Technical approach

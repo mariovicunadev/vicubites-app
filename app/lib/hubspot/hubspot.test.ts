@@ -10,7 +10,7 @@ import {
   toB2BCompany,
   type B2BCompany,
 } from "./mappers";
-import { ensureCompanyIdProperty } from "./sync.server";
+import { ensureCompanyIdProperty, syncCompanies } from "./sync.server";
 
 const clinic: B2BCompany = {
   id: "gid://shopify/Company/101",
@@ -152,5 +152,16 @@ describe("ensureCompanyIdProperty", () => {
     const send = vi.fn(() => Promise.resolve(Response.json({ name: COMPANY_ID_PROPERTY })));
     await ensureCompanyIdProperty("t", { fetch: send, sleep });
     expect(send).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("syncCompanies", () => {
+  afterEach(() => vi.unstubAllEnvs());
+
+  it("does nothing without a HubSpot token", async () => {
+    vi.stubEnv("HUBSPOT_ACCESS_TOKEN", "");
+    const send = vi.fn();
+    await expect(syncCompanies("vicubites.myshopify.com", [clinic], { fetch: send })).resolves.toBeNull();
+    expect(send).not.toHaveBeenCalled();
   });
 });
