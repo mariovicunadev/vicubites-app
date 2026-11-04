@@ -2,10 +2,10 @@
 
 | Field     | Value |
 |-----------|-------|
-| Status    | In review |
+| Status    | Done |
 | Branch    | `feature/010-flow-hubspot-ci` |
 | Estimate  | 4–6 h · ~4–5.5 h (AI-assisted) · ~11–15 h manual |
-| Actual    | — |
+| Actual    | ~3.5 h |
 
 ## Goal
 
@@ -111,8 +111,8 @@ contact's email address. No addresses, phone numbers, orders or prices.
 - [x] Access scopes: none added (`write_customers` already grants the `read_customers` that
       companies, company contacts, their webhooks and the trigger's customer reference need).
 - [x] Every Admin GraphQL operation is typed by codegen and validated against 2026-10.
-- [ ] `npm run typecheck`, `npm run lint`, `npm test` and `npx react-router build` pass locally,
-      and the CI workflow passes on the pull request. (Local checks pass; CI pending on the PR.)
+- [x] `npm run typecheck`, `npm run lint`, `npm test` and `npx react-router build` pass locally,
+      and the CI workflow passes on the pull request.
 - [x] One announced axe pass on the new B2B CRM page: 0 violations (32 rules passed), run on the
       page's server render (connected, with the failures table) loaded with the Polaris web
       components; the admin iframe is cross-origin, so axe could not run inside it directly.
