@@ -2,7 +2,7 @@
 
 | Field     | Value |
 |-----------|-------|
-| Status    | Approved |
+| Status    | In review |
 | Branch    | `feature/009-refill-radar-reminders` |
 | Estimate  | 6–8 h · ~4–5 h (AI-assisted) · ~15–19 h manual |
 | Actual    | — |
@@ -104,9 +104,11 @@ spec puts that data to work in three places:
       the block)
 - [x] After "Rebuild from orders", every demo customer with a forecast has
       `$app.refill_variants` holding the last dry-food variant bought per species
-- [ ] Given a logged-in demo customer with a dog forecast due in 3 days, then the block shows the
+- [x] Given a logged-in demo customer with a dog forecast due in 3 days, then the block shows the
       bag bought, the run-out date and the basis, and "Reorder" adds that variant to the cart;
       given a logged-out visitor or a customer without a forecast, then it renders no markup
+      (checked with the demo customer's dog forecast 4 days out; the home page had no
+      `vb-refill` element when signed out or signed in as a customer without a forecast)
 - [x] Given a sold-out variant, then the line links to the product instead of adding to the cart
       (checked by setting the demo cat bag to 0 available, then back to 57)
 - [x] Given a dog-and-cat home, then the block lists both species, earliest first
@@ -135,7 +137,9 @@ spec puts that data to work in three places:
       `read_pixels`; the app reads `defaultEmailAddress` only, the pixel no customer fields)
 - [x] Every Admin GraphQL operation is typed by codegen and validated against the pinned API version
 - [x] `npm run typecheck`, `npm run lint`, `npm test` and `npx react-router build` pass
-- [ ] One axe pass on a storefront page with the block (text checks for the rest)
+- [x] One axe pass on a storefront page with the block (text checks for the rest): home page,
+      0 violations in the block (one contrast check on the heading came back incomplete under
+      the section background layer; computed by hand at 17:1)
 
 ## Technical approach
 
