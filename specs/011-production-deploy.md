@@ -2,10 +2,10 @@
 
 | Field     | Value |
 |-----------|-------|
-| Status    | In review |
+| Status    | Done |
 | Branch    | `feature/011-production-deploy` |
 | Estimate  | 2 h · ~3–4 h (AI-assisted) · ~7–9 h manual |
-| Actual    | — |
+| Actual    | ~3.5 h |
 
 ## Goal
 
@@ -84,7 +84,7 @@ pixel run on Shopify; the storefront block does not call the backend.
 - [x] A due-soon customer reaches Klaviyo (event) and Flow (`Refill due` trigger); the workflow ran
       once its trigger was selected again (see Risks)
 - [x] Secrets live only in Vercel environment variables and the local `.env`; none are committed
-- [ ] `npm run typecheck`, `npm run lint`, `npm test` and CI pass
+- [x] `npm run typecheck`, `npm run lint`, `npm test` and CI pass
 
 ## Technical approach
 
