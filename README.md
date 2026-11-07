@@ -29,7 +29,8 @@ Flow, Klaviyo and HubSpot deliver.
   [`@shopify/shopify-app-react-router`](https://shopify.dev/docs/api/shopify-app-react-router)
   (embedded auth with token exchange, App Bridge)
 - [Polaris web components](https://shopify.dev/docs/api/app-home) for the admin UI
-- [Prisma](https://www.prisma.io/) for sessions and app data (SQLite in development)
+- [Prisma](https://www.prisma.io/) with Postgres ([Neon](https://neon.com/)) for sessions and app data
+- Hosted on [Vercel](https://vercel.com/) (serverless functions)
 - TypeScript `strict`, Admin GraphQL types generated with
   [`@shopify/api-codegen-preset`](https://shopify.dev/docs/api/shopify-app-react-router/v4/guide-graphql-types)
 - [Vitest](https://vitest.dev/) for unit tests
@@ -104,8 +105,8 @@ days. The reminder itself (block, "Reorder", forecast updates, Klaviyo sends) ru
 webhooks, so blockers don't affect it; the app doesn't try to work around them.
 
 **Klaviyo.** For every forecast due within 14 days, the app sends a `Refill Due` event through
-Klaviyo's Create Event API (on each order webhook, and from "Send due reminders" on the admin
-page). The event carries the customer's email and the forecast (`species`, `run_out_on`,
+Klaviyo's Create Event API (on each order webhook, when an initial load or "Rebuild from orders"
+finishes, and from "Send due reminders" on the admin page). The event carries the customer's email and the forecast (`species`, `run_out_on`,
 `days_left`, `basis`, `days_of_food`), with a `unique_id` built from customer, species and
 run-out date, so a resend never duplicates the event and a new forecast creates a new one. A
 Klaviyo flow triggered by the `Refill Due` metric sends the email; content and timing live in
@@ -149,17 +150,76 @@ B2B companies and their contacts are pushed to HubSpot CRM, one way (Shopify →
 
 Deletions and HubSpot → Shopify changes are out of scope.
 
+## Production
+
+```
+Shopify admin / storefront / webhooks
+        │ HTTPS
+        ▼
+Vercel (iad1) ── React Router app as Vercel Functions
+        │ pooled connection (PgBouncer)
+        ▼
+Neon Postgres (aws-us-east-1) ── branch `production`; local development uses branch `dev`
+```
+
+Only the backend is hosted: the embedded admin, webhooks, the pixel endpoint and the Klaviyo,
+Flow and HubSpot calls. The theme, the theme app extension and the web pixel run on Shopify.
+
+**Why serverless fits.** Every task starts from a request (an admin page, a webhook, a pixel
+event); nothing runs in the background, so functions that scale to zero cover the app. Both
+free tiers pause instead of billing when a limit is reached.
+
+**Build.** `react-router.config.ts` applies the `@vercel/react-router` preset only when Vercel
+builds (`VERCEL=1`): routes become Vercel Functions. Any other build is a single Node server
+(`npm start`, or the `Dockerfile` on a container host). `npm run build` runs `prisma generate`
+first.
+
+**Database.** The app connects through Neon's pooled URL (`DATABASE_URL`), so many short-lived
+functions share a few connections; migrations use the direct URL (`DATABASE_URL_UNPOOLED`),
+because they need a full session. Both end in `connect_timeout=15`, which covers Neon waking from
+scale to zero. Migrations run from the deploy procedure, never during the build.
+
+**Environment variables (Vercel, Production).** `SHOPIFY_API_KEY`, `SHOPIFY_API_SECRET`,
+`SCOPES`, `SHOPIFY_APP_URL`, `DATABASE_URL`, `DATABASE_URL_UNPOOLED`, `KLAVIYO_PRIVATE_KEY`,
+`HUBSPOT_ACCESS_TOKEN`. Values are pasted without quotes. A change needs a redeploy.
+
+**Deploy procedure.**
+
+1. Merge to `main`; Vercel builds and deploys the production branch.
+2. If the schema changed: `npx prisma migrate deploy` with the production URLs in the
+   environment.
+3. If the app configuration or extensions changed: `shopify app deploy`.
+4. After a development session on the dev store: `shopify app dev clean` (or "Clean dev
+   preview" in the admin's Dev Console). Until then the store keeps the development preview,
+   which points the app at a tunnel that no longer exists.
+
+**First release on a store.** A database starts empty: open the app (token exchange stores the
+session), run "Rebuild from orders" on Refill Radar (it also sends any due reminders) and "Sync
+B2B to HubSpot". Shop data itself lives in Shopify. Flow workflows built on the `Refill due`
+trigger during a development preview keep listening to the preview trigger: select the trigger
+again in the workflow after the first deploy.
+
+**Known issue.** In production the web pixel doesn't post events yet: the pixel loads with the
+production endpoint and analytics consent, but no request reaches `/pixel/refill/events`. The
+same code recorded views, clicks and checkouts during development. Reorders are still counted by
+the `orders/create` webhook; only the reminder funnel figures are missing.
+
 ## Getting started
 
 Requirements: Node.js 22.12+, [Shopify CLI](https://shopify.dev/docs/apps/tools/cli), a Shopify
-development store.
+development store, a Postgres database (a Neon branch works).
+
+In `.env` at the app root:
+
+- `DATABASE_URL`: pooled Postgres URL; `DATABASE_URL_UNPOOLED`: direct URL, for migrations.
 
 ```bash
 npm install
-shopify app dev          # links the app, starts a tunnel and opens it in the admin
+npx prisma migrate deploy  # create the tables
+shopify app dev            # links the app, starts a tunnel and opens it in the admin
 ```
 
-Optional, in `.env` at the app root:
+Optional, in the same `.env`:
 
 - `KLAVIYO_PRIVATE_KEY`: a Klaviyo private API key with `events:write`; turns on the Klaviyo
   events.

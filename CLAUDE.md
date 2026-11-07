@@ -21,7 +21,7 @@ Product copy describes nutrition only; no health or medical claims.
 ## Stack
 
 React Router 7 app template · `@shopify/shopify-app-react-router` · Polaris web components +
-App Bridge · Prisma (SQLite in development) · TypeScript `strict` · GraphQL codegen · Vitest.
+App Bridge · Prisma + Postgres (Neon; a `dev` branch locally, production on Vercel) · TypeScript `strict` · GraphQL codegen · Vitest.
 
 Admin API version **2026-10**, pinned in `app/shopify.server.ts`, `.graphqlrc.ts` and
 `shopify.app.toml`. Change all three together.

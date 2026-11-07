@@ -8,9 +8,14 @@ register(({ analytics, init, settings }) => {
   const endpoint = String(settings.endpoint);
   const shop = init.data.shop.myshopifyDomain;
 
-  // A plain-text body keeps the request simple (no CORS preflight); no customer data is sent.
+  // A plain-text body keeps the request simple (no CORS preflight); no cookies or customer data are sent.
   const send = (payload: Record<string, unknown>) => {
-    fetch(endpoint, { method: "POST", body: JSON.stringify({ shop, ...payload }), keepalive: true }).catch(() => {});
+    fetch(endpoint, {
+      method: "POST",
+      body: JSON.stringify({ shop, ...payload }),
+      credentials: "omit",
+      keepalive: true,
+    }).catch(() => {});
   };
 
   for (const name of REMINDER_EVENTS) {

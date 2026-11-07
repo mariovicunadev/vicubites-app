@@ -1,7 +1,7 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
 client_id = "d313b885e5cb92bb34246ca58e433fb3"
-application_url = "https://example.com"
+application_url = "https://vicubites-app.vercel.app"
 embedded = true
 name = "vicubites-app"
 
@@ -55,8 +55,7 @@ description = "Last dry food variant bought per species, for the storefront reor
 access.admin = "merchant_read"
 
 [auth]
-redirect_urls = [ "https://example.com/api/auth" ]
+redirect_urls = [ "https://vicubites-app.vercel.app/auth/callback" ]
 
 [build]
-include_config_on_deploy = true
 automatically_update_urls_on_dev = true
