@@ -59,7 +59,8 @@ logic. That trade-off is measured with `shopify app function run` and recorded i
 - Function extension `order-limit` (Cart and Checkout Validation Function API, target
   `cart.validations.generate.run`):
   - B2C carts only (no `purchasingCompany`).
-  - For each variant line over `maxPerVariant`, returns an error on that line's quantity:
+  - Quantities are added up per variant (one variant can sit on several lines). For each
+    variant over `maxPerVariant`, returns one cart-level error (`$.cart`):
     "Limit of {max} per order for {product title}. For wholesale, contact us about a business
     account."
   - Configuration in the validation's `$app.order-limit-config` JSON metafield:
@@ -96,8 +97,8 @@ logic. That trade-off is measured with `shopify app function run` and recorded i
 - [ ] Non-food lines (no `custom.kcal_per_kg`) are never discounted.
 - [ ] The Refill reward combines with the free shipping threshold on the same order.
 - [ ] Given a B2C cart with more than `maxPerVariant` units of one variant, then the cart and the
-      checkout show the limit message on that line, and checkout can't be completed until the
-      quantity is reduced.
+      checkout show the limit message naming the product, and checkout can't be completed
+      until the quantity is reduced.
 - [ ] Missing or invalid configuration makes each function return no operations (no discount, no
       error), and unit tests cover it.
 - [ ] `/app/checkout-rules` shows each instance's status, creates a missing instance, updates
@@ -129,7 +130,9 @@ logic. That trade-off is measured with `shopify app function run` and recorded i
 - `extensions/order-limit/`: `src/cart_validations_generate_run.graphql` + `.ts`. Input:
   `cart.buyerIdentity.purchasingCompany`, lines (`quantity`, variant and product title) and
   `validation.metafield($app, order-limit-config).jsonValue`. Output: `validationAdd` with one
-  error per line over the limit, targeted at `$.cart.lines[i].quantity`.
+  error per variant over the limit, targeted at `$.cart` (the only cart-level target the
+  reference documents; its own quantity-limit example uses it). Created with
+  `blockOnFailure: false`: if the function itself fails, checkout stays open (fail open).
 - Pure logic (date window, config parsing) lives in small exported functions so that unit tests
   call them directly. Function tests run in Vitest against the generated input types.
 
@@ -165,8 +168,9 @@ then `shopify app deploy` and create the production instances from the productio
 
 - `shop.localTime.date` follows the store's time zone. A customer near midnight may see the
   window move by a day. This is accepted and documented.
-- Open: the limit on active validations per store and how `blockOnFailure` behaves if the
-  function errors. Both are checked in the docs before implementation and recorded here.
+- A store can have at most 25 active validation functions (reference, 2026-10); this app adds
+  one. Line-level targets such as `$.cart.lines[0].quantity` aren't documented, so the error is
+  cart-level and names the product instead.
 - The dev preview and production share one app (D-045). Instances created during `app dev` point
   to the preview function: they are removed before the production instances are created.
 - The B2B check needs a company-location session on the storefront (owner steps, as in earlier

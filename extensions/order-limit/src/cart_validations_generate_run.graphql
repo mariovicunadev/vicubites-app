@@ -1,7 +1,28 @@
 query CartValidationsGenerateRunInput {
   cart {
+    buyerIdentity {
+      purchasingCompany {
+        company {
+          id
+        }
+      }
+    }
     lines {
       quantity
+      merchandise {
+        __typename
+        ... on ProductVariant {
+          id
+          product {
+            title
+          }
+        }
+      }
+    }
+  }
+  validation {
+    config: metafield(namespace: "$app", key: "order-limit-config") {
+      jsonValue
     }
   }
 }

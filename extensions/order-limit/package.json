@@ -7,8 +7,7 @@
     "shopify": "npm exec -- shopify",
     "typegen": "npm exec -- shopify app function typegen",
     "build": "npm exec -- shopify app function build",
-    "preview": "npm exec -- shopify app function run",
-    "test": "vitest"
+    "preview": "npm exec -- shopify app function run"
   },
   "codegen": {
     "schema": "schema.graphql",
@@ -27,9 +26,5 @@
   },
   "dependencies": {
     "@shopify/shopify_function": "^2.0.1"
-  },
-  "devDependencies": {
-    "@shopify/shopify-function-test-helpers": "^1.0.0",
-    "vitest": "^3.2.4"
   }
 }
