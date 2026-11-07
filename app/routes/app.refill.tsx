@@ -8,6 +8,7 @@ import { useFetcher, useLoaderData, useRevalidator } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 
 import { AdminApiError } from "../lib/admin/errors";
+import { getAppUrl } from "../lib/app-url.server";
 import { refreshStaleJobs } from "../lib/bulk/jobs.server";
 import { toJobView } from "../lib/bulk/job-view";
 import { FUNNEL_DAYS } from "../lib/refill/events";
@@ -32,7 +33,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     load = await processLatestRefillLoad(admin.graphql, session.shop);
     const pixel = await findRefillPixel(admin.graphql);
     // The app's URL changes with each development tunnel: keep the pixel pointed at it.
-    if (pixel) await syncRefillPixel(admin.graphql, pixel, process.env.SHOPIFY_APP_URL ?? "");
+    if (pixel) await syncRefillPixel(admin.graphql, pixel, getAppUrl());
     pixelConnected = pixel !== null;
   } catch (caught) {
     if (!(caught instanceof AdminApiError)) throw caught;
@@ -61,7 +62,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const { admin, session } = await authenticate.admin(request);
   const intent = (await request.formData()).get("intent");
   try {
-    if (intent === "connect-pixel") await connectRefillPixel(admin.graphql, process.env.SHOPIFY_APP_URL ?? "");
+    if (intent === "connect-pixel") await connectRefillPixel(admin.graphql, getAppUrl());
     else if (intent === "send-reminders") return { error: null, runs: await sendDueReminders(admin.graphql, session.shop) };
     else await startRefillLoad(admin.graphql, session.shop);
     return { error: null };
