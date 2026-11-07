@@ -2,7 +2,7 @@
 
 | Field     | Value |
 |-----------|-------|
-| Status    | Approved |
+| Status    | In review |
 | Branch    | `feature/011-production-deploy` |
 | Estimate  | 2 h · ~3–4 h (AI-assisted) · ~7–9 h manual |
 | Actual    | — |
@@ -59,27 +59,31 @@ pixel run on Shopify; the storefront block does not call the backend.
 
 ## Acceptance criteria
 
-- [ ] `npm run build` runs `prisma generate` before `react-router build` and succeeds locally and
+- [x] `npm run build` runs `prisma generate` before `react-router build` and succeeds locally and
       on Vercel
-- [ ] `prisma/schema.prisma` uses `postgresql` with `url = env("DATABASE_URL")` (pooled) and
+- [x] `prisma/schema.prisma` uses `postgresql` with `url = env("DATABASE_URL")` (pooled) and
       `directUrl = env("DATABASE_URL_UNPOOLED")`; `migration_lock.toml` says `postgresql`
-- [ ] One baseline migration creates the whole current schema; `prisma migrate deploy` applies it
+- [x] One baseline migration creates the whole current schema; `prisma migrate deploy` applies it
       to the `dev` branch and to production with no drift (`prisma migrate status` is clean)
-- [ ] Local development runs against the Neon `dev` branch; no SQLite file is used
-- [ ] The production deployment answers on its `*.vercel.app` URL; Vercel functions run in `iad1`
-- [ ] `shopify.app.toml` has the production `application_url` and auth redirect, and
+- [x] Local development runs against the Neon `dev` branch; no SQLite file is used
+- [x] The production deployment answers on its `*.vercel.app` URL; Vercel functions run in `iad1`
+      (`x-vercel-id: cle1::iad1::…`)
+- [x] `shopify.app.toml` has the production `application_url` and auth redirect, and
       `shopify app deploy` releases a new app version
-- [ ] Given the app is opened from the Shopify admin, then OAuth completes, a session row is stored
+- [x] Given the app is opened from the Shopify admin, then OAuth completes, a session row is stored
       in Neon and the embedded pages load
-- [ ] Given a new order, then the `orders/create` webhook is accepted (HMAC verified) and the
-      customer's refill forecast is updated in Neon
-- [ ] Given a B2B company is updated, then the `companies` webhook syncs it to HubSpot
+- [x] Given a new order, then the `orders/create` webhook is accepted (HMAC verified) and the
+      customer's refill forecast is updated in Neon (two storefront test orders; an unsigned request
+      gets `400`)
+- [x] Given a B2B company is updated, then the `companies` webhook syncs it to HubSpot
 - [ ] Given the Refill Radar page is opened, then the web pixel settings point to the production
-      endpoint and a storefront event is stored
-- [ ] The initial refill load and the B2B sync rebuild the app's tables in the empty production
+      endpoint and a storefront event is stored. **Open:** the settings point to production, but no
+      event reaches the endpoint (see Risks)
+- [x] The initial refill load and the B2B sync rebuild the app's tables in the empty production
       database
-- [ ] A due-soon customer reaches Klaviyo (event) and Flow (`Refill due` trigger)
-- [ ] Secrets live only in Vercel environment variables and the local `.env`; none are committed
+- [x] A due-soon customer reaches Klaviyo (event) and Flow (`Refill due` trigger); the workflow ran
+      once its trigger was selected again (see Risks)
+- [x] Secrets live only in Vercel environment variables and the local `.env`; none are committed
 - [ ] `npm run typecheck`, `npm run lint`, `npm test` and CI pass
 
 ## Technical approach
@@ -123,8 +127,19 @@ Access scopes added: none.
 - **Cold starts.** Neon Free suspends compute after 5 minutes idle and Vercel functions scale to
   zero; the first request after a pause is slower. Shopify expects webhook responses within
   5 seconds; to be measured on the first webhook after an idle period.
-- **One app for development and production.** While `shopify app dev` runs, the app URL points to
-  the tunnel; production traffic resumes on the Vercel URL when the session ends. To be verified
-  after the first development session following the release.
+- **One app for development and production.** The development preview outlives `shopify app dev`:
+  until `shopify app dev clean` (or "Clean dev preview" in the Dev Console) the store keeps
+  loading the app from the old tunnel. Part of the deploy procedure in the README.
+- **Flow workflows and the development preview.** A workflow built on the `Refill due` trigger
+  while the preview ran kept listening to the preview trigger: Flow accepted
+  `flowTriggerReceive` with no errors and ran nothing. Selecting the trigger again in the
+  workflow fixed it (verified with one test trigger; the test tag was removed).
+- **Web pixel in production (open).** The pixel loads with the production endpoint and
+  analytics consent allowed, and the same code recorded events during development, yet no
+  request reaches `/pixel/refill/events`. Ruled out: consent, the Customer events connection,
+  the pixel record (deleted and recreated) and the script version (a new version was released).
+  Reorders are still counted server-side; only the funnel figures are missing. Follow-up work.
+- **Initial load sends reminders.** Finishing an initial load or a rebuild sends any due
+  reminders (Klaviyo and Flow); the README says so.
 - **Plan limits.** Vercel Hobby (non-commercial use; functions up to 300 s) and Neon Free (1 GB
   per project, 100 CU-hours per month) pause instead of billing when exceeded.
