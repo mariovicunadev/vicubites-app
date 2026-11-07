@@ -4,7 +4,7 @@ import { defineConfig } from "vitest/config";
 // or the dev-server HMR settings.
 export default defineConfig({
   test: {
-    include: ["app/**/*.test.ts"],
+    include: ["app/**/*.test.ts", "extensions/*/src/**/*.test.ts"],
     environment: "node",
   },
 });

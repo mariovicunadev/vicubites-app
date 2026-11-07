@@ -1,15 +1,40 @@
 query CartInput {
+  shop {
+    localTime {
+      date
+    }
+  }
   cart {
+    buyerIdentity {
+      purchasingCompany {
+        company {
+          id
+        }
+      }
+      customer {
+        refillRunOut: metafield(namespace: "$app", key: "refill_run_out") {
+          value
+        }
+      }
+    }
     lines {
       id
-      cost {
-        subtotalAmount {
-          amount
+      merchandise {
+        __typename
+        ... on ProductVariant {
+          product {
+            kcalPerKg: metafield(namespace: "custom", key: "kcal_per_kg") {
+              value
+            }
+          }
         }
       }
     }
   }
   discount {
     discountClasses
+    config: metafield(namespace: "$app", key: "refill-reward-config") {
+      jsonValue
+    }
   }
 }

@@ -1,90 +1,67 @@
 import {
   DiscountClass,
-  OrderDiscountSelectionStrategy,
   ProductDiscountSelectionStrategy,
-  CartInput,
-  CartLinesDiscountsGenerateRunResult,
-} from '../generated/api';
+  type CartInput,
+  type CartLinesDiscountsGenerateRunResult,
+} from "../generated/api";
+import { isRefillDue, parseRefillRewardConfig } from "./refill-reward";
 
+export const REFILL_REWARD_MESSAGE = "Refill reward";
 
+const NO_DISCOUNT: CartLinesDiscountsGenerateRunResult = { operations: [] };
+
+/**
+ * Discounts the dry food in a B2C cart when the customer's food is due to
+ * run out within the configured window (before or after the run-out date).
+ *
+ * Returns no operations whenever something is missing: no product class,
+ * invalid configuration, a guest or B2B buyer, no forecast, or no dry food.
+ */
 export function cartLinesDiscountsGenerateRun(
   input: CartInput,
 ): CartLinesDiscountsGenerateRunResult {
-  if (!input.cart.lines.length) {
-    return {operations: []};
+  if (!input.discount.discountClasses.includes(DiscountClass.Product)) {
+    return NO_DISCOUNT;
   }
 
-  const hasOrderDiscountClass = input.discount.discountClasses.includes(
-    DiscountClass.Order,
-  );
-  const hasProductDiscountClass = input.discount.discountClasses.includes(
-    DiscountClass.Product,
-  );
+  const config = parseRefillRewardConfig(input.discount.config?.jsonValue);
+  if (!config) return NO_DISCOUNT;
 
-  if (!hasOrderDiscountClass && !hasProductDiscountClass) {
-    return {operations: []};
+  const buyer = input.cart.buyerIdentity;
+  // B2B buyers have their own catalog pricing; guests have no forecast.
+  if (!buyer?.customer || buyer.purchasingCompany) return NO_DISCOUNT;
+
+  const runOutOn = buyer.customer.refillRunOut?.value;
+  if (!runOutOn || !isRefillDue(runOutOn, input.shop.localTime.date, config.windowDays)) {
+    return NO_DISCOUNT;
   }
 
-  const maxCartLine = input.cart.lines.reduce((maxLine, line) => {
-    if (line.cost.subtotalAmount.amount > maxLine.cost.subtotalAmount.amount) {
-      return line;
-    }
-    return maxLine;
-  }, input.cart.lines[0]);
+  // Dry food is any product with a calorie density (same rule as the forecast).
+  const targets = input.cart.lines
+    .filter(
+      (line) =>
+        line.merchandise.__typename === "ProductVariant" &&
+        line.merchandise.product.kcalPerKg != null,
+    )
+    .map((line) => ({ cartLine: { id: line.id } }));
 
-  const operations = [];
-
-  if (hasOrderDiscountClass) {
-    operations.push({
-      orderDiscountsAdd: {
-        candidates: [
-          {
-            message: '10% OFF ORDER',
-            targets: [
-              {
-                orderSubtotal: {
-                  excludedCartLineIds: [],
-                },
-              },
-            ],
-            value: {
-              percentage: {
-                value: 10,
-              },
-            },
-          },
-        ],
-        selectionStrategy: OrderDiscountSelectionStrategy.First,
-      },
-    });
-  }
-
-  if (hasProductDiscountClass) {
-    operations.push({
-      productDiscountsAdd: {
-        candidates: [
-          {
-            message: '20% OFF PRODUCT',
-            targets: [
-              {
-                cartLine: {
-                  id: maxCartLine.id,
-                },
-              },
-            ],
-            value: {
-              percentage: {
-                value: 20,
-              },
-            },
-          },
-        ],
-        selectionStrategy: ProductDiscountSelectionStrategy.First,
-      },
-    });
-  }
+  if (targets.length === 0) return NO_DISCOUNT;
 
   return {
-    operations,
+    operations: [
+      {
+        productDiscountsAdd: {
+          candidates: [
+            {
+              message: REFILL_REWARD_MESSAGE,
+              targets,
+              // `Decimal` is serialized as a string.
+              value: { percentage: { value: String(config.percentage) } },
+            },
+          ],
+          selectionStrategy: ProductDiscountSelectionStrategy.First,
+        },
+      },
+    ],
   };
 }
