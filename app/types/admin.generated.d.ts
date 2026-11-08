@@ -33,6 +33,42 @@ export type BulkOperationStatusQueryVariables = AdminTypes.Exact<{
 
 export type BulkOperationStatusQuery = { bulkOperation?: AdminTypes.Maybe<Pick<AdminTypes.BulkOperation, 'id' | 'status' | 'errorCode' | 'objectCount' | 'rootObjectCount' | 'url' | 'partialDataUrl' | 'createdAt' | 'completedAt'>> };
 
+export type CheckoutRulesOverviewQueryVariables = AdminTypes.Exact<{ [key: string]: never; }>;
+
+
+export type CheckoutRulesOverviewQuery = { shopifyFunctions: { nodes: Array<Pick<AdminTypes.ShopifyFunction, 'id' | 'handle'>> }, discountNodes: { nodes: Array<(
+      Pick<AdminTypes.DiscountNode, 'id'>
+      & { config?: AdminTypes.Maybe<Pick<AdminTypes.Metafield, 'jsonValue'>>, discount: (
+        { __typename: 'DiscountAutomaticApp' }
+        & Pick<AdminTypes.DiscountAutomaticApp, 'title' | 'status'>
+        & { appDiscountType: Pick<AdminTypes.AppDiscountType, 'functionId'> }
+      ) | { __typename: 'DiscountAutomaticBasic' | 'DiscountAutomaticBxgy' | 'DiscountAutomaticFreeShipping' | 'DiscountCodeApp' | 'DiscountCodeBasic' | 'DiscountCodeBxgy' | 'DiscountCodeFreeShipping' } }
+    )> }, validations: { nodes: Array<(
+      Pick<AdminTypes.Validation, 'id' | 'title' | 'enabled'>
+      & { shopifyFunction: Pick<AdminTypes.ShopifyFunction, 'id'>, config?: AdminTypes.Maybe<Pick<AdminTypes.Metafield, 'jsonValue'>> }
+    )> } };
+
+export type RefillRewardCreateMutationVariables = AdminTypes.Exact<{
+  discount: AdminTypes.DiscountAutomaticAppInput;
+}>;
+
+
+export type RefillRewardCreateMutation = { discountAutomaticAppCreate?: AdminTypes.Maybe<{ automaticAppDiscount?: AdminTypes.Maybe<Pick<AdminTypes.DiscountAutomaticApp, 'discountId'>>, userErrors: Array<Pick<AdminTypes.DiscountUserError, 'field' | 'message' | 'code'>> }> };
+
+export type OrderLimitCreateMutationVariables = AdminTypes.Exact<{
+  validation: AdminTypes.ValidationCreateInput;
+}>;
+
+
+export type OrderLimitCreateMutation = { validationCreate?: AdminTypes.Maybe<{ validation?: AdminTypes.Maybe<Pick<AdminTypes.Validation, 'id'>>, userErrors: Array<Pick<AdminTypes.ValidationUserError, 'field' | 'message' | 'code'>> }> };
+
+export type CheckoutRuleConfigSetMutationVariables = AdminTypes.Exact<{
+  metafields: Array<AdminTypes.MetafieldsSetInput> | AdminTypes.MetafieldsSetInput;
+}>;
+
+
+export type CheckoutRuleConfigSetMutation = { metafieldsSet?: AdminTypes.Maybe<{ metafields?: AdminTypes.Maybe<Array<Pick<AdminTypes.Metafield, 'id'>>>, userErrors: Array<Pick<AdminTypes.MetafieldsSetUserError, 'field' | 'message' | 'code'>> }> };
+
 export type FixCurrentProductsQueryVariables = AdminTypes.Exact<{
   ids: Array<AdminTypes.Scalars['ID']['input']> | AdminTypes.Scalars['ID']['input'];
   keys?: AdminTypes.InputMaybe<Array<AdminTypes.Scalars['String']['input']> | AdminTypes.Scalars['String']['input']>;
@@ -177,6 +213,7 @@ export type ShopOverviewQuery = { shop: Pick<AdminTypes.Shop, 'name' | 'myshopif
 
 interface GeneratedQueryTypes {
   "#graphql\n  query bulkOperationStatus($id: ID!) {\n    bulkOperation(id: $id) {\n      id\n      status\n      errorCode\n      objectCount\n      rootObjectCount\n      url\n      partialDataUrl\n      createdAt\n      completedAt\n    }\n  }\n": {return: BulkOperationStatusQuery, variables: BulkOperationStatusQueryVariables},
+  "#graphql\n  query checkoutRulesOverview {\n    shopifyFunctions(first: 25) {\n      nodes {\n        id\n        handle\n      }\n    }\n    discountNodes(first: 25, query: \"type:app\") {\n      nodes {\n        id\n        config: metafield(namespace: \"$app\", key: \"refill-reward-config\") {\n          jsonValue\n        }\n        discount {\n          __typename\n          ... on DiscountAutomaticApp {\n            title\n            status\n            appDiscountType {\n              functionId\n            }\n          }\n        }\n      }\n    }\n    validations(first: 25) {\n      nodes {\n        id\n        title\n        enabled\n        shopifyFunction {\n          id\n        }\n        config: metafield(namespace: \"$app\", key: \"order-limit-config\") {\n          jsonValue\n        }\n      }\n    }\n  }\n": {return: CheckoutRulesOverviewQuery, variables: CheckoutRulesOverviewQueryVariables},
   "#graphql\n  query fixCurrentProducts($ids: [ID!]!, $keys: [String!]) {\n    nodes(ids: $ids) {\n      ... on Product {\n        id\n        title\n        handle\n        metafields(first: 20, keys: $keys) {\n          nodes {\n            namespace\n            key\n            value\n          }\n        }\n      }\n    }\n  }\n": {return: FixCurrentProductsQuery, variables: FixCurrentProductsQueryVariables},
   "#graphql\n  query fixChoiceDefinitions {\n    metafieldDefinitions(first: 50, ownerType: PRODUCT, namespace: \"custom\") {\n      nodes {\n        namespace\n        key\n        validations {\n          name\n          value\n        }\n      }\n    }\n  }\n": {return: FixChoiceDefinitionsQuery, variables: FixChoiceDefinitionsQueryVariables},
   "#graphql\n  query b2bCatalogs {\n    catalogs(first: 50, type: COMPANY_LOCATION) {\n      nodes {\n        id\n        status\n        publication {\n          id\n        }\n      }\n    }\n  }\n": {return: B2bCatalogsQuery, variables: B2bCatalogsQueryVariables},
@@ -194,6 +231,9 @@ interface GeneratedMutationTypes {
   "#graphql\n  mutation runBulkQuery($query: String!) {\n    bulkOperationRunQuery(query: $query) {\n      bulkOperation {\n        id\n        status\n        createdAt\n      }\n      userErrors {\n        field\n        message\n        code\n      }\n    }\n  }\n": {return: RunBulkQueryMutation, variables: RunBulkQueryMutationVariables},
   "#graphql\n  mutation stageBulkVariables {\n    stagedUploadsCreate(\n      input: {\n        resource: BULK_MUTATION_VARIABLES\n        filename: \"variables.jsonl\"\n        mimeType: \"text/jsonl\"\n        httpMethod: POST\n      }\n    ) {\n      stagedTargets {\n        url\n        parameters {\n          name\n          value\n        }\n      }\n      userErrors {\n        field\n        message\n      }\n    }\n  }\n": {return: StageBulkVariablesMutation, variables: StageBulkVariablesMutationVariables},
   "#graphql\n  mutation runBulkMutation($mutation: String!, $stagedUploadPath: String!) {\n    bulkOperationRunMutation(mutation: $mutation, stagedUploadPath: $stagedUploadPath) {\n      bulkOperation {\n        id\n        status\n        createdAt\n      }\n      userErrors {\n        field\n        message\n        code\n      }\n    }\n  }\n": {return: RunBulkMutationMutation, variables: RunBulkMutationMutationVariables},
+  "#graphql\n  mutation refillRewardCreate($discount: DiscountAutomaticAppInput!) {\n    discountAutomaticAppCreate(automaticAppDiscount: $discount) {\n      automaticAppDiscount {\n        discountId\n      }\n      userErrors {\n        field\n        message\n        code\n      }\n    }\n  }\n": {return: RefillRewardCreateMutation, variables: RefillRewardCreateMutationVariables},
+  "#graphql\n  mutation orderLimitCreate($validation: ValidationCreateInput!) {\n    validationCreate(validation: $validation) {\n      validation {\n        id\n      }\n      userErrors {\n        field\n        message\n        code\n      }\n    }\n  }\n": {return: OrderLimitCreateMutation, variables: OrderLimitCreateMutationVariables},
+  "#graphql\n  mutation checkoutRuleConfigSet($metafields: [MetafieldsSetInput!]!) {\n    metafieldsSet(metafields: $metafields) {\n      metafields {\n        id\n      }\n      userErrors {\n        field\n        message\n        code\n      }\n    }\n  }\n": {return: CheckoutRuleConfigSetMutation, variables: CheckoutRuleConfigSetMutationVariables},
   "#graphql\n  mutation flowTriggerRefillDue($handle: String!, $payload: JSON!) {\n    flowTriggerReceive(handle: $handle, payload: $payload) {\n      userErrors {\n        field\n        message\n      }\n    }\n  }\n": {return: FlowTriggerRefillDueMutation, variables: FlowTriggerRefillDueMutationVariables},
   "#graphql\n  mutation refillPixelCreate($settings: JSON!) {\n    webPixelCreate(webPixel: { settings: $settings }) {\n      webPixel {\n        id\n      }\n      userErrors {\n        code\n        field\n        message\n      }\n    }\n  }\n": {return: RefillPixelCreateMutation, variables: RefillPixelCreateMutationVariables},
   "#graphql\n  mutation refillPixelUpdate($id: ID!, $settings: JSON!) {\n    webPixelUpdate(id: $id, webPixel: { settings: $settings }) {\n      webPixel {\n        id\n      }\n      userErrors {\n        code\n        field\n        message\n      }\n    }\n  }\n": {return: RefillPixelUpdateMutation, variables: RefillPixelUpdateMutationVariables},

@@ -70,7 +70,7 @@ logic. That trade-off is measured with `shopify app function run` and recorded i
   - A form for each one. It creates the instance if missing (`discountAutomaticAppCreate`,
     `validationCreate`) or updates its settings metafield (`metafieldsSet`). Input is checked on
     the server: percentage 1–50, window 1–60 days, limit 1–99.
-  - Navigation link and ES/EN strings, as on the other app pages.
+  - Navigation link; English copy, as on the other app pages.
 - Unit tests for both functions with input fixtures (B2C due, B2C not due, B2C late, B2B, guest,
   missing config, non-food lines, line over the limit), plus tests for the form validation.
 - Production: `shopify app deploy` and instances created in the store from the production app.
