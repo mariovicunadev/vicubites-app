@@ -14,8 +14,8 @@ Two pieces of checkout logic that run on Shopify's infrastructure as Shopify Fun
 - **Refill reward (Discount Function):** a B2C customer whose dry food is due to run out soon gets
   an automatic percentage discount on the dry food in their cart. This rewards reordering on time.
 - **B2C order limit (Validation Function):** a B2C cart can't hold more than a set number of units
-  of one variant. Cart and checkout show a clear message, and checkout is blocked until the
-  quantity is reduced. This protects retail stock from bulk resale; wholesale goes through B2B.
+  of one variant. Checkout shows a clear message and is blocked until the quantity is
+  reduced. This protects retail stock from bulk resale; wholesale goes through B2B.
 
 The merchant turns both on and sets them up from a new **Checkout rules** page in the app.
 
@@ -148,8 +148,8 @@ logic. That trade-off is measured with `shopify app function run` and recorded i
   percentage value and one target per qualifying line. The function returns nothing when
   `PRODUCT` is not among `discountClasses`.
 - `extensions/order-limit/`: `src/cart_validations_generate_run.graphql` + `.ts`. Input:
-  `cart.buyerIdentity.purchasingCompany`, lines (`quantity`, variant and product title) and
-  `validation.metafield($app, order-limit-config).jsonValue`. Output: `validationAdd` with one
+  `buyerJourney.step`, `cart.buyerIdentity.purchasingCompany`, lines (`quantity`, variant and
+  product title) and `validation.metafield($app, order-limit-config).jsonValue`. Output: `validationAdd` with one
   error per variant over the limit, targeted at `$.cart` (the only cart-level target the
   reference documents; its own quantity-limit example uses it). Created with
   `blockOnFailure: false`: if the function itself fails, checkout stays open (fail open).
