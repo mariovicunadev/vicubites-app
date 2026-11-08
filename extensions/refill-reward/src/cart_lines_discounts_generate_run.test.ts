@@ -9,16 +9,18 @@ type Line = CartInput["cart"]["lines"][number];
 
 const TODAY = "2026-11-07";
 
-const product = (id: string, productType: string): Line => ({
+const product = (id: string, productType: string, sellingPlanId: string | null = null): Line => ({
   id,
+  sellingPlanAllocation: sellingPlanId ? { sellingPlan: { id: sellingPlanId } } : null,
   merchandise: { __typename: "ProductVariant", product: { productType } },
 });
 
 const dryFood = (id: string) => product(id, "Dry Dog Food");
 const wetFood = (id: string) => product(id, "Wet Dog Food");
 const treat = (id: string) => product(id, "Dog Treats");
+const dryFoodSubscription = (id: string) => product(id, "Dry Dog Food", "gid://shopify/SellingPlan/1");
 
-const customItem = (id: string): Line => ({ id, merchandise: { __typename: "CustomProduct" } });
+const customItem = (id: string): Line => ({ id, sellingPlanAllocation: null, merchandise: { __typename: "CustomProduct" } });
 
 /** A due-soon B2C cart with one dry food line; each test changes one thing. */
 function cartInput({
@@ -54,6 +56,7 @@ describe("cartLinesDiscountsGenerateRun", () => {
           treat("gid://shopify/CartLine/2"),
           product("gid://shopify/CartLine/3", "Dry Cat Food"),
           wetFood("gid://shopify/CartLine/4"),
+          dryFoodSubscription("gid://shopify/CartLine/5"),
         ],
       }),
     );
@@ -89,6 +92,7 @@ describe("cartLinesDiscountsGenerateRun", () => {
     ["no forecast for the customer", cartInput({ runOutOn: null })],
     ["a guest checkout", cartInput({ guest: true })],
     ["a B2B buyer", cartInput({ b2b: true })],
+    ["dry food on a subscription only", cartInput({ lines: [dryFoodSubscription("gid://shopify/CartLine/1")] })],
     ["wet food and treats only", cartInput({ lines: [wetFood("gid://shopify/CartLine/1"), treat("gid://shopify/CartLine/2")] })],
     ["no dry food in the cart", cartInput({ lines: [treat("gid://shopify/CartLine/1"), customItem("gid://shopify/CartLine/2")] })],
     ["an empty cart", cartInput({ lines: [] })],

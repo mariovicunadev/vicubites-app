@@ -14,8 +14,12 @@ const NO_DISCOUNT: CartLinesDiscountsGenerateRunResult = { operations: [] };
  * Discounts the dry food in a B2C cart when the customer's food is due to
  * run out within the configured window (before or after the run-out date).
  *
+ * Lines on a subscription (selling plan) are left out: they already get the
+ * plan's own discount and arrive without a reorder.
+ *
  * Returns no operations whenever something is missing: no product class,
- * invalid configuration, a guest or B2B buyer, no forecast, or no dry food.
+ * invalid configuration, a guest or B2B buyer, no forecast, or no dry food
+ * bought outside a subscription.
  */
 export function cartLinesDiscountsGenerateRun(
   input: CartInput,
@@ -41,7 +45,11 @@ export function cartLinesDiscountsGenerateRun(
   const targets: { cartLine: { id: string } }[] = [];
   for (const line of input.cart.lines) {
     const merchandise = line.merchandise;
-    if (merchandise.__typename === "ProductVariant" && isDryFood(merchandise.product.productType)) {
+    if (
+      !line.sellingPlanAllocation &&
+      merchandise.__typename === "ProductVariant" &&
+      isDryFood(merchandise.product.productType)
+    ) {
       targets.push({ cartLine: { id: line.id } });
     }
   }
