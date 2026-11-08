@@ -235,10 +235,14 @@ scale to zero. Migrations run from the deploy procedure, never during the build.
 
 **Deploy procedure.**
 
-1. Merge to `main`; Vercel builds and deploys the production branch.
+1. Merge to `develop`, then promote that `develop` deployment to production in Vercel (Promote
+   to Production rebuilds it with the production environment). Vercel's production branch is
+   `main`, which receives `develop` at release time.
 2. If the schema changed: `npx prisma migrate deploy` with the production URLs in the
    environment.
-3. If the app configuration or extensions changed: `shopify app deploy`.
+3. If the app configuration or extensions changed: `shopify app deploy`. Function instances
+   (discounts, validations) created during a development preview are removed with it: create
+   them again from the production app.
 4. After a development session on the dev store: `shopify app dev clean` (or "Clean dev
    preview" in the admin's Dev Console). Until then the store keeps the development preview,
    which points the app at a tunnel that no longer exists.

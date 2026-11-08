@@ -2,10 +2,10 @@
 
 | Field     | Value |
 |-----------|-------|
-| Status    | In review |
+| Status    | Done |
 | Branch    | `feature/012-discount-validation-functions` |
 | Estimate  | 3.5–4.5 h (AI-assisted) · 9–11 h manual |
-| Actual    | — |
+| Actual    | ~10 h (including store verification rounds) |
 
 ## Goal
 
@@ -14,8 +14,8 @@ Two pieces of checkout logic that run on Shopify's infrastructure as Shopify Fun
 - **Refill reward (Discount Function):** a B2C customer whose dry food is due to run out soon gets
   an automatic percentage discount on the dry food in their cart. This rewards reordering on time.
 - **B2C order limit (Validation Function):** a B2C cart can't hold more than a set number of units
-  of one variant. Cart and checkout show a clear message, and checkout is blocked until the
-  quantity is reduced. This protects retail stock from bulk resale; wholesale goes through B2B.
+  of one variant. Checkout shows a clear message and is blocked until the quantity is
+  reduced. This protects retail stock from bulk resale; wholesale goes through B2B.
 
 The merchant turns both on and sets them up from a new **Checkout rules** page in the app.
 
@@ -107,8 +107,9 @@ logic. That trade-off is measured with `shopify app function run` and recorded i
 - [x] Lines that aren't dry food (wet food, treats, other products) and dry food lines on a
       subscription are never discounted.
       Verified in the store with a wet food line and a subscription line, plus unit tests.
-- [ ] The Refill reward combines with the free shipping threshold on the same order.
-      Pending: no test cart has reached the threshold yet; checked with the production cart.
+- [x] The Refill reward combines with the free shipping threshold on the same order.
+      Verified on production. The native free shipping discount combined with no other class;
+      it now combines with product discounts (both sides must allow a combination).
 - [x] Given a B2C cart with more than `maxPerVariant` units of one variant, then checkout shows
       the limit message naming the product and can't be completed until the quantity is
       reduced. The cart itself always accepts changes, including removals.
@@ -126,9 +127,10 @@ logic. That trade-off is measured with `shopify app function run` and recorded i
       version 2026-10, and Admin operations are typed by codegen.
 - [x] `npm run typecheck`, `npm run lint`, `npm test` and `npx react-router build` pass, along
       with function builds (`shopify app function build` for each).
-- [ ] Deployed to production, with both instances active in the store and verified with one B2C
-      test cart (discount and limit) and one B2B check. Functions released (app version 4);
-      instances are created from the production page after merge.
+- [x] Deployed to production, with both instances active in the store and verified with one B2C
+      test cart (discount and limit) and one B2B check. Functions released in app version 4;
+      instances created from the production page and read back through the Admin API (the
+      instances created on the development preview are removed with it).
 - [x] One axe pass on `/app/checkout-rules`: 0 violations (32 rules passed), run on the page's
       server render loaded with the Polaris web components, in two states (saved banner and a
       field error); the admin iframe is cross-origin. README section "Checkout rules" added.
@@ -146,8 +148,8 @@ logic. That trade-off is measured with `shopify app function run` and recorded i
   percentage value and one target per qualifying line. The function returns nothing when
   `PRODUCT` is not among `discountClasses`.
 - `extensions/order-limit/`: `src/cart_validations_generate_run.graphql` + `.ts`. Input:
-  `cart.buyerIdentity.purchasingCompany`, lines (`quantity`, variant and product title) and
-  `validation.metafield($app, order-limit-config).jsonValue`. Output: `validationAdd` with one
+  `buyerJourney.step`, `cart.buyerIdentity.purchasingCompany`, lines (`quantity`, variant and
+  product title) and `validation.metafield($app, order-limit-config).jsonValue`. Output: `validationAdd` with one
   error per variant over the limit, targeted at `$.cart` (the only cart-level target the
   reference documents; its own quantity-limit example uses it). Created with
   `blockOnFailure: false`: if the function itself fails, checkout stays open (fail open).
