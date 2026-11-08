@@ -2,7 +2,7 @@
 
 | Field     | Value |
 |-----------|-------|
-| Status    | Approved |
+| Status    | In progress |
 | Branch    | `feature/013-starter-kit-bundles` |
 | Estimate  | 3–4 h (AI-assisted) · 8–10 h manual |
 | Actual    | — |
