@@ -1,0 +1,17 @@
+api_version = "2026-10"
+
+[[extensions]]
+name = "t:name"
+handle = "refill-reward"
+type = "function"
+uid = "d0221713-06ab-4190-6822-c83db9ea7097a7afeb86"
+description = "t:description"
+
+  [[extensions.targeting]]
+  target = "cart.lines.discounts.generate.run"
+  input_query = "src/cart_lines_discounts_generate_run.graphql"
+  export = "cart-lines-discounts-generate-run"
+
+  [extensions.build]
+  command = ""
+  path = "dist/function.wasm"

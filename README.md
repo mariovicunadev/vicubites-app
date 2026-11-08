@@ -14,7 +14,9 @@ It runs inside the Shopify admin as a custom app for the brand's store.
 | **Refill Radar** | Food runs out on a predictable schedule, but one-time buyers who aren't reminded often reorder elsewhere. The module predicts each customer's run-out date from bag size and daily portion (or their real reorder cadence) and triggers reminders through Shopify Flow and Klaviyo. | In development: forecast, webhook, admin page, storefront reminder, web pixel, Klaviyo events and Flow trigger done |
 
 B2B accounts also reach the sales team's CRM: companies and their contacts are kept in sync with
-HubSpot (see [B2B CRM](#b2b-crm-hubspot)).
+HubSpot (see [B2B CRM](#b2b-crm-hubspot)), and two checkout rules built as Shopify Functions
+reward on-time reorders and cap retail quantities (see
+[Checkout rules](#checkout-rules-shopify-functions)).
 
 ### Why an app
 
@@ -69,7 +71,7 @@ returned. Re-authentication redirects (a thrown `Response`) pass through untouch
 `read_products`, `write_products` (bulk fixes of nutrition metafields), `read_metaobject_definitions`,
 `read_publications` (B2B catalog coverage), `read_orders` and `write_customers` (Refill Radar
 reads orders and stores the forecast on the customer), `write_pixels` and `read_customer_events`
-(Refill Radar's web pixel).
+(Refill Radar's web pixel), `write_discounts` and `write_validations` (checkout rules).
 
 **Protected customer data.** Refill Radar works on the order's customer ID (level 1). The one
 level 2 field it reads is the email of a customer who is due soon, at send time, to address the
@@ -149,6 +151,54 @@ B2B companies and their contacts are pushed to HubSpot CRM, one way (Shopify →
   HubSpot as not connected and the webhooks succeed without calling HubSpot.
 
 Deletions and HubSpot → Shopify changes are out of scope.
+
+## Checkout rules (Shopify Functions)
+
+Two rules run on Shopify's servers, inside cart and checkout, as Shopify Functions written in
+TypeScript (compiled to WebAssembly). The admin page `/app/checkout-rules` creates each rule and
+edits its settings, which live in an `$app` JSON metafield on the rule. The Function reads that
+metafield on every run, so a change applies without a deploy.
+
+| Rule | Function API | What it does |
+|---|---|---|
+| **Refill reward** (`extensions/refill-reward`) | Discount (`cart.lines.discounts.generate.run`, class `PRODUCT`) | Takes `percentage` (default 10 %) off dry food for a signed-in retail customer whose Refill Radar run-out date is within `windowDays` (default 14) of today, before or after it. Combines with order and shipping discounts. |
+| **Order limit** (`extensions/order-limit`) | Cart and Checkout Validation (`cart.validations.generate.run`) | Blocks a retail checkout holding more than `maxPerVariant` (default 6) units of one variant, adding up the variant across lines, with a message that names the product and points to a business account. |
+
+**Why Functions.** The reward depends on the app's own data (the run-out date Refill Radar keeps
+on the customer) compared with the store's date at the moment of checkout, which a Function reads
+live. Native quantity rules exist only on B2B catalogs. A Function also runs for express checkouts
+(Shop Pay, Apple Pay), where a theme check never runs.
+
+**Rules worth knowing:**
+
+- **Dry food is a product type** (`Dry Dog Food`, `Dry Cat Food`). Wet food and treats carry
+  `custom.kcal_per_kg` too, so that metafield can't tell them apart.
+- **Subscription lines are left out** of the reward (`sellingPlanAllocation`): they already get
+  the plan's discount and renew without a reorder. An automatic discount would apply to the
+  first order only anyway.
+- **B2B buyers are left out** of both rules (`purchasingCompany`): their catalog sets their prices
+  and quantity rules.
+- **The limit runs at checkout steps only** (`buyerJourney.step`). In the online store cart, a
+  validation error makes the Ajax Cart API reject every change with a 422, removals included, so
+  a cart already over the limit (built while signed in as B2B) could never be fixed. Errors
+  target the whole cart (`$.cart`), the only cart-level target the reference documents.
+- **Both fail safe.** Missing or invalid settings mean no discount and no error. The validation
+  is created with `blockOnFailure: false`: if the Function itself fails, checkout stays open.
+
+**Instruction budget.** A Function may run up to 11 million instructions. Measured with
+`shopify app function run` on carts of 5, 50 and 200 lines (the most a Function sees in full):
+
+| Function | 5 lines | 50 lines | 200 lines |
+|---|---|---|---|
+| Refill reward | 0.58 M | 2.17 M | 7.45 M (68 %) |
+| Order limit | 0.36 M | 1.88 M | 6.73 M (61 %) |
+
+About half the cost is parsing the input, so every field in the input query is paid for on every
+line. The logic walks the lines in plain loops with no intermediate arrays: a first version of
+the order limit built with `flatMap` and a `Map` cost 9.1 M at 200 lines.
+
+Both Functions have unit tests that call them with typed input fixtures, and a contract test
+checks that every value the admin page saves is accepted by the Function that reads it.
 
 ## Production
 

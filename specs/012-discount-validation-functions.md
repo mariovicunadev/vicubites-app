@@ -1,0 +1,195 @@
+# 012 — Refill reward discount and B2C order limit (Shopify Functions)
+
+| Field     | Value |
+|-----------|-------|
+| Status    | In review |
+| Branch    | `feature/012-discount-validation-functions` |
+| Estimate  | 3.5–4.5 h (AI-assisted) · 9–11 h manual |
+| Actual    | — |
+
+## Goal
+
+Two pieces of checkout logic that run on Shopify's infrastructure as Shopify Functions:
+
+- **Refill reward (Discount Function):** a B2C customer whose dry food is due to run out soon gets
+  an automatic percentage discount on the dry food in their cart. This rewards reordering on time.
+- **B2C order limit (Validation Function):** a B2C cart can't hold more than a set number of units
+  of one variant. Cart and checkout show a clear message, and checkout is blocked until the
+  quantity is reduced. This protects retail stock from bulk resale; wholesale goes through B2B.
+
+The merchant turns both on and sets them up from a new **Checkout rules** page in the app.
+
+## Context
+
+[Spec 008](008-refill-radar.md) writes each B2C customer's next run-out date to the customer
+metafield `$app.refill_run_out` (`date`). Specs 009 and 010 use it for reminders (storefront
+block, Klaviyo, Flow). This spec closes the loop at checkout: the reminder brings the customer
+back, and the discount applies itself.
+
+**Why Functions and not native settings:**
+
+- A native automatic discount can target products, collections, customer segments or quantities.
+  It can't read an app-owned date and compare it with today. A volume discount would be native, so
+  it is not built here.
+- B2B already has native quantity rules (minimum, maximum and increment) in its catalogs. Retail
+  has no native per-order limit, so the Validation Function covers B2C only and leaves B2B to the
+  native rules.
+
+**Why TypeScript:** the app is TypeScript and both functions are light (a few cart lines and a
+date comparison), well under the instruction limit. Rust is the documented choice for heavy
+logic. That trade-off is measured with `shopify app function run` and recorded in the README.
+
+## Scope
+
+**In scope**
+
+- Function extension `refill-reward` (Discount Function API, target
+  `cart.lines.discounts.generate.run`, discount class `PRODUCT`):
+  - Applies only when the buyer is a logged-in customer with no `purchasingCompany` (B2C).
+  - Reads `$app.refill_run_out` from the customer and `shop.localTime.date`. The customer
+    qualifies when the run-out date is between today and today + `windowDays`. It also qualifies
+    when the date has already passed by up to `windowDays`, so a late reorder still counts.
+  - Discounts every dry food line (product type `Dry Dog Food` or `Dry Cat Food`) by
+    `percentage`. Wet food and treats also carry `custom.kcal_per_kg`, so the metafield can't
+    identify dry food; the product type can. Lines on a subscription (`sellingPlanAllocation`)
+    are left out: they already carry the plan's discount and renew without a reorder. The
+    message shown at checkout is "Refill reward".
+  - Configuration in the discount's `$app.refill-reward-config` JSON metafield:
+    `{ "percentage": 10, "windowDays": 14 }`. Missing or invalid configuration means no
+    discount.
+  - Combines with order and shipping discounts, so the native free shipping threshold still
+    applies.
+- Function extension `order-limit` (Cart and Checkout Validation Function API, target
+  `cart.validations.generate.run`):
+  - B2C carts only (no `purchasingCompany`).
+  - Checkout steps only (`buyerJourney.step` is `CHECKOUT_INTERACTION` or
+    `CHECKOUT_COMPLETION`). In the online store cart, a returned error makes the Ajax Cart API
+    reject every change with a 422, removals included, so a cart that is already over the limit
+    (built while signed in as B2B, then signed out) could never be fixed. This follows the
+    reference's own examples, which return early outside checkout.
+  - Quantities are added up per variant (one variant can sit on several lines). For each
+    variant over `maxPerVariant`, returns one cart-level error (`$.cart`):
+    "Limit of {max} per order for {product title}. For wholesale, contact us about a business
+    account."
+  - Configuration in the validation's `$app.order-limit-config` JSON metafield:
+    `{ "maxPerVariant": 6 }`. Missing or invalid configuration means no errors.
+- App page `/app/checkout-rules`:
+  - Status of each function instance (active or not, current settings).
+  - A form for each one. It creates the instance if missing (`discountAutomaticAppCreate`,
+    `validationCreate`) or updates its settings metafield (`metafieldsSet`). Input is checked on
+    the server: percentage 1–50, window 1–60 days, limit 1–99.
+  - Navigation link; English copy, as on the other app pages.
+- Unit tests for both functions with input fixtures (B2C due, B2C not due, B2C late, B2B, guest,
+  missing config, non-food lines, line over the limit), plus tests for the form validation.
+- Production: `shopify app deploy` and instances created in the store from the production app.
+- Housekeeping: `extensions/*/manifest.json` (generated by the CLI on build) added to
+  `.gitignore`.
+
+**Out of scope**
+
+- A Discount UI extension (settings form inside the native discount page). The app page covers
+  configuration for now.
+- Discount codes. Only the automatic discount is built.
+- Matching the discount to the due species. Every dry food line is discounted. Per-species
+  matching would need the JSON forecast in the function input and is listed as a follow-up.
+- Network access from functions, and quantity limits for B2B (native catalog rules).
+
+## Acceptance criteria
+
+- [x] Given a B2C customer whose `refill_run_out` falls within `windowDays` of today (before or
+      after), when they add dry food to the cart, then each dry food line shows the
+      "Refill reward" discount at the configured percentage, in the cart and at checkout.
+      Verified at checkout with a customer due in 3 days (10 % on each dry food line).
+- [x] Given a B2C customer with no run-out date, a run-out date outside the window, or a guest
+      checkout, then no Refill reward discount applies.
+      Guest checkout verified in the store; the other cases by unit tests.
+- [x] Given a B2B buyer (company location), then neither function changes or blocks the cart.
+- [x] Lines that aren't dry food (wet food, treats, other products) and dry food lines on a
+      subscription are never discounted.
+      Verified in the store with a wet food line and a subscription line, plus unit tests.
+- [ ] The Refill reward combines with the free shipping threshold on the same order.
+      Pending: no test cart has reached the threshold yet; checked with the production cart.
+- [x] Given a B2C cart with more than `maxPerVariant` units of one variant, then checkout shows
+      the limit message naming the product and can't be completed until the quantity is
+      reduced. The cart itself always accepts changes, including removals.
+- [x] Missing or invalid configuration makes each function return no operations (no discount, no
+      error), and unit tests cover it.
+- [x] `/app/checkout-rules` shows each instance's status, creates a missing instance, updates
+      settings, and rejects out-of-range values with a field error. Changes take effect without a
+      redeploy.
+      Verified on the dev preview and read back through the Admin API.
+- [x] Instruction count per function, measured with `shopify app function run` on the largest
+      fixture, is recorded in the README.
+- [x] Access scopes: only `write_discounts` and `write_validations` added (with their `read_`
+      counterparts implied).
+- [x] Every Admin GraphQL operation and both function input queries are validated against API
+      version 2026-10, and Admin operations are typed by codegen.
+- [x] `npm run typecheck`, `npm run lint`, `npm test` and `npx react-router build` pass, along
+      with function builds (`shopify app function build` for each).
+- [ ] Deployed to production, with both instances active in the store and verified with one B2C
+      test cart (discount and limit) and one B2B check. Functions released (app version 4);
+      instances are created from the production page after merge.
+- [x] One axe pass on `/app/checkout-rules`: 0 violations (32 rules passed), run on the page's
+      server render loaded with the Polaris web components, in two states (saved banner and a
+      field error); the admin iframe is cross-origin. README section "Checkout rules" added.
+
+## Technical approach
+
+**Extensions** (generated with `shopify app generate extension`, TypeScript template):
+
+- `extensions/refill-reward/`: `src/cart_lines_discounts_generate_run.graphql` + `.ts`. Input:
+  `shop.localTime.date`, `cart.buyerIdentity.customer.metafield($app, refill_run_out)`,
+  `cart.buyerIdentity.purchasingCompany`, line `id`, `sellingPlanAllocation.sellingPlan.id`,
+  `merchandise.product.productType`,
+  `discount.discountClasses` and `discount.metafield($app,
+  refill-reward-config).jsonValue`. Output: one `productDiscountsAdd` operation with a
+  percentage value and one target per qualifying line. The function returns nothing when
+  `PRODUCT` is not among `discountClasses`.
+- `extensions/order-limit/`: `src/cart_validations_generate_run.graphql` + `.ts`. Input:
+  `cart.buyerIdentity.purchasingCompany`, lines (`quantity`, variant and product title) and
+  `validation.metafield($app, order-limit-config).jsonValue`. Output: `validationAdd` with one
+  error per variant over the limit, targeted at `$.cart` (the only cart-level target the
+  reference documents; its own quantity-limit example uses it). Created with
+  `blockOnFailure: false`: if the function itself fails, checkout stays open (fail open).
+- Pure logic (date window, config parsing) lives in small exported functions so that unit tests
+  call them directly. Function tests run in Vitest against the generated input types.
+
+**App:**
+
+- `app/routes/app.checkout-rules.tsx`: loader reads instances (`discountNodes` filtered by the
+  app's function, `validations`) and their settings metafields. The action creates or updates
+  them.
+- `app/lib/checkout-rules/`: settings types, parsing and validation shared by the route and the
+  tests, plus Admin GraphQL operations (`discountAutomaticAppCreate`, `validationCreate`,
+  `metafieldsSet`).
+- Access scopes added: `write_discounts`, `write_validations` (the owner approves the update in
+  the admin).
+
+**Rollout:** develop against the dev preview (`shopify app dev`), verify, clean the dev preview,
+then `shopify app deploy` and create the production instances from the production app.
+
+## References
+
+- Discount Function API (2026-10): https://shopify.dev/docs/api/functions/2026-10/discount
+- Build a Discount Function: https://shopify.dev/docs/apps/build/discounts/build-discount-function
+- Cart and Checkout Validation Function API (2026-10):
+  https://shopify.dev/docs/api/functions/2026-10/cart-and-checkout-validation
+- Create checkout validation:
+  https://shopify.dev/docs/apps/build/checkout/cart-checkout-validation/create-checkout-validation
+- Metafields for input queries:
+  https://shopify.dev/docs/apps/build/functions/input-queries/metafields-for-input-queries
+- Function resource limits: https://shopify.dev/docs/api/functions/2026-10
+- Optimize instruction counts: https://shopify.dev/docs/apps/build/functions/optimize-instruction-counts
+- Test and debug Shopify Functions: https://shopify.dev/docs/apps/build/functions/test-debug-functions
+
+## Risks and open questions
+
+- `shop.localTime.date` follows the store's time zone. A customer near midnight may see the
+  window move by a day. This is accepted and documented.
+- A store can have at most 25 active validation functions (reference, 2026-10); this app adds
+  one. Line-level targets such as `$.cart.lines[0].quantity` aren't documented, so the error is
+  cart-level and names the product instead.
+- The dev preview and production share one app (D-045). Instances created during `app dev` point
+  to the preview function: they are removed before the production instances are created.
+- The B2B check needs a company-location session on the storefront (owner steps, as in earlier
+  specs).

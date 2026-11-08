@@ -1,0 +1,3 @@
+# The CLI rewrites these with LF; keep them LF so they never show up as modified
+/extensions/*/shopify.d.ts text eol=lf
+/extensions/*/generated/** text eol=lf

@@ -1,0 +1,43 @@
+query CartInput {
+  shop {
+    localTime {
+      date
+    }
+  }
+  cart {
+    buyerIdentity {
+      purchasingCompany {
+        company {
+          id
+        }
+      }
+      customer {
+        refillRunOut: metafield(namespace: "$app", key: "refill_run_out") {
+          value
+        }
+      }
+    }
+    lines {
+      id
+      sellingPlanAllocation {
+        sellingPlan {
+          id
+        }
+      }
+      merchandise {
+        __typename
+        ... on ProductVariant {
+          product {
+            productType
+          }
+        }
+      }
+    }
+  }
+  discount {
+    discountClasses
+    config: metafield(namespace: "$app", key: "refill-reward-config") {
+      jsonValue
+    }
+  }
+}
