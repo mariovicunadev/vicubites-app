@@ -123,7 +123,9 @@ logic. That trade-off is measured with `shopify app function run` and recorded i
       with function builds (`shopify app function build` for each).
 - [ ] Deployed to production, with both instances active in the store and verified with one B2C
       test cart (discount and limit) and one B2B check.
-- [ ] One axe pass on `/app/checkout-rules`. README section "Checkout rules" added.
+- [x] One axe pass on `/app/checkout-rules`: 0 violations (32 rules passed), run on the page's
+      server render loaded with the Polaris web components, in two states (saved banner and a
+      field error); the admin iframe is cross-origin. README section "Checkout rules" added.
 
 ## Technical approach
 
