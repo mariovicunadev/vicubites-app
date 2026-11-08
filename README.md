@@ -98,7 +98,7 @@ and customers without a forecast, get no markup; a sold-out bag links to its pro
 
 | Layer | Source | What it counts | Limit |
 |---|---|---|---|
-| Reminder funnel | Web pixel (`extensions/refill-radar-pixel/`) posting to `/pixel/refill/events` | Reminder views, "Reorder" clicks, completed checkouts after a view | A minimum, never a total: the pixel runs only with analytics consent, and content blockers block its sandbox |
+| Reminder funnel | Web pixel (`extensions/refill-radar-pixel/`) posting to `/pixel/refill/events` | Reminder views, "Reorder" clicks, completed checkouts after a view | A minimum, never a total: the pixel runs only with analytics consent, and content blockers or network-level tracker filters block its sandbox |
 | Reorders | `orders/create` webhook | Dry food reorders from returning customers | Counts every order, but doesn't know whether the customer saw the reminder |
 
 The admin page shows both for the last 30 days. Pixel events are untrusted counts (anyone can
@@ -253,10 +253,12 @@ B2B to HubSpot". Shop data itself lives in Shopify. Flow workflows built on the 
 trigger during a development preview keep listening to the preview trigger: select the trigger
 again in the workflow after the first deploy.
 
-**Known issue.** In production the web pixel doesn't post events yet: the pixel loads with the
-production endpoint and analytics consent, but no request reaches `/pixel/refill/events`. The
-same code recorded views, clicks and checkouts during development. Reorders are still counted by
-the `orders/create` webhook; only the reminder funnel figures are missing.
+**Testing the pixel.** Network-level tracker filters (for example a VPN's threat protection,
+which inspects HTTPS even in a private window) can answer the pixel sandbox worker and
+`/api/collect` with an empty `204`. The pixel then loads no code and sends nothing, without a
+console error. Before debugging, compare the worker's response headers with a normal storefront
+URL (a filtered reply has almost none) or allowlist the store. Reorders are counted by the
+`orders/create` webhook either way.
 
 ## Getting started
 
