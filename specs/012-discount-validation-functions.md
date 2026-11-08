@@ -49,7 +49,9 @@ logic. That trade-off is measured with `shopify app function run` and recorded i
   - Reads `$app.refill_run_out` from the customer and `shop.localTime.date`. The customer
     qualifies when the run-out date is between today and today + `windowDays`. It also qualifies
     when the date has already passed by up to `windowDays`, so a late reorder still counts.
-  - Discounts every dry food line (product has `custom.kcal_per_kg`) by `percentage`. The
+  - Discounts every dry food line (product type `Dry Dog Food` or `Dry Cat Food`) by
+    `percentage`. Wet food and treats also carry `custom.kcal_per_kg`, so the metafield can't
+    identify dry food; the product type can. The
     message shown at checkout is "Refill reward".
   - Configuration in the discount's `$app.refill-reward-config` JSON metafield:
     `{ "percentage": 10, "windowDays": 14 }`. Missing or invalid configuration means no
@@ -94,7 +96,7 @@ logic. That trade-off is measured with `shopify app function run` and recorded i
 - [ ] Given a B2C customer with no run-out date, a run-out date outside the window, or a guest
       checkout, then no Refill reward discount applies.
 - [ ] Given a B2B buyer (company location), then neither function changes or blocks the cart.
-- [ ] Non-food lines (no `custom.kcal_per_kg`) are never discounted.
+- [ ] Lines that aren't dry food (wet food, treats, other products) are never discounted.
 - [ ] The Refill reward combines with the free shipping threshold on the same order.
 - [ ] Given a B2C cart with more than `maxPerVariant` units of one variant, then the cart and the
       checkout show the limit message naming the product, and checkout can't be completed
@@ -122,8 +124,8 @@ logic. That trade-off is measured with `shopify app function run` and recorded i
 
 - `extensions/refill-reward/`: `src/cart_lines_discounts_generate_run.graphql` + `.ts`. Input:
   `shop.localTime.date`, `cart.buyerIdentity.customer.metafield($app, refill_run_out)`,
-  `cart.buyerIdentity.purchasingCompany`, line `id`, `merchandise.product.metafield(custom,
-  kcal_per_kg)`, `discount.discountClasses` and `discount.metafield($app,
+  `cart.buyerIdentity.purchasingCompany`, line `id`, `merchandise.product.productType`,
+  `discount.discountClasses` and `discount.metafield($app,
   refill-reward-config).jsonValue`. Output: one `productDiscountsAdd` operation with a
   percentage value and one target per qualifying line. The function returns nothing when
   `PRODUCT` is not among `discountClasses`.

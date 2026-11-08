@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { daysBetween, isRefillDue, parseRefillRewardConfig } from "./refill-reward";
+import { daysBetween, isDryFood, isRefillDue, parseRefillRewardConfig } from "./refill-reward";
 
 describe("parseRefillRewardConfig", () => {
   it("accepts integers inside both ranges", () => {
@@ -60,4 +60,18 @@ describe("isRefillDue", () => {
     expect(isRefillDue("2026-10-23", today, 14)).toBe(false);
     expect(isRefillDue("", today, 14)).toBe(false);
   });
+});
+
+describe("isDryFood", () => {
+  it("accepts the dry food product types", () => {
+    expect(isDryFood("Dry Dog Food")).toBe(true);
+    expect(isDryFood("Dry Cat Food")).toBe(true);
+  });
+
+  it.each([["Wet Dog Food"], ["Wet Cat Food"], ["Dog Treats"], ["Cat Treats"], [""], [null], [undefined]])(
+    "rejects %j",
+    (productType) => {
+      expect(isDryFood(productType)).toBe(false);
+    },
+  );
 });

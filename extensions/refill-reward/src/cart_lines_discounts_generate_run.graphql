@@ -23,9 +23,7 @@ query CartInput {
         __typename
         ... on ProductVariant {
           product {
-            kcalPerKg: metafield(namespace: "custom", key: "kcal_per_kg") {
-              value
-            }
+            productType
           }
         }
       }

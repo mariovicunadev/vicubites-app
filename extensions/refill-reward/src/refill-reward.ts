@@ -52,3 +52,14 @@ export function isRefillDue(runOutOn: string, today: string, windowDays: number)
   const days = daysBetween(today, runOutOn);
   return days !== null && Math.abs(days) <= windowDays;
 }
+
+/**
+ * Product types that count as dry food. Wet food and treats also carry a
+ * calorie density (`custom.kcal_per_kg`), so the metafield can't tell them
+ * apart; the product type, kept by the merchant, can.
+ */
+export const DRY_FOOD_TYPES: readonly string[] = ["Dry Dog Food", "Dry Cat Food"];
+
+export function isDryFood(productType: string | null | undefined): boolean {
+  return productType != null && DRY_FOOD_TYPES.includes(productType);
+}

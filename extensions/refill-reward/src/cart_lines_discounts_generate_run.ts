@@ -4,7 +4,7 @@ import {
   type CartInput,
   type CartLinesDiscountsGenerateRunResult,
 } from "../generated/api";
-import { isRefillDue, parseRefillRewardConfig } from "./refill-reward";
+import { isDryFood, isRefillDue, parseRefillRewardConfig } from "./refill-reward";
 
 export const REFILL_REWARD_MESSAGE = "Refill reward";
 
@@ -36,14 +36,15 @@ export function cartLinesDiscountsGenerateRun(
     return NO_DISCOUNT;
   }
 
-  // Dry food is any product with a calorie density (same rule as the forecast).
-  const targets = input.cart.lines
-    .filter(
-      (line) =>
-        line.merchandise.__typename === "ProductVariant" &&
-        line.merchandise.product.kcalPerKg != null,
-    )
-    .map((line) => ({ cartLine: { id: line.id } }));
+  // One plain loop, no intermediate arrays: per-line cost dominates the
+  // instruction budget in large carts.
+  const targets: { cartLine: { id: string } }[] = [];
+  for (const line of input.cart.lines) {
+    const merchandise = line.merchandise;
+    if (merchandise.__typename === "ProductVariant" && isDryFood(merchandise.product.productType)) {
+      targets.push({ cartLine: { id: line.id } });
+    }
+  }
 
   if (targets.length === 0) return NO_DISCOUNT;
 

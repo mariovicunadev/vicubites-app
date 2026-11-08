@@ -9,15 +9,14 @@ type Line = CartInput["cart"]["lines"][number];
 
 const TODAY = "2026-11-07";
 
-const dryFood = (id: string): Line => ({
+const product = (id: string, productType: string): Line => ({
   id,
-  merchandise: { __typename: "ProductVariant", product: { kcalPerKg: { value: "3650" } } },
+  merchandise: { __typename: "ProductVariant", product: { productType } },
 });
 
-const treat = (id: string): Line => ({
-  id,
-  merchandise: { __typename: "ProductVariant", product: { kcalPerKg: null } },
-});
+const dryFood = (id: string) => product(id, "Dry Dog Food");
+const wetFood = (id: string) => product(id, "Wet Dog Food");
+const treat = (id: string) => product(id, "Dog Treats");
 
 const customItem = (id: string): Line => ({ id, merchandise: { __typename: "CustomProduct" } });
 
@@ -50,7 +49,12 @@ describe("cartLinesDiscountsGenerateRun", () => {
   it("discounts every dry food line for a B2C customer whose refill is due", () => {
     const result = cartLinesDiscountsGenerateRun(
       cartInput({
-        lines: [dryFood("gid://shopify/CartLine/1"), treat("gid://shopify/CartLine/2"), dryFood("gid://shopify/CartLine/3")],
+        lines: [
+          dryFood("gid://shopify/CartLine/1"),
+          treat("gid://shopify/CartLine/2"),
+          product("gid://shopify/CartLine/3", "Dry Cat Food"),
+          wetFood("gid://shopify/CartLine/4"),
+        ],
       }),
     );
 
@@ -85,6 +89,7 @@ describe("cartLinesDiscountsGenerateRun", () => {
     ["no forecast for the customer", cartInput({ runOutOn: null })],
     ["a guest checkout", cartInput({ guest: true })],
     ["a B2B buyer", cartInput({ b2b: true })],
+    ["wet food and treats only", cartInput({ lines: [wetFood("gid://shopify/CartLine/1"), treat("gid://shopify/CartLine/2")] })],
     ["no dry food in the cart", cartInput({ lines: [treat("gid://shopify/CartLine/1"), customItem("gid://shopify/CartLine/2")] })],
     ["an empty cart", cartInput({ lines: [] })],
     ["no configuration", cartInput({ config: null })],
