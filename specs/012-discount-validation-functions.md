@@ -2,7 +2,7 @@
 
 | Field     | Value |
 |-----------|-------|
-| Status    | Approved |
+| Status    | In review |
 | Branch    | `feature/012-discount-validation-functions` |
 | Estimate  | 3.5–4.5 h (AI-assisted) · 9–11 h manual |
 | Actual    | — |
@@ -96,33 +96,39 @@ logic. That trade-off is measured with `shopify app function run` and recorded i
 
 ## Acceptance criteria
 
-- [ ] Given a B2C customer whose `refill_run_out` falls within `windowDays` of today (before or
+- [x] Given a B2C customer whose `refill_run_out` falls within `windowDays` of today (before or
       after), when they add dry food to the cart, then each dry food line shows the
       "Refill reward" discount at the configured percentage, in the cart and at checkout.
-- [ ] Given a B2C customer with no run-out date, a run-out date outside the window, or a guest
+      Verified at checkout with a customer due in 3 days (10 % on each dry food line).
+- [x] Given a B2C customer with no run-out date, a run-out date outside the window, or a guest
       checkout, then no Refill reward discount applies.
-- [ ] Given a B2B buyer (company location), then neither function changes or blocks the cart.
-- [ ] Lines that aren't dry food (wet food, treats, other products) and dry food lines on a
+      Guest checkout verified in the store; the other cases by unit tests.
+- [x] Given a B2B buyer (company location), then neither function changes or blocks the cart.
+- [x] Lines that aren't dry food (wet food, treats, other products) and dry food lines on a
       subscription are never discounted.
+      Verified in the store with a wet food line and a subscription line, plus unit tests.
 - [ ] The Refill reward combines with the free shipping threshold on the same order.
-- [ ] Given a B2C cart with more than `maxPerVariant` units of one variant, then checkout shows
+      Pending: no test cart has reached the threshold yet; checked with the production cart.
+- [x] Given a B2C cart with more than `maxPerVariant` units of one variant, then checkout shows
       the limit message naming the product and can't be completed until the quantity is
       reduced. The cart itself always accepts changes, including removals.
-- [ ] Missing or invalid configuration makes each function return no operations (no discount, no
+- [x] Missing or invalid configuration makes each function return no operations (no discount, no
       error), and unit tests cover it.
-- [ ] `/app/checkout-rules` shows each instance's status, creates a missing instance, updates
+- [x] `/app/checkout-rules` shows each instance's status, creates a missing instance, updates
       settings, and rejects out-of-range values with a field error. Changes take effect without a
       redeploy.
-- [ ] Instruction count per function, measured with `shopify app function run` on the largest
+      Verified on the dev preview and read back through the Admin API.
+- [x] Instruction count per function, measured with `shopify app function run` on the largest
       fixture, is recorded in the README.
-- [ ] Access scopes: only `write_discounts` and `write_validations` added (with their `read_`
+- [x] Access scopes: only `write_discounts` and `write_validations` added (with their `read_`
       counterparts implied).
-- [ ] Every Admin GraphQL operation and both function input queries are validated against API
+- [x] Every Admin GraphQL operation and both function input queries are validated against API
       version 2026-10, and Admin operations are typed by codegen.
-- [ ] `npm run typecheck`, `npm run lint`, `npm test` and `npx react-router build` pass, along
+- [x] `npm run typecheck`, `npm run lint`, `npm test` and `npx react-router build` pass, along
       with function builds (`shopify app function build` for each).
 - [ ] Deployed to production, with both instances active in the store and verified with one B2C
-      test cart (discount and limit) and one B2B check.
+      test cart (discount and limit) and one B2B check. Functions released (app version 4);
+      instances are created from the production page after merge.
 - [x] One axe pass on `/app/checkout-rules`: 0 violations (32 rules passed), run on the page's
       server render loaded with the Polaris web components, in two states (saved banner and a
       field error); the admin iframe is cross-origin. README section "Checkout rules" added.
