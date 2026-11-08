@@ -134,11 +134,12 @@ Access scopes added: none.
   while the preview ran kept listening to the preview trigger: Flow accepted
   `flowTriggerReceive` with no errors and ran nothing. Selecting the trigger again in the
   workflow fixed it (verified with one test trigger; the test tag was removed).
-- **Web pixel in production (open).** The pixel loads with the production endpoint and
-  analytics consent allowed, and the same code recorded events during development, yet no
-  request reaches `/pixel/refill/events`. Ruled out: consent, the Customer events connection,
-  the pixel record (deleted and recreated) and the script version (a new version was released).
-  Reorders are still counted server-side; only the funnel figures are missing. Follow-up work.
+- **Web pixel in production (resolved).** No request reached `/pixel/refill/events` from the
+  test browser. The cause was outside the app: a network-level tracker filter on the test
+  machine inspected HTTPS (also in private windows) and answered the pixel sandbox worker and
+  `/api/collect` with an empty `204`, so no pixel code ran. `curl` received the real worker, and
+  the published pixel script matched the local build. With the store allowlisted in the filter,
+  the pixel posted and the endpoint answered `204`. The README notes how to spot it.
 - **Initial load sends reminders.** Finishing an initial load or a rebuild sends any due
   reminders (Klaviyo and Flow); the README says so.
 - **Plan limits.** Vercel Hobby (non-commercial use; functions up to 300 s) and Neon Free (1 GB
