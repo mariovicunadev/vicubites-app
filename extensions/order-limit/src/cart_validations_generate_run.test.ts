@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { CartValidationsGenerateRunInput } from "../generated/api";
+import { BuyerJourneyStep, type CartValidationsGenerateRunInput } from "../generated/api";
 import { cartValidationsGenerateRun } from "./cart_validations_generate_run";
 
 type Line = CartValidationsGenerateRunInput["cart"]["lines"][number];
@@ -11,13 +11,15 @@ const variant = (id: string, quantity: number, title = "Adult Chicken Recipe"): 
 
 const customItem = (quantity: number): Line => ({ quantity, merchandise: { __typename: "CustomProduct" } });
 
-/** A B2C cart with a limit of 6; each test changes one thing. */
+/** A B2C cart at checkout with a limit of 6; each test changes one thing. */
 function cartInput({
+  step = BuyerJourneyStep.CheckoutCompletion as BuyerJourneyStep | null,
   lines = [variant("gid://shopify/ProductVariant/1", 7)],
   b2b = false,
   config = { maxPerVariant: 6 } as unknown,
 } = {}): CartValidationsGenerateRunInput {
   return {
+    buyerJourney: { step },
     cart: {
       buyerIdentity: {
         purchasingCompany: b2b ? { company: { id: "gid://shopify/Company/1" } } : null,
@@ -61,7 +63,15 @@ describe("cartValidationsGenerateRun", () => {
     });
   });
 
+  it("also blocks while the buyer moves through checkout", () => {
+    const result = cartValidationsGenerateRun(cartInput({ step: BuyerJourneyStep.CheckoutInteraction }));
+    expect(result.operations).toHaveLength(1);
+  });
+
   it.each([
+    // In the cart an error rejects every change, removals included.
+    ["a cart interaction", cartInput({ step: BuyerJourneyStep.CartInteraction })],
+    ["an unknown step", cartInput({ step: null })],
     ["a cart within the limit", cartInput({ lines: [variant("gid://shopify/ProductVariant/1", 6)] })],
     ["a B2B buyer", cartInput({ b2b: true })],
     ["custom items only", cartInput({ lines: [customItem(20)] })],

@@ -61,6 +61,11 @@ logic. That trade-off is measured with `shopify app function run` and recorded i
 - Function extension `order-limit` (Cart and Checkout Validation Function API, target
   `cart.validations.generate.run`):
   - B2C carts only (no `purchasingCompany`).
+  - Checkout steps only (`buyerJourney.step` is `CHECKOUT_INTERACTION` or
+    `CHECKOUT_COMPLETION`). In the online store cart, a returned error makes the Ajax Cart API
+    reject every change with a 422, removals included, so a cart that is already over the limit
+    (built while signed in as B2B, then signed out) could never be fixed. This follows the
+    reference's own examples, which return early outside checkout.
   - Quantities are added up per variant (one variant can sit on several lines). For each
     variant over `maxPerVariant`, returns one cart-level error (`$.cart`):
     "Limit of {max} per order for {product title}. For wholesale, contact us about a business
@@ -98,9 +103,9 @@ logic. That trade-off is measured with `shopify app function run` and recorded i
 - [ ] Given a B2B buyer (company location), then neither function changes or blocks the cart.
 - [ ] Lines that aren't dry food (wet food, treats, other products) are never discounted.
 - [ ] The Refill reward combines with the free shipping threshold on the same order.
-- [ ] Given a B2C cart with more than `maxPerVariant` units of one variant, then the cart and the
-      checkout show the limit message naming the product, and checkout can't be completed
-      until the quantity is reduced.
+- [ ] Given a B2C cart with more than `maxPerVariant` units of one variant, then checkout shows
+      the limit message naming the product and can't be completed until the quantity is
+      reduced. The cart itself always accepts changes, including removals.
 - [ ] Missing or invalid configuration makes each function return no operations (no discount, no
       error), and unit tests cover it.
 - [ ] `/app/checkout-rules` shows each instance's status, creates a missing instance, updates
