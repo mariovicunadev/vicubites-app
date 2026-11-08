@@ -5,11 +5,20 @@
 (() => {
   const connect = (picker) => {
     const scope = picker.closest('.shopify-section') || document;
-    const form = scope.querySelector('form[action*="/cart/add"]');
+    // The add to cart form is the one with a submit button: themes also render hidden
+    // `/cart/add` forms with none (Shop Pay Installments' price terms).
+    const forms = [...scope.querySelectorAll('form[action*="/cart/add"]')];
+    const form = forms.find((candidate) => candidate.querySelector('[type="submit"]')) || forms[0];
     if (!form) return;
-    if (!form.id) form.id = 'StarterKitProductForm-' + Math.random().toString(36).slice(2);
+    // Attribute access, not `form.id`: the product form holds an `<input name="id">` (the
+    // variant), and named controls shadow form properties (`form.id` is that input).
+    let formId = form.getAttribute('id');
+    if (!formId) {
+      formId = 'StarterKitProductForm-' + Math.random().toString(36).slice(2);
+      form.setAttribute('id', formId);
+    }
     for (const field of picker.querySelectorAll('[data-kit-field]')) {
-      field.setAttribute('form', form.id);
+      field.setAttribute('form', formId);
     }
   };
 
