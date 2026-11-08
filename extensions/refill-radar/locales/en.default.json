@@ -14,5 +14,12 @@
     "reorder": "Reorder",
     "view_product": "View product",
     "note": "An estimate to help you reorder in time, not feeding advice."
+  },
+  "starter_kit": {
+    "recipe": "Dry food recipe",
+    "treat": "Treat flavor",
+    "note": "Your kit ships as the recipe and treat you choose.",
+    "hint_inactive": "Starter kit picker: turn on bundles in the Vicubites Ops app to show the options.",
+    "hint_other_product": "Starter kit picker: shows only on the starter kit product."
   }
 }

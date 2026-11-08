@@ -1,0 +1,86 @@
+{% doc %}
+  Starter kit picker: lets the buyer choose the dry food recipe and the treat flavor of the Cat
+  Starter Kit. The choices travel as hidden line item properties (`_kit_recipe`, `_kit_treat`) and
+  the app's Cart Transform function expands the kit into those products.
+
+  Options come from the app-owned shop metafield `$app.starter_kit_picker`, written together with
+  the function's configuration, so the picker never offers a choice the function doesn't know.
+  Renders only on the kit's product page; without JavaScript the kit uses the default choices.
+{% enddoc %}
+{%- liquid
+  assign picker = shop.metafields['$app'].starter_kit_picker.value
+  assign is_kit = false
+  if picker != blank and product != blank and product.id == picker.productId
+    assign is_kit = true
+  endif
+-%}
+
+{%- if is_kit -%}
+  <fieldset class="vb-kit" data-starter-kit-picker {{ block.shopify_attributes }}>
+    {%- if block.settings.heading != blank -%}
+      <legend class="vb-kit__heading">{{ block.settings.heading | escape }}</legend>
+    {%- endif -%}
+
+    <div class="vb-kit__field">
+      <label class="vb-kit__label" for="StarterKitRecipe-{{ block.id }}">{{ 'starter_kit.recipe' | t }}</label>
+      <select
+        class="vb-kit__select"
+        id="StarterKitRecipe-{{ block.id }}"
+        name="properties[_kit_recipe]"
+        data-kit-field
+      >
+        {%- for option in picker.recipes -%}
+          <option value="{{ option.value | escape }}"{% if option.value == picker.defaultRecipe %} selected{% endif %}>
+            {{- option.label | escape -}}
+          </option>
+        {%- endfor -%}
+      </select>
+    </div>
+
+    <div class="vb-kit__field">
+      <label class="vb-kit__label" for="StarterKitTreat-{{ block.id }}">{{ 'starter_kit.treat' | t }}</label>
+      <select
+        class="vb-kit__select"
+        id="StarterKitTreat-{{ block.id }}"
+        name="properties[_kit_treat]"
+        data-kit-field
+      >
+        {%- for option in picker.treats -%}
+          <option value="{{ option.value | escape }}"{% if option.value == picker.defaultTreat %} selected{% endif %}>
+            {{- option.label | escape -}}
+          </option>
+        {%- endfor -%}
+      </select>
+    </div>
+
+    <p class="vb-kit__note">{{ 'starter_kit.note' | t }}</p>
+  </fieldset>
+{%- elsif request.design_mode -%}
+  <p class="vb-kit__hint" {{ block.shopify_attributes }}>
+    {%- if picker == blank -%}
+      {{ 'starter_kit.hint_inactive' | t }}
+    {%- else -%}
+      {{ 'starter_kit.hint_other_product' | t }}
+    {%- endif -%}
+  </p>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Starter kit picker",
+  "target": "content",
+  "stylesheet": "starter-kit-picker.css",
+  "javascript": "starter-kit-picker.js",
+  "enabled_on": {
+    "templates": ["product"]
+  },
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Build your kit"
+    }
+  ]
+}
+{% endschema %}
