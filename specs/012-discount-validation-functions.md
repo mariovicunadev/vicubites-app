@@ -2,10 +2,10 @@
 
 | Field     | Value |
 |-----------|-------|
-| Status    | In review |
+| Status    | Done |
 | Branch    | `feature/012-discount-validation-functions` |
 | Estimate  | 3.5–4.5 h (AI-assisted) · 9–11 h manual |
-| Actual    | — |
+| Actual    | ~10 h (including store verification rounds) |
 
 ## Goal
 
@@ -107,8 +107,9 @@ logic. That trade-off is measured with `shopify app function run` and recorded i
 - [x] Lines that aren't dry food (wet food, treats, other products) and dry food lines on a
       subscription are never discounted.
       Verified in the store with a wet food line and a subscription line, plus unit tests.
-- [ ] The Refill reward combines with the free shipping threshold on the same order.
-      Pending: no test cart has reached the threshold yet; checked with the production cart.
+- [x] The Refill reward combines with the free shipping threshold on the same order.
+      Verified on production. The native free shipping discount combined with no other class;
+      it now combines with product discounts (both sides must allow a combination).
 - [x] Given a B2C cart with more than `maxPerVariant` units of one variant, then checkout shows
       the limit message naming the product and can't be completed until the quantity is
       reduced. The cart itself always accepts changes, including removals.
@@ -126,9 +127,10 @@ logic. That trade-off is measured with `shopify app function run` and recorded i
       version 2026-10, and Admin operations are typed by codegen.
 - [x] `npm run typecheck`, `npm run lint`, `npm test` and `npx react-router build` pass, along
       with function builds (`shopify app function build` for each).
-- [ ] Deployed to production, with both instances active in the store and verified with one B2C
-      test cart (discount and limit) and one B2B check. Functions released (app version 4);
-      instances are created from the production page after merge.
+- [x] Deployed to production, with both instances active in the store and verified with one B2C
+      test cart (discount and limit) and one B2B check. Functions released in app version 4;
+      instances created from the production page and read back through the Admin API (the
+      instances created on the development preview are removed with it).
 - [x] One axe pass on `/app/checkout-rules`: 0 violations (32 rules passed), run on the page's
       server render loaded with the Polaris web components, in two states (saved banner and a
       field error); the admin iframe is cross-origin. README section "Checkout rules" added.
