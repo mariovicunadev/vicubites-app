@@ -2,7 +2,7 @@
 
 | Field     | Value |
 |-----------|-------|
-| Status    | In progress |
+| Status    | In review |
 | Branch    | `feature/013-starter-kit-bundles` |
 | Estimate  | 3–4 h (AI-assisted) · 8–10 h manual |
 | Actual    | — |
@@ -134,8 +134,9 @@ and the pattern of configuring a function through an `$app` metafield on its ins
 - [x] Access scopes: only `write_cart_transforms` added.
 - [x] Every Admin GraphQL operation and the function input query are validated against API version
       2026-10, and Admin operations are typed by codegen.
-- [ ] `npm run typecheck`, `npm run lint`, `npm test`, `npx react-router build` and
+- [x] `npm run typecheck`, `npm run lint`, `npm test`, `npx react-router build` and
       `shopify app function build` pass.
+      278 tests in 31 files; the three functions build.
 - [ ] Deployed to production: new app version, Vercel promotion of `develop`, Cart Transform created
       from the production app and read back through the Admin API; both kits verified in a
       storefront cart.
