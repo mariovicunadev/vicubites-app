@@ -93,7 +93,8 @@ to the order when it is placed, where the `orders/create` webhook reads it.
 - [ ] Given a customer without a forecast, the page shows the empty state
 - [ ] Both extensions render in English and Spanish
 - [ ] Bundles stay under the limits (64 KB checkout, 128 KB full page), checked in the build output
-- [ ] Access scopes: only `write_orders`, required to own the `$app` order metafield definition
+- [ ] Access scopes: only `write_orders`, required to own the `$app` order metafield definition, and
+  `customer_read_customers`, required for the account page to query `customer`
 - [ ] Every Admin GraphQL operation is typed by codegen and validated against 2026-10; the Customer
       Account API query is validated against `customer` 2026-10
 - [ ] Unit tests: preference from order, reminder skipping, forecast `variantId`, extension helpers
@@ -121,6 +122,10 @@ to the order when it is placed, where the `orders/create` webhook reads it.
   definition (`[order.metafields.app.refill_reminders]`); the app doesn't edit orders. The
   alternative, a merchant-owned `custom` definition created in the admin, would leave the data
   outside the app's namespace and the setup outside version control.
+- Customer Account API scope added: `customer_read_customers`. The `shopify://customer-account`
+  request needs no extension capability, but the `customer` query requires this read-only scope;
+  without it the API answers `ACCESS_DENIED`. The page reads only the signed-in customer's two
+  `$app` metafields.
 
 ## References
 

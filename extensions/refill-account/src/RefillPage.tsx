@@ -71,6 +71,9 @@ function RefillPage() {
       )}
       {state.status === "ready" && state.cards.length > 0 && (
         <s-stack gap="base">
+          <s-section>
+            <s-text color="subdued">{translate(state.reminders ? "remindersOn" : "remindersOff")}</s-text>
+          </s-section>
           {state.cards.map((card) => (
             <s-section key={card.species} heading={translate(`species.${card.species}`)}>
               <s-stack gap="small-200">
@@ -93,7 +96,6 @@ function RefillPage() {
               </s-stack>
             </s-section>
           ))}
-          <s-text color="subdued">{translate(state.reminders ? "remindersOn" : "remindersOff")}</s-text>
         </s-stack>
       )}
     </s-page>
