@@ -34,8 +34,8 @@ api_version = "2026-10"
   topics = [ "companies/create", "companies/update", "company_contacts/create", "company_contacts/update" ]
 
 # Refill Radar forecast, owned by the app ($app namespace). Merchants can read
-# it on the customer; storefront and customer account access come with the
-# surfaces that need them.
+# it on the customer. The customer account page reads the forecast and the
+# reminder choice; Liquid reads $app metafields whatever their storefront access.
 [customer.metafields.app.refill_run_out]
 type = "date"
 name = "Refill run-out date"
@@ -45,14 +45,31 @@ access.admin = "merchant_read"
 [customer.metafields.app.refill_forecast]
 type = "json"
 name = "Refill forecast"
-description = "Refill Radar forecast per species: basis, days of food, last order and run-out dates."
+description = "Refill Radar forecast per species: basis, days of food, last order and run-out dates, last variant."
 access.admin = "merchant_read"
+access.customer_account = "read"
 
 [customer.metafields.app.refill_variants]
 type = "list.variant_reference"
 name = "Refill last bags"
 description = "Last dry food variant bought per species, for the storefront reorder button (Refill Radar)."
 access.admin = "merchant_read"
+
+[customer.metafields.app.refill_reminders]
+type = "boolean"
+name = "Refill reminders"
+description = "The customer's latest refill reminder choice from checkout; unset means on (Refill Radar)."
+access.admin = "merchant_read"
+access.customer_account = "read"
+
+# Set in checkout as a cart metafield by the Refill Radar block and copied to
+# the order when it's placed; the orders/create webhook reads it.
+[order.metafields.app.refill_reminders]
+type = "boolean"
+name = "Refill reminders"
+description = "Whether the buyer asked for refill reminders in checkout (Refill Radar)."
+access.admin = "merchant_read"
+capabilities.cart_to_order_copyable = true
 
 [auth]
 redirect_urls = [ "https://vicubites-app.vercel.app/auth/callback" ]
