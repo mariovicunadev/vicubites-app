@@ -125,8 +125,10 @@ and the pattern of configuring a function through an `$app` metafield on its ins
       its configuration; changes take effect without a redeploy.
       Status and creation verified on the dev preview (configuration and picker metafield read
       back through the Admin API); the save path is checked again in production.
-- [ ] Instruction count of the function, measured with `shopify app function run` on the largest
+- [x] Instruction count of the function, measured with `shopify app function run` on the largest
       fixture, is recorded in the README.
+      1.15 M (5 lines), 3.89 M (50 lines), 10.31 M at 200 lines with all 18 possible kit lines
+      (94 % of the limit).
 - [x] Access scopes: only `write_cart_transforms` added.
 - [x] Every Admin GraphQL operation and the function input query are validated against API version
       2026-10, and Admin operations are typed by codegen.
@@ -135,11 +137,11 @@ and the pattern of configuring a function through an `$app` metafield on its ins
 - [ ] Deployed to production: new app version, Vercel promotion of `develop`, Cart Transform created
       from the production app and read back through the Admin API; both kits verified in a
       storefront cart.
-- [ ] One axe pass on `/app/checkout-rules` (Bundles section): 0 violations. README section
+- [x] One axe pass on `/app/checkout-rules` (Bundles section): 0 violations. README section
       "Bundles: native vs. Cart Transform" added.
       Axe: 0 violations on the page's server render loaded with the Polaris web components, in two
       states (active kit: 32 rules passed; problems list with the function not deployed: 34), and
-      on the storefront product page with the picker block (0 on the page). README pending.
+      on the storefront product page with the picker block (0 on the page).
 
 ## Technical approach
 
