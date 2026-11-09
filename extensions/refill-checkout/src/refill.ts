@@ -30,10 +30,23 @@ export function bagGrams(optionValue: string): number | null {
   return match[2].toLowerCase() === "kg" ? Math.round(amount * 1000) : amount;
 }
 
+/**
+ * Compares resource IDs whether they come as GIDs or bare numbers: cart lines
+ * give `gid://shopify/Product/123`, while `appMetafields` targets give `123`
+ * (API 2026-10, although the reference documents a GID).
+ */
+export function sameResource(a: string, b: string): boolean {
+  const tail = (id: string) => id.slice(id.lastIndexOf("/") + 1);
+  return tail(a) === tail(b);
+}
+
 function productValue(metafields: readonly AppMetafieldEntry[], productId: string, key: string): string | null {
   const entry = metafields.find(
     ({ target, metafield }) =>
-      target.type === "product" && target.id === productId && metafield.namespace === "custom" && metafield.key === key,
+      target.type === "product" &&
+      sameResource(target.id, productId) &&
+      metafield.namespace === "custom" &&
+      metafield.key === key,
   );
   return entry ? String(entry.metafield.value) : null;
 }

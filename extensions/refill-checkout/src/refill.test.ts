@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { bagGrams, hasDryFood, isDryFoodLine, remindersChecked, type AppMetafieldEntry } from "./refill";
+import { bagGrams, hasDryFood, isDryFoodLine, remindersChecked, sameResource, type AppMetafieldEntry } from "./refill";
 
 const DOG_FOOD = "gid://shopify/Product/1";
 const TREATS = "gid://shopify/Product/2";
@@ -42,10 +42,27 @@ describe("dry food detection", () => {
     );
   });
 
+  it("matches metafield targets given as bare IDs, as checkout sends them", () => {
+    const fromCheckout: AppMetafieldEntry[] = [
+      { target: { type: "product", id: "9599873810670" }, metafield: { namespace: "custom", key: "species", value: "Dog" } },
+      { target: { type: "product", id: "9599873810670" }, metafield: { namespace: "custom", key: "kcal_per_kg", value: "3700" } },
+    ];
+    const line = { productId: "gid://shopify/Product/9599873810670", options: [{ name: "Size", value: "7 kg" }] };
+    expect(isDryFoodLine(line, fromCheckout)).toBe(true);
+  });
+
   it("finds dry food anywhere in the cart", () => {
     expect(hasDryFood([treatBag, dryBag], catalog)).toBe(true);
     expect(hasDryFood([treatBag], catalog)).toBe(false);
     expect(hasDryFood([], catalog)).toBe(false);
+  });
+});
+
+describe("sameResource", () => {
+  it("compares GIDs and bare IDs", () => {
+    expect(sameResource("gid://shopify/Product/1", "1")).toBe(true);
+    expect(sameResource("gid://shopify/Product/1", "gid://shopify/Product/1")).toBe(true);
+    expect(sameResource("gid://shopify/Product/1", "11")).toBe(false);
   });
 });
 
