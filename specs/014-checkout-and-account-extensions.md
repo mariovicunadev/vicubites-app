@@ -93,7 +93,7 @@ to the order when it is placed, where the `orders/create` webhook reads it.
 - [ ] Given a customer without a forecast, the page shows the empty state
 - [ ] Both extensions render in English and Spanish
 - [ ] Bundles stay under the limits (64 KB checkout, 128 KB full page), checked in the build output
-- [ ] Access scopes: no new scopes
+- [ ] Access scopes: only `write_orders`, required to own the `$app` order metafield definition
 - [ ] Every Admin GraphQL operation is typed by codegen and validated against 2026-10; the Customer
       Account API query is validated against `customer` 2026-10
 - [ ] Unit tests: preference from order, reminder skipping, forecast `variantId`, extension helpers
@@ -117,7 +117,10 @@ to the order when it is placed, where the `orders/create` webhook reads it.
   `reminders.server.ts` filter, `forecast.ts` `variantId`. Migration `refill_preference` on the
   Neon `dev` branch first, production at deploy.
 - `/app/refill`: reminders-off count.
-- Access scopes added: none.
+- Access scopes added: `write_orders`. Shopify requires it for an app to declare an order metafield
+  definition (`[order.metafields.app.refill_reminders]`); the app doesn't edit orders. The
+  alternative, a merchant-owned `custom` definition created in the admin, would leave the data
+  outside the app's namespace and the setup outside version control.
 
 ## References
 
