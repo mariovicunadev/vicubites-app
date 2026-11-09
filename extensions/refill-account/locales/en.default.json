@@ -1,0 +1,27 @@
+{
+  "heading": "Refill Radar",
+  "subheading": "When your pet's dry food is expected to run out, from your orders.",
+  "loading": "Loading your refill forecast",
+  "loadFailed": "We couldn't load your refill forecast. Please refresh the page.",
+  "empty": {
+    "heading": "No forecast yet",
+    "body": "Your forecast appears after your first dry food order."
+  },
+  "species": {
+    "dog": "Dog food",
+    "cat": "Cat food"
+  },
+  "daysLeft": {
+    "one": "{{count}} day left",
+    "other": "{{count}} days left"
+  },
+  "ranOut": "Probably run out",
+  "runOutOn": "Expected to run out on {{date}}",
+  "lastOrder": {
+    "one": "Last order on {{date}}, about {{count}} day of food",
+    "other": "Last order on {{date}}, about {{count}} days of food"
+  },
+  "reorder": "Reorder the same bag",
+  "remindersOn": "Refill reminders are on. You can turn them off at your next checkout.",
+  "remindersOff": "Refill reminders are off. You can turn them back on at your next checkout."
+}

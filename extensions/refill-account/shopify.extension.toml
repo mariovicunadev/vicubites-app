@@ -1,0 +1,19 @@
+api_version = "2026-10"
+
+[[extensions]]
+name = "Refill Radar"
+handle = "refill-account"
+type = "ui_extension"
+uid = "52dd66ee-a93d-b807-886e-dca4b07cd7495fe52309"
+
+# Full page, not tied to an order. The merchant adds it in the checkout and
+# accounts editor, which offers to link it from the account menu.
+[[extensions.targeting]]
+module = "./src/RefillPage.tsx"
+target = "customer-account.page.render"
+
+# The Customer Account API (shopify:// protocol) needs no capability: Shopify
+# authenticates it. No Storefront API or external calls.
+[extensions.capabilities]
+api_access = false
+network_access = false

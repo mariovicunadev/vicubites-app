@@ -17,7 +17,7 @@
     "prisma": "prisma",
     "graphql-codegen": "graphql-codegen",
     "vite": "vite",
-    "typecheck": "react-router typegen && tsc --noEmit && tsc -p extensions/nutrition-health-block && tsc -p extensions/refill-radar-pixel && tsc -p extensions/refill-reward && tsc -p extensions/order-limit && tsc -p extensions/starter-kit-expand && tsc -p extensions/refill-checkout",
+    "typecheck": "react-router typegen && tsc --noEmit && tsc -p extensions/nutrition-health-block && tsc -p extensions/refill-radar-pixel && tsc -p extensions/refill-reward && tsc -p extensions/order-limit && tsc -p extensions/starter-kit-expand && tsc -p extensions/refill-checkout && tsc -p extensions/refill-account",
     "test": "vitest run",
     "test:watch": "vitest"
   },

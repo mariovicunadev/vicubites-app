@@ -1,0 +1,27 @@
+{
+  "heading": "Refill Radar",
+  "subheading": "Cuándo se espera que se acabe la comida seca de tu mascota, según tus pedidos.",
+  "loading": "Cargando tu pronóstico de recarga",
+  "loadFailed": "No pudimos cargar tu pronóstico de recarga. Actualiza la página.",
+  "empty": {
+    "heading": "Aún no hay pronóstico",
+    "body": "Tu pronóstico aparece después de tu primer pedido de comida seca."
+  },
+  "species": {
+    "dog": "Comida para perro",
+    "cat": "Comida para gato"
+  },
+  "daysLeft": {
+    "one": "Queda {{count}} día",
+    "other": "Quedan {{count}} días"
+  },
+  "ranOut": "Probablemente ya se acabó",
+  "runOutOn": "Se espera que se acabe el {{date}}",
+  "lastOrder": {
+    "one": "Último pedido el {{date}}, para unos {{count}} día",
+    "other": "Último pedido el {{date}}, para unos {{count}} días"
+  },
+  "reorder": "Volver a pedir la misma bolsa",
+  "remindersOn": "Los recordatorios de recarga están activados. Puedes desactivarlos en tu próximo checkout.",
+  "remindersOff": "Los recordatorios de recarga están desactivados. Puedes volver a activarlos en tu próximo checkout."
+}
