@@ -8,9 +8,11 @@ import {
   forecastCustomer,
   forecastSpecies,
   isDueSoon,
-  lastVariants,
+  lastVariantBySpecies,
   median,
   speciesFrom,
+  withVariants,
+  type Forecast,
   type Purchase,
 } from "./forecast";
 
@@ -119,21 +121,44 @@ describe("forecastCustomer", () => {
   });
 });
 
-describe("lastVariants", () => {
+describe("lastVariantBySpecies", () => {
   it("keeps the latest purchase's variant per species", () => {
     expect(
-      lastVariants([
+      lastVariantBySpecies([
         purchase("2026-10-28T00:00:00Z", { variantId: "gid://shopify/ProductVariant/2" }),
         purchase("2026-09-30T00:00:00Z"),
         purchase("2026-10-04T00:00:00Z", { species: "cat", variantId: "gid://shopify/ProductVariant/7" }),
-      ]).sort(),
-    ).toEqual(["gid://shopify/ProductVariant/2", "gid://shopify/ProductVariant/7"]);
+      ]),
+    ).toEqual(
+      new Map([
+        ["dog", "gid://shopify/ProductVariant/2"],
+        ["cat", "gid://shopify/ProductVariant/7"],
+      ]),
+    );
   });
 
   it("falls back to an older purchase when the latest has no variant left", () => {
     expect(
-      lastVariants([purchase("2026-10-28T00:00:00Z", { variantId: null }), purchase("2026-09-30T00:00:00Z")]),
-    ).toEqual(["gid://shopify/ProductVariant/1"]);
+      lastVariantBySpecies([purchase("2026-10-28T00:00:00Z", { variantId: null }), purchase("2026-09-30T00:00:00Z")]),
+    ).toEqual(new Map([["dog", "gid://shopify/ProductVariant/1"]]));
+  });
+});
+
+describe("withVariants", () => {
+  const dog: Forecast = {
+    species: "dog",
+    basis: "estimate",
+    daysOfFood: 30,
+    lastOrderOn: "2026-10-28",
+    runOutOn: "2026-11-27",
+  };
+
+  it("adds each species' last variant, or null when none is left", () => {
+    const cat: Forecast = { ...dog, species: "cat" };
+    expect(withVariants([dog, cat], new Map([["dog", "gid://shopify/ProductVariant/2"]]))).toEqual([
+      { ...dog, variantId: "gid://shopify/ProductVariant/2" },
+      { ...cat, variantId: null },
+    ]);
   });
 });
 

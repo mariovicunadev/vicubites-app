@@ -2,7 +2,7 @@
 
 | Field     | Value |
 |-----------|-------|
-| Status    | Approved |
+| Status    | In progress |
 | Branch    | `feature/014-checkout-account-extensions` |
 | Estimate  | 4–5.5 h (AI-assisted) · 10–13 h manual |
 | Actual    | — |

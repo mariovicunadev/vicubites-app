@@ -120,16 +120,26 @@ export function forecastCustomer(purchases: Purchase[]): Forecast[] {
 
 /**
  * The variant of each species' latest purchase that has one, for the
- * storefront's reorder button. One ID per species, in no particular order.
+ * reorder buttons (storefront and customer account).
  */
-export function lastVariants(purchases: Purchase[]): string[] {
+export function lastVariantBySpecies(purchases: Purchase[]): Map<Species, string> {
   const latest = new Map<Species, Purchase>();
   for (const purchase of purchases) {
     if (!purchase.variantId) continue;
     const current = latest.get(purchase.species);
     if (!current || purchase.processedAt > current.processedAt) latest.set(purchase.species, purchase);
   }
-  return [...latest.values()].map((purchase) => purchase.variantId as string);
+  return new Map([...latest].map(([species, purchase]) => [species, purchase.variantId as string]));
+}
+
+/** A forecast as stored in the customer's `refill_forecast` metafield. */
+export interface ForecastWithVariant extends Forecast {
+  /** The last dry food variant bought for this species, or null if none is left. */
+  variantId: string | null;
+}
+
+export function withVariants(forecasts: Forecast[], variants: Map<Species, string>): ForecastWithVariant[] {
+  return forecasts.map((forecast) => ({ ...forecast, variantId: variants.get(forecast.species) ?? null }));
 }
 
 export function daysLeft(forecast: Pick<Forecast, "runOutOn">, today: string): number {

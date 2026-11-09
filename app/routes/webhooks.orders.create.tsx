@@ -1,5 +1,6 @@
 import type { ActionFunctionArgs } from "react-router";
 
+import { recordPreference } from "../lib/refill/preference.server";
 import { sendDueReminders } from "../lib/refill/reminders.server";
 import { fetchOrder, recordOrder, refreshCustomer } from "../lib/refill/store.server";
 import { authenticate } from "../shopify.server";
@@ -12,7 +13,9 @@ interface OrderCreatePayload {
  * `orders/create`: reads the order through GraphQL (the same fields as the
  * bulk load, instead of the REST-shaped payload), stores its dry food and
  * recomputes that customer's forecast. Replays are harmless: purchases are
- * upserted and the forecast is recomputed from the same rows.
+ * upserted and the forecast is recomputed from the same rows. The buyer's
+ * reminder choice from checkout is stored before reminders run, so turning
+ * them off takes effect on this very order.
  */
 export const action = async ({ request }: ActionFunctionArgs) => {
   const { admin, payload, shop, topic } = await authenticate.webhook(request);
@@ -21,6 +24,10 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const orderId = (payload as OrderCreatePayload).admin_graphql_api_id;
   const order = await fetchOrder(admin.graphql, orderId);
   if (!order?.customerId) return new Response();
+
+  if (await recordPreference(admin.graphql, shop, order)) {
+    console.info(`${topic} ${orderId}: refill reminders ${order.refillReminders ? "on" : "off"} for ${order.customerId}`);
+  }
 
   const purchases = await recordOrder(shop, order);
   if (purchases.length > 0) {

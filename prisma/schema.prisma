@@ -124,6 +124,21 @@ model RefillForecast {
   @@index([shop, runOutOn])
 }
 
+// A customer's choice about refill reminders, made in checkout and copied to
+// the order. No row means reminders are on. The latest order wins.
+model RefillPreference {
+  id         String   @id @default(cuid())
+  shop       String
+  customerId String
+  reminders  Boolean
+  // The order that carried the choice, and when it was processed
+  orderId    String
+  decidedAt  DateTime
+  updatedAt  DateTime @updatedAt
+
+  @@unique([shop, customerId])
+}
+
 // Storefront reminder events from the Refill Radar web pixel. No customer
 // identity: the browser's client ID links a reminder to a later checkout.
 model RefillEvent {

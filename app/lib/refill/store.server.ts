@@ -5,7 +5,15 @@ import { adminGraphql } from "../admin/graphql.server";
 import { assertNoUserErrors } from "../admin/errors";
 import { createBulkJob, latestBulkJob, refreshJob } from "../bulk/jobs.server";
 import { downloadBulkResult } from "../bulk/operations.server";
-import { forecastCustomer, lastVariants, type Forecast, type Purchase, type Species } from "./forecast";
+import {
+  forecastCustomer,
+  lastVariantBySpecies,
+  withVariants,
+  type Forecast,
+  type Purchase,
+  type Species,
+} from "./forecast";
+import { REFILL_METAFIELDS_SET } from "./metafields";
 import { sendDueReminders } from "./reminders.server";
 import {
   orderFromBulkNode,
@@ -29,6 +37,9 @@ const REFILL_ORDER_QUERY = `#graphql
       purchasingEntity {
         __typename
       }
+      refillReminders: metafield(namespace: "$app", key: "refill_reminders") {
+        value
+      }
       lineItems(first: 100) {
         nodes {
           quantity
@@ -48,20 +59,6 @@ const REFILL_ORDER_QUERY = `#graphql
             }
           }
         }
-      }
-    }
-  }
-`;
-
-const REFILL_METAFIELDS_SET = `#graphql
-  mutation refillMetafieldsSet($metafields: [MetafieldsSetInput!]!) {
-    metafieldsSet(metafields: $metafields) {
-      metafields {
-        key
-      }
-      userErrors {
-        field
-        message
       }
     }
   }
@@ -113,7 +110,7 @@ export async function refreshCustomer(graphql: AdminGraphql, shop: string, custo
     prisma.refillForecast.deleteMany({ where: { shop, customerId } }),
     ...forecasts.map((forecast) => prisma.refillForecast.create({ data: { shop, customerId, ...forecast } })),
   ]);
-  if (forecasts.length > 0) await writeMetafields(graphql, customerId, forecasts, lastVariants(purchases));
+  if (forecasts.length > 0) await writeMetafields(graphql, customerId, forecasts, lastVariantBySpecies(purchases));
   return forecasts;
 }
 
@@ -121,8 +118,9 @@ async function writeMetafields(
   graphql: AdminGraphql,
   customerId: string,
   forecasts: Forecast[],
-  variantIds: string[],
+  variants: Map<Species, string>,
 ) {
+  const variantIds = [...variants.values()];
   const { metafieldsSet } = await adminGraphql(graphql, REFILL_METAFIELDS_SET, {
     variables: {
       metafields: [
@@ -139,7 +137,8 @@ async function writeMetafields(
           namespace: "$app",
           key: "refill_forecast",
           type: "json",
-          value: JSON.stringify(forecasts),
+          // Each forecast carries its last bag's variant, for the customer account reorder button.
+          value: JSON.stringify(withVariants(forecasts, variants)),
         },
         // A list metafield can't be empty: skipped when no purchase has a variant left.
         ...(variantIds.length > 0

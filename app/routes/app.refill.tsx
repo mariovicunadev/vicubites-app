@@ -15,6 +15,7 @@ import { FUNNEL_DAYS } from "../lib/refill/events";
 import { loadReminderMetrics } from "../lib/refill/events.server";
 import { DUE_SOON_DAYS, REFERENCE_DAILY_KCAL } from "../lib/refill/forecast";
 import { connectRefillPixel, findRefillPixel, syncRefillPixel } from "../lib/refill/pixel.server";
+import { countOptedOut } from "../lib/refill/preference.server";
 import { loadReminderStatus, sendDueReminders, type ChannelStatus } from "../lib/refill/reminders.server";
 import { loadForecasts, processLatestRefillLoad, startRefillLoad } from "../lib/refill/store.server";
 import { toRefillRow, type RefillRow } from "../lib/refill/view";
@@ -55,6 +56,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     pixelConnected,
     funnel: await loadReminderMetrics(session.shop),
     reminders: await loadReminderStatus(session.shop),
+    optedOut: await countOptedOut(session.shop),
   };
 };
 
@@ -73,7 +75,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 };
 
 export default function RefillRadar() {
-  const { load, dueSoon, later, pixelConnected, funnel, reminders, error: loadError } = useLoaderData<typeof loader>();
+  const { load, dueSoon, later, pixelConnected, funnel, reminders, optedOut, error: loadError } =
+    useLoaderData<typeof loader>();
   const fetcher = useFetcher<typeof action>();
   const pixelFetcher = useFetcher<typeof action>();
   const reminderFetcher = useFetcher<typeof action>();
@@ -196,6 +199,10 @@ export default function RefillRadar() {
               )}
               <s-paragraph>Klaviyo: {channelSummary(reminders.KLAVIYO)}</s-paragraph>
               <s-paragraph>Flow: {channelSummary(reminders.FLOW)}</s-paragraph>
+              <s-paragraph>
+                Customers who turned reminders off in checkout: {optedOut}. They get no Klaviyo event or Flow
+                trigger.
+              </s-paragraph>
               <s-text color="subdued">
                 {`Every forecast due within ${DUE_SOON_DAYS} days is delivered once per run-out date on each channel, after each order and on demand. Flow: the "Refill due" trigger starts the store's own workflows. Klaviyo: one "Refill Due" event, which a Klaviyo flow turns into an email.`}
                 {reminders.KLAVIYO.connected
