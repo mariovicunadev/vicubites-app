@@ -97,11 +97,13 @@ and the pattern of configuring a function through an `$app` metafield on its ins
 
 - [x] `bundlesFeature` confirms the store can publish bundles before the kits are published.
       `shop.features.bundles.eligibleForBundles` is `true`.
-- [ ] Given Kit A on the storefront, when a customer adds it to the cart, then the cart shows the
+- [x] Given Kit A on the storefront, when a customer adds it to the cart, then the cart shows the
       kit at its fixed price and checkout lists its two components; availability follows the
       components' stock.
       Price and components verified at checkout ($28.79: Adult Chicken & Brown Rice 2 kg +
-      Training Treats Chicken); availability with a component out of stock not tested yet.
+      Training Treats Chicken). The kit's quantity is its scarcest component's (45); with the
+      treats set to 0 the kit showed "Sold out" and the Ajax API refused it (422); stock restored
+      to 45 and the kit was available again within seconds.
 - [x] Given Kit B with a recipe and flavor chosen in the app block, when it's added to the cart,
       then the cart line expands into exactly that recipe and that treat, and their prices add up
       to the kit price.
