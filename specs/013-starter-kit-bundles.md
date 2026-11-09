@@ -95,27 +95,40 @@ and the pattern of configuring a function through an `$app` metafield on its ins
 
 ## Acceptance criteria
 
-- [ ] `bundlesFeature` confirms the store can publish bundles before the kits are published.
+- [x] `bundlesFeature` confirms the store can publish bundles before the kits are published.
+      `shop.features.bundles.eligibleForBundles` is `true`.
 - [ ] Given Kit A on the storefront, when a customer adds it to the cart, then the cart shows the
       kit at its fixed price and checkout lists its two components; availability follows the
       components' stock.
-- [ ] Given Kit B with a recipe and flavor chosen in the app block, when it's added to the cart,
+      Price and components verified at checkout ($28.79: Adult Chicken & Brown Rice 2 kg +
+      Training Treats Chicken); availability with a component out of stock not tested yet.
+- [x] Given Kit B with a recipe and flavor chosen in the app block, when it's added to the cart,
       then the cart line expands into exactly that recipe and that treat, and their prices add up
       to the kit price.
-- [ ] Given Kit B added without attributes or with an unknown value (for example through the Ajax
+      Adult Salmon + Turkey chosen in the block: checkout shows those two components; the order
+      split $26.99 into $20.47 + $6.52.
+- [x] Given Kit B added without attributes or with an unknown value (for example through the Ajax
       API), then it expands into the default recipe and flavor and the cart still works.
-- [ ] Given two Kit B lines with different choices, then each expands into its own components.
-- [ ] Lines that aren't Kit B are never changed by the function, and missing or invalid
+      No attributes verified at checkout (Ajax API, quantity 2: two of each default component, so
+      expanded quantities are per kit); unknown values by unit tests.
+- [x] Given two Kit B lines with different choices, then each expands into its own components.
+- [x] Lines that aren't Kit B are never changed by the function, and missing or invalid
       configuration returns no operations (unit tests).
-- [ ] A test order with Kit B shows the components as order lines linked to the kit, the fulfillment
+- [x] A test order with Kit B shows the components as order lines linked to the kit, the fulfillment
       order lists the components, and the components' inventory goes down (not the parent's).
       The test order is announced before it's placed and deleted afterwards.
+      Two order lines sharing a `lineItemGroup` (the kit variant and its `_kit_*` attributes); one
+      unfulfilled group with both components (shipping weight from the components); inventory
+      57 → 56 and 56 → 55, kit untracked. Cancelled with restock (back to 57 and 56), then
+      deleted.
 - [ ] `/app/checkout-rules` shows the Cart Transform's status, creates it when missing and rewrites
       its configuration; changes take effect without a redeploy.
+      Status and creation verified on the dev preview (configuration and picker metafield read
+      back through the Admin API); the save path is checked again in production.
 - [ ] Instruction count of the function, measured with `shopify app function run` on the largest
       fixture, is recorded in the README.
-- [ ] Access scopes: only `write_cart_transforms` added.
-- [ ] Every Admin GraphQL operation and the function input query are validated against API version
+- [x] Access scopes: only `write_cart_transforms` added.
+- [x] Every Admin GraphQL operation and the function input query are validated against API version
       2026-10, and Admin operations are typed by codegen.
 - [ ] `npm run typecheck`, `npm run lint`, `npm test`, `npx react-router build` and
       `shopify app function build` pass.
@@ -124,6 +137,9 @@ and the pattern of configuring a function through an `$app` metafield on its ins
       storefront cart.
 - [ ] One axe pass on `/app/checkout-rules` (Bundles section): 0 violations. README section
       "Bundles: native vs. Cart Transform" added.
+      Axe: 0 violations on the page's server render loaded with the Polaris web components, in two
+      states (active kit: 32 rules passed; problems list with the function not deployed: 34), and
+      on the storefront product page with the picker block (0 on the page). README pending.
 
 ## Technical approach
 
@@ -183,8 +199,9 @@ deploy, promote `develop` in Vercel, then create the Cart Transform from the pro
 - A store has one Cart Transform per app. Future bundle logic in this app goes into the same
   function and configuration.
 - The docs don't state how inventory and fulfillment work for customized bundles; they say order
-  lines return the components with a reference to the parent. The parent is left untracked and
-  the test order checks the real behavior; the spec is updated with what it shows.
+  lines return the components with a reference to the parent. The test order showed it: the
+  components carry inventory and fulfillment, grouped under the kit (`lineItemGroup`), and the
+  untracked parent never moves.
 - `requiresComponents: true` hides Kit B from channels that don't support bundles and drops it from
   the cart if the function doesn't expand it. `blockOnFailure: false` keeps checkout open if the
   function fails, so a failing function removes the kit instead of blocking the order.
@@ -195,3 +212,7 @@ deploy, promote `develop` in Vercel, then create the Cart Transform from the pro
   (`priceInput: FIXED`).
 - After an app assigns bundle components, only that app can manage them: Kit A's components are
   edited through this app's operations, not the admin bundle editor.
+- Discount functions see the kit's parent line, not the expanded components: the Refill reward
+  (dry food only) doesn't apply to the dry food inside Kit B, verified at checkout with a customer
+  due in 2 days (a loose bag in the same cart got 10 %). Kept on purpose: the kit is already an
+  entry price. The docs don't describe this.
