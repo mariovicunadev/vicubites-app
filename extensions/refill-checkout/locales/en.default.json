@@ -1,0 +1,6 @@
+{
+  "heading": "Refill Radar",
+  "forecast": "This order updates your refill forecast, so we can tell you before the food runs out.",
+  "reminders": "Remind me before this food runs out",
+  "saveFailed": "We couldn't save your reminder choice. Please try again."
+}

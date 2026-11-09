@@ -38,8 +38,10 @@ to the order when it is placed, where the `orders/create` webhook reads it.
 - Checkout UI extension `refill-checkout`, target `purchase.checkout.block.render`:
   - Renders only when the cart has a dry food line (product metafield `custom.kcal_per_kg` set).
   - Text: the order updates the buyer's refill forecast. Checkbox "Remind me before this food runs
-    out", checked by default (current behavior), backed by cart metafield `$app:refill_reminders`
-    (`boolean`), written with `applyMetafieldChange({ type: "updateCartMetafield" })`.
+    out", backed by cart metafield `$app:refill_reminders` (`boolean`), written with
+    `applyMetafieldChange({ type: "updateCartMetafield" })` only when the buyer changes it. It shows
+    the choice made in this checkout, else the signed-in customer's saved choice, else checked
+    (current behavior).
   - When `instructions.metafields.canSetCartMetafields` is false (accelerated checkouts, draft
     orders), the checkbox is hidden and only the text shows.
   - Locales: `en.default.json` and `es.json`.
@@ -138,6 +140,9 @@ to the order when it is placed, where the `orders/create` webhook reads it.
   access in the Partner Dashboard (owner step).
 - A full page only loads after the merchant adds it in the checkout and accounts editor; the menu
   link is a separate owner step.
+- A guest buyer who turned reminders off on an earlier order sees the box checked (no saved choice
+  is visible without signing in); leaving it untouched keeps reminders off, because nothing is
+  written unless the box changes.
 - Accelerated checkouts can't write cart metafields: the preference only changes from the standard
   checkout.
 - A cart permalink (`/cart/<variant>:1`) opens checkout with only that bag, not the buyer's current
