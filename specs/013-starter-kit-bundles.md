@@ -2,10 +2,10 @@
 
 | Field     | Value |
 |-----------|-------|
-| Status    | In review |
+| Status    | Done |
 | Branch    | `feature/013-starter-kit-bundles` |
 | Estimate  | 3–4 h (AI-assisted) · 8–10 h manual |
-| Actual    | — |
+| Actual    | ~7.5 h (including store verification rounds) |
 
 ## Goal
 
@@ -123,10 +123,11 @@ and the pattern of configuring a function through an `$app` metafield on its ins
       unfulfilled group with both components (shipping weight from the components); inventory
       57 → 56 and 56 → 55, kit untracked. Cancelled with restock (back to 57 and 56), then
       deleted.
-- [ ] `/app/checkout-rules` shows the Cart Transform's status, creates it when missing and rewrites
+- [x] `/app/checkout-rules` shows the Cart Transform's status, creates it when missing and rewrites
       its configuration; changes take effect without a redeploy.
-      Status and creation verified on the dev preview (configuration and picker metafield read
-      back through the Admin API); the save path is checked again in production.
+      Status and creation verified on the dev preview and in production (configuration and picker
+      metafield read back through the Admin API). Saving again returns no errors; with unchanged
+      products the values are identical and Shopify leaves the metafields' `updatedAt` as is.
 - [x] Instruction count of the function, measured with `shopify app function run` on the largest
       fixture, is recorded in the README.
       1.15 M (5 lines), 3.89 M (50 lines), 10.31 M at 200 lines with all 18 possible kit lines
@@ -137,9 +138,13 @@ and the pattern of configuring a function through an `$app` metafield on its ins
 - [x] `npm run typecheck`, `npm run lint`, `npm test`, `npx react-router build` and
       `shopify app function build` pass.
       278 tests in 31 files; the three functions build.
-- [ ] Deployed to production: new app version, Vercel promotion of `develop`, Cart Transform created
+- [x] Deployed to production: new app version, Vercel promotion of `develop`, Cart Transform created
       from the production app and read back through the Admin API; both kits verified in a
       storefront cart.
+      App version `vicubites-app-5`; `develop` (113c3bd) promoted in Vercel; one Cart Transform
+      bound to the released function (`blockOnFailure: false`). Checkout with both kits: Kit A
+      into its two components, Kit B into the recipe and flavor chosen in the block (Indoor Adult
+      Turkey + Salmon). The dev preview's Cart Transform was removed by `app dev clean`.
 - [x] One axe pass on `/app/checkout-rules` (Bundles section): 0 violations. README section
       "Bundles: native vs. Cart Transform" added.
       Axe: 0 violations on the page's server render loaded with the Polaris web components, in two
