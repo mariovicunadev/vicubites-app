@@ -1,0 +1,29 @@
+query CartTransformRunInput {
+  cart {
+    lines {
+      id
+      recipe: attribute(key: "_kit_recipe") {
+        value
+      }
+      treat: attribute(key: "_kit_treat") {
+        value
+      }
+      cost {
+        amountPerQuantity {
+          amount
+        }
+      }
+      merchandise {
+        __typename
+        ... on ProductVariant {
+          id
+        }
+      }
+    }
+  }
+  cartTransform {
+    config: metafield(namespace: "$app", key: "starter-kit-config") {
+      jsonValue
+    }
+  }
+}

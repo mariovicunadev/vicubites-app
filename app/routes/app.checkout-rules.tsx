@@ -3,6 +3,7 @@ import { useFetcher, useLoaderData } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 
 import { AdminApiError } from "../lib/admin/errors";
+import { loadBundles, saveStarterKit, type BundlesView } from "../lib/bundles/bundles.server";
 import type { RuleView } from "../lib/checkout-rules/overview";
 import { loadCheckoutRules, saveOrderLimit, saveRefillReward } from "../lib/checkout-rules/rules.server";
 import {
@@ -17,15 +18,16 @@ import { authenticate } from "../shopify.server";
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { admin } = await authenticate.admin(request);
   try {
-    return { error: null, rules: await loadCheckoutRules(admin.graphql) };
+    const [rules, bundles] = await Promise.all([loadCheckoutRules(admin.graphql), loadBundles(admin.graphql)]);
+    return { error: null, rules, bundles };
   } catch (error) {
-    if (error instanceof AdminApiError) return { error: error.message, rules: null };
+    if (error instanceof AdminApiError) return { error: error.message, rules: null, bundles: null };
     throw error;
   }
 };
 
 type FieldErrors = Partial<Record<string, string>>;
-type ActionResult = { saved: boolean; error: string | null; fieldErrors: FieldErrors };
+type ActionResult = { saved: boolean; error: string | null; fieldErrors: FieldErrors; problems?: string[] };
 
 export const action = async ({ request }: ActionFunctionArgs): Promise<ActionResult> => {
   const { admin } = await authenticate.admin(request);
@@ -34,6 +36,13 @@ export const action = async ({ request }: ActionFunctionArgs): Promise<ActionRes
 
   // The owner ID comes from a fresh read, never from the form.
   try {
+    if (intent === "starter-kit") {
+      // Built on the server from the store's products: the form sends nothing else.
+      const problems = await saveStarterKit(admin.graphql);
+      return problems
+        ? { saved: false, error: null, fieldErrors: {}, problems }
+        : { saved: true, error: null, fieldErrors: {} };
+    }
     const rules = await loadCheckoutRules(admin.graphql);
     if (intent === "refill-reward") {
       const result = validateRefillRewardForm(form);
@@ -72,12 +81,72 @@ function FormFeedback({ result }: { result: ActionResult | undefined }) {
   return result.saved ? <s-banner tone="success" heading="Saved. Checkout uses the new settings now." /> : null;
 }
 
+function BundlesBadge({ bundles }: { bundles: BundlesView }) {
+  if (!bundles.functionReady) return <s-badge tone="warning">Function not deployed</s-badge>;
+  if (!bundles.transformId) return <s-badge>Not created</s-badge>;
+  if (bundles.outdated) return <s-badge tone="warning">Needs update</s-badge>;
+  return <s-badge tone="success">Active</s-badge>;
+}
+
+function BundlesSection({ bundles }: { bundles: BundlesView }) {
+  const fetcher = useFetcher<typeof action>();
+  const { build } = bundles;
+  const problems = fetcher.data?.problems ?? (build.ok ? [] : build.problems);
+  const canSave = bundles.functionReady && build.ok && fetcher.state === "idle";
+
+  return (
+    <s-section heading="Bundles">
+      <fetcher.Form method="post">
+        <input type="hidden" name="intent" value="starter-kit" />
+        <s-stack direction="block" gap="base">
+          <s-stack direction="inline" gap="small-200">
+            <BundlesBadge bundles={bundles} />
+          </s-stack>
+          <s-text color="subdued">
+            Cat Starter Kit: the buyer picks a dry food recipe and a treat flavor on the product page, and the cart
+            expands the kit into those two products at the kit price. Options and price shares come from the products in
+            the store; save again after changing them.
+          </s-text>
+          {!bundles.eligibleForBundles ? (
+            <s-banner heading="This store can't sell bundles" tone="critical" />
+          ) : null}
+          {problems.length > 0 ? (
+            <s-banner heading="Fix these before saving" tone="warning">
+              <s-unordered-list>
+                {problems.map((problem) => (
+                  <s-list-item key={problem}>{problem}</s-list-item>
+                ))}
+              </s-unordered-list>
+            </s-banner>
+          ) : null}
+          <FormFeedback result={fetcher.data?.problems ? undefined : fetcher.data} />
+          {build.ok ? (
+            <s-stack direction="block" gap="small-200">
+              <s-text>
+                Recipes ({build.picker.recipes.length}):{" "}
+                {build.picker.recipes.map((option) => option.label).join(", ")}
+              </s-text>
+              <s-text>
+                Treat flavors ({build.picker.treats.length}):{" "}
+                {build.picker.treats.map((option) => option.label).join(", ")}
+              </s-text>
+            </s-stack>
+          ) : null}
+          <s-button type="submit" variant="primary" {...(!canSave ? { disabled: true } : {})}>
+            {bundles.transformId ? "Save" : "Turn on starter kit"}
+          </s-button>
+        </s-stack>
+      </fetcher.Form>
+    </s-section>
+  );
+}
+
 export default function CheckoutRules() {
-  const { rules, error } = useLoaderData<typeof loader>();
+  const { rules, bundles, error } = useLoaderData<typeof loader>();
   const rewardFetcher = useFetcher<typeof action>();
   const limitFetcher = useFetcher<typeof action>();
 
-  if (!rules) {
+  if (!rules || !bundles) {
     return (
       <s-page heading="Checkout rules">
         <s-banner heading="Could not read the checkout rules" tone="critical">
@@ -167,6 +236,8 @@ export default function CheckoutRules() {
           </s-stack>
         </limitFetcher.Form>
       </s-section>
+
+      <BundlesSection bundles={bundles} />
     </s-page>
   );
 }

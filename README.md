@@ -16,7 +16,9 @@ It runs inside the Shopify admin as a custom app for the brand's store.
 B2B accounts also reach the sales team's CRM: companies and their contacts are kept in sync with
 HubSpot (see [B2B CRM](#b2b-crm-hubspot)), and two checkout rules built as Shopify Functions
 reward on-time reorders and cap retail quantities (see
-[Checkout rules](#checkout-rules-shopify-functions)).
+[Checkout rules](#checkout-rules-shopify-functions)). A starter kit for new customers is built two ways, as a native fixed
+bundle and as a Cart Transform Function (see
+[Starter kit bundles](#starter-kit-bundles-native-vs-cart-transform)).
 
 ### Why an app
 
@@ -71,7 +73,8 @@ returned. Re-authentication redirects (a thrown `Response`) pass through untouch
 `read_products`, `write_products` (bulk fixes of nutrition metafields), `read_metaobject_definitions`,
 `read_publications` (B2B catalog coverage), `read_orders` and `write_customers` (Refill Radar
 reads orders and stores the forecast on the customer), `write_pixels` and `read_customer_events`
-(Refill Radar's web pixel), `write_discounts` and `write_validations` (checkout rules).
+(Refill Radar's web pixel), `write_discounts` and `write_validations` (checkout rules),
+`write_cart_transforms` (starter kit bundles).
 
 **Protected customer data.** Refill Radar works on the order's customer ID (level 1). The one
 level 2 field it reads is the email of a customer who is due soon, at send time, to address the
@@ -199,6 +202,88 @@ the order limit built with `flatMap` and a `Map` cost 9.1 M at 200 lines.
 
 Both Functions have unit tests that call them with typed input fixtures, and a contract test
 checks that every value the admin page saves is accepted by the Function that reads it.
+
+## Starter kit bundles (native vs. Cart Transform)
+
+Two starter kits for new retail customers, each built on a different Shopify bundle model, so the
+store shows both side by side.
+
+| Kit | Model | How it's built |
+|---|---|---|
+| **Dog Starter Kit** (Adult Chicken & Brown Rice 2 kg + Training Treats, Chicken) | Native fixed bundle | `productVariantRelationshipBulkUpdate` links the kit variant to its two components with `priceInput: { calculation: FIXED }`. Shopify expands it, takes stock from the components and needs no code at checkout. |
+| **Cat Starter Kit** (any dry cat food recipe, 1.5 kg + any Crunchy Treats flavor) | Customized bundle, Cart Transform Function (`extensions/starter-kit-expand`) | The buyer picks a recipe and a treat flavor on the product page; a Function expands the kit line into those two products at the kit price. |
+
+**Why a Function for the cat kit.** A fixed bundle has one component list per variant: 6 recipes
+× 3 flavors would mean 18 kit variants, each with its own components and price. With a Cart
+Transform the kit stays one variant at one price, and the choice travels with the cart line.
+
+**How the cat kit works:**
+
+1. A theme app block, **Starter kit picker** (`extensions/refill-radar/blocks/starter-kit-picker.liquid`),
+   renders two selects on the kit's product page and joins them to the theme's add to cart form
+   with the HTML `form` attribute. The choices reach the cart as line item properties
+   `_kit_recipe` and `_kit_treat` (the leading underscore hides them from the buyer).
+2. The Function (`cart.transform.run`, TypeScript) reads each line's two attributes and the
+   configuration in an `$app` JSON metafield on the Cart Transform. For every kit line it returns
+   a `lineExpand` operation with the chosen recipe and treat, one of each per kit.
+3. The kit price is split across the two components in proportion to their list prices, in
+   cents, with the rounding remainder on the last component, so the parts always add up to the
+   kit price (`fixedPricePerUnit`). Example: $26.99 → $20.47 + $6.52.
+4. A missing or unknown choice falls back to the default recipe and flavor (a kit added through
+   the Ajax API still works). Lines that aren't the kit, or a missing configuration, return no
+   operations.
+
+**Admin page.** The **Bundles** section of `/app/checkout-rules` builds the configuration from
+the store's own products: every active dry cat food with a 1.5 kg bag, and every priced variant of
+the treats product. It lists anything that blocks the build (kit not active, kit variant without
+`requiresComponents`, no recipes), creates the Cart Transform (`cartTransformCreate`), and writes
+the same options to an app-owned shop metafield that the picker block reads, so the block never
+offers a choice the Function can't expand. A badge shows **Needs update** when products or prices
+changed since the last save. A contract test runs every configuration the page builds through
+the Function's own parser.
+
+**What the store showed** (checked with a test order, then cancelled and deleted):
+
+- The order has no kit line: it has the two components, grouped by a `lineItemGroup` that holds
+  the kit variant and its `_kit_*` attributes. The admin shows each as "Part of: Cat Starter Kit".
+- Inventory and fulfillment follow the components: their stock goes down, they ship as one
+  group, and the shipping weight is theirs. The kit variant is untracked and never moves.
+- Expanded quantities are per kit: two kits in one line become two of each component.
+- **Discount Functions see the kit line, not the components.** The Refill reward (dry food only)
+  doesn't apply to the dry food inside the kit, while a loose bag in the same cart gets it. That's
+  kept on purpose: the kit is already an entry price.
+
+**Rules worth knowing:**
+
+- **One Cart Transform per app and store.** Any future bundle logic goes into the same Function
+  and configuration.
+- **`requiresComponents: true` on the kit variant.** Shopify hides it from channels that don't
+  support bundles and drops it from a cart where nothing expands it. The Cart Transform is
+  created with `blockOnFailure: false`, so a failing Function removes the kit instead of blocking
+  checkout.
+- **No selling plans.** Shopify rejects transform operations on a line with a selling plan, so both
+  kits are one-time purchases, and they stay out of B2B catalogs.
+- **Joining a form from outside.** The picker reads the form's id with `getAttribute("id")`: the
+  product form holds an `<input name="id">` (the variant), and named controls shadow form
+  properties, so `form.id` is that input. It also skips hidden `/cart/add` forms without a submit
+  button, such as the Shop Pay Installments terms form.
+- **Liquid reads `$app` metafields** on the shop without a definition and with storefront access
+  left off, so the options aren't exposed to the Storefront API.
+
+**Instruction budget.** Measured with `shopify app function run`. A cart holds at most 18
+different kit lines: two kits with the same recipe and flavor share one line (only its quantity
+grows), and there are 6 × 3 combinations. The worst case is a full 200-line cart with all 18:
+
+| Cart | 5 lines (2 kits) | 50 lines (10 kits) | 200 lines (18 kits) |
+|---|---|---|---|
+| Starter kit expand | 1.15 M | 3.89 M | 10.31 M (94 %) |
+
+At 200 lines about 6.9 M goes to parsing the input, 0.95 M to the configuration and 2.6 M to the
+kits. The code already avoids regular expressions and intermediate arrays (a regex check on
+variant IDs and `map`/`filter` chains cost about 0.2 M more), and shorter option labels changed
+nothing. The margin is thin: each extra recipe or flavor adds possible kit lines, and about 25
+kit lines in a 200-line cart would pass the 11 M limit. Growing the options would mean moving
+the Function to Rust, the language Shopify recommends when instruction counts matter.
 
 ## Production
 
