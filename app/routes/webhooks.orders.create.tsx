@@ -19,7 +19,11 @@ interface OrderCreatePayload {
  */
 export const action = async ({ request }: ActionFunctionArgs) => {
   const { admin, payload, shop, topic } = await authenticate.webhook(request);
-  if (!admin) return new Response();
+  if (!admin) {
+    // No offline session for the shop (fresh database or uninstalled app): nothing can be read.
+    console.warn(`${topic} for ${shop}: no offline session, webhook skipped`);
+    return new Response();
+  }
 
   const orderId = (payload as OrderCreatePayload).admin_graphql_api_id;
   const order = await fetchOrder(admin.graphql, orderId);
