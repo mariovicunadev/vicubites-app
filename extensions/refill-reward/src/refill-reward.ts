@@ -54,12 +54,11 @@ export function isRefillDue(runOutOn: string, today: string, windowDays: number)
 }
 
 /**
- * Product types that count as dry food. Wet food and treats also carry a
- * calorie density (`custom.kcal_per_kg`), so the metafield can't tell them
- * apart; the product type, kept by the merchant, can.
+ * Dry food is a variant with a bag weight (`custom.bag_grams`, set only on
+ * dry food bags). Product type, titles and option names reach Functions in the
+ * buyer's language, so the rule never reads them.
  */
-export const DRY_FOOD_TYPES: readonly string[] = ["Dry Dog Food", "Dry Cat Food"];
-
-export function isDryFood(productType: string | null | undefined): boolean {
-  return productType != null && DRY_FOOD_TYPES.includes(productType);
+export function isDryFood(bagGrams: string | null | undefined): boolean {
+  const grams = Number(bagGrams);
+  return bagGrams != null && bagGrams !== "" && Number.isInteger(grams) && grams > 0;
 }

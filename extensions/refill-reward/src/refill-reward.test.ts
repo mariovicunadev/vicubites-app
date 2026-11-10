@@ -63,15 +63,16 @@ describe("isRefillDue", () => {
 });
 
 describe("isDryFood", () => {
-  it("accepts the dry food product types", () => {
-    expect(isDryFood("Dry Dog Food")).toBe(true);
-    expect(isDryFood("Dry Cat Food")).toBe(true);
+  it("accepts a variant with a bag weight", () => {
+    expect(isDryFood("7000")).toBe(true);
+    expect(isDryFood("1500")).toBe(true);
   });
 
-  it.each([["Wet Dog Food"], ["Wet Cat Food"], ["Dog Treats"], ["Cat Treats"], [""], [null], [undefined]])(
+  // Product types and option values are translated text, never keys
+  it.each([["Dry Dog Food"], ["Alimento seco para perros"], ["1.5 kg"], ["0"], [""], [null], [undefined]])(
     "rejects %j",
-    (productType) => {
-      expect(isDryFood(productType)).toBe(false);
+    (bagGrams) => {
+      expect(isDryFood(bagGrams)).toBe(false);
     },
   );
 });

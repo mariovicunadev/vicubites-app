@@ -29,10 +29,11 @@
       {%- else -%}
         {%- for forecast in forecasts -%}
           {%- liquid
-            # Matched by the product's species, not by position: a deleted variant drops out of the list.
+            # Matched by the product's species key (the metaobject handle, never the translated label),
+            # not by position: a deleted variant drops out of the list.
             assign bag = nil
             for variant in variants
-              assign variant_species = variant.product.metafields.custom.species.value | downcase
+              assign variant_species = variant.product.metafields.custom.species.value.system.handle
               if variant_species == forecast.species
                 assign bag = variant
                 break
