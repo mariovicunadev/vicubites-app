@@ -18,7 +18,7 @@
   else
     assign basis_text = 'refill.basis.estimate' | t
   endif
-  assign run_out_date = run_out_on | date: '%B %-d'
+  assign run_out_date = run_out_on | date: format: 'refill_day'
   assign today_s = 'now' | date: '%Y-%m-%d' | date: '%s' | plus: 0
   assign run_out_s = run_out_on | date: '%s' | plus: 0
   assign days_left = run_out_s | minus: today_s | divided_by: 86400

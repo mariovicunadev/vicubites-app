@@ -21,5 +21,8 @@
     "note": "Your kit ships as the recipe and treat you choose.",
     "hint_inactive": "Starter kit picker: turn on bundles in the Vicubites Ops app to show the options.",
     "hint_other_product": "Starter kit picker: shows only on the starter kit product."
+  },
+  "date_formats": {
+    "refill_day": "%B %-d"
   }
 }

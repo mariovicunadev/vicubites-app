@@ -1,0 +1,28 @@
+{
+  "refill": {
+    "pets": {
+      "dog": "perro",
+      "cat": "gato"
+    },
+    "runs_out_html": "La comida de tu {{ pet }} se acabaría alrededor del <strong>{{ date }}</strong>.",
+    "ran_out_html": "La comida de tu {{ pet }} podría haberse acabado el <strong>{{ date }}</strong>.",
+    "basis": {
+      "estimate": "Calculado a partir del tamaño de la bolsa.",
+      "cadence": "Según la frecuencia con la que vuelves a pedir."
+    },
+    "sample_bag": "Pollo y arroz · 7 kg",
+    "reorder": "Volver a pedir",
+    "view_product": "Ver producto",
+    "note": "Una estimación para ayudarte a pedir a tiempo, no una recomendación de alimentación."
+  },
+  "starter_kit": {
+    "recipe": "Receta de alimento seco",
+    "treat": "Sabor del premio",
+    "note": "Tu kit se envía con la receta y el premio que elijas.",
+    "hint_inactive": "Selector del kit de inicio: activa los bundles en la app Vicubites Ops para mostrar las opciones.",
+    "hint_other_product": "Selector del kit de inicio: solo se muestra en el producto del kit de inicio."
+  },
+  "date_formats": {
+    "refill_day": "%-d de %B"
+  }
+}
