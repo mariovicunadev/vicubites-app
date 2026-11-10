@@ -46,9 +46,10 @@ working, but they move to the same keys so there is one rule everywhere.
   and root `metaobject` lookups are limited to app-owned metaobjects. A Function cannot read the handle
   of a referenced metaobject.
 
-So the checkout block and the Function work with GIDs: the checkout block only needs to know that a
-species is set (the definition only accepts `species` entries), and the Function compares against the
-GID of the `dry` entry, which the app writes into the discount's configuration metafield.
+So the checkout block and the Function never need a handle. Only dry food bags carry the variant
+metafield `custom.bag_grams`, so "has a bag weight" means "is a dry food bag": the Function reads that
+number, and the checkout block also checks that a species reference is set (the definition only
+accepts `species` entries).
 
 ## Scope
 
@@ -64,9 +65,8 @@ GID of the `dry` entry, which the app writes into the discount's configuration m
   product definitions and migrates values; the existing metafield seed writes references from then on.
 - App consumers: `refill/orders.ts`, `refill/store.server.ts`, `refill/forecast.ts` (`speciesFrom`),
   `fix/fields.ts` (choices become entries), `health/rules.ts`, `catalog/export.ts`.
-- Extensions: `refill-checkout` (species set), `refill-reminder` (handle), `refill-reward` (food type
-  GID vs. configured `dry` GID, no `productType`); the app writes the `dry` GID into
-  `refill-reward-config`.
+- Extensions: `refill-checkout` (bag weight and species reference), `refill-reminder` (handle),
+  `refill-reward` (bag weight, no `productType`).
 - Theme consumers: `icon-species`, `feeding-calculator`, `product-attributes`, `_card-data`,
   `recipe-stamp`, `product-comparison` (handle for logic, label for text).
 - Automatic collections and the Search & Discovery filters that use these metafields, rebuilt on the
@@ -117,7 +117,8 @@ GID of the `dry` entry, which the app writes into the discount's configuration m
       English words, keys on the `Size` option name or reads `productType`
 - [ ] Walkthrough in English and Spanish (home, collection, product, cart, checkout, account) with no
       broken feature; one announced axe pass on the touched pages with 0 new violations
-- [ ] Access scopes unchanged (metaobject access already granted; checked before the migration)
+- [ ] Access scopes: `read_metaobjects` added (the backend reads metaobject handles through
+      metafield references and lists entries for the bulk fix); nothing else
 - [ ] Every Admin GraphQL operation is typed by codegen and validated against the pinned API version
 - [ ] `npm run typecheck`, `npm run lint`, `npm test` and `shopify theme check` pass
 
@@ -129,21 +130,22 @@ GID of the `dry` entry, which the app writes into the discount's configuration m
   the two product definitions with their values, recreate them as `metaobject_reference`
   (`metaobject_definition_id` validation, filter enabled), then `metafieldsSet` the references in
   batches of 25. A dry run prints the mapping before writing.
-- **App:** one module `app/lib/catalog/product-keys.ts` with the handles (`SPECIES`, `FOOD_TYPES`) and
-  a reader from `reference.handle`; every Admin query asks for the reference. `checkout-rules` writes
-  `dryFoodTypeId` into `refill-reward-config` when the discount is created or saved.
-- **Function `refill-reward`:** input reads `custom.food_type { value }` instead of `productType`;
-  `isDryFood(foodTypeId, config.dryFoodTypeId)`.
-- **Checkout block:** a line is dry food when it has a bag size, calories and a species reference
-  (`gid://shopify/Metaobject/`); the contract test keeps it aligned with `orders.ts`.
+- **App:** one module `app/lib/catalog/product-keys.ts` with the handles (`SPECIES`, `FOOD_TYPES`,
+  `PROTEINS`) and readers for `reference.handle` and `custom.bag_grams`; every Admin query asks for the
+  reference. The bulk fix takes handles in the spreadsheet (labels are rejected) and writes the
+  matching reference; the catalog export writes handles.
+- **Function `refill-reward`:** input reads the variant's `custom.bag_grams` instead of `productType`.
+- **Checkout block:** a line is dry food when its variant has a bag weight, its product has calories
+  and a species reference (`gid://shopify/Metaobject/`); the contract test keeps it aligned with
+  `orders.ts`.
 - **Theme:** consumers use `.value.system.handle` for logic and `.value.label` for text.
-- **Guard tests:** a Vitest test in the app scans `extensions/` and `app/lib/` for comparisons with
-  `Dog`, `Cat`, `Dry`, `Wet`, `Treats` or `productType`; a Node test in the theme scans `snippets/`,
-  `sections/` and `blocks/` for the same words in comparisons.
+- **Guard tests:** `app/lib/catalog/translatable-keys.test.ts` scans `extensions/` and `app/lib/`;
+  `npm run check:product-keys` in the theme scans blocks, sections, snippets, layout, templates and
+  assets. Both fail on comparisons with English key labels, the `Size` option name, a key metafield
+  read as text, or the product type.
 - **Owner steps:** rebuild the two Search & Discovery filters on the new definitions; production
   release (`app deploy`) and theme push as usual.
-- Access scopes added: none expected (`write_metaobject_definitions` and `write_metaobjects` to confirm
-  before the migration).
+- Access scopes added: `read_metaobjects`.
 
 ## Sweep results
 
@@ -156,7 +158,7 @@ the original through the Admin API.
 | `extensions/refill-checkout/src/refill.ts` | option name `Size` | checkout `selectedOptions` (localized) | Broken: fixed with `custom.bag_grams` |
 | `extensions/refill-checkout/src/refill.ts` | `bagGrams()` parses the option value ("1.5 kg") | checkout `selectedOptions` (localized) | At risk ("1,5 kg"): fixed with `custom.bag_grams` |
 | `extensions/refill-checkout/src/refill.ts` | species `dog` / `cat` | `appMetafields` (localized) | Broken: fixed with species reference |
-| `extensions/refill-reward/src/refill-reward.ts` | `productType` in `DRY_FOOD_TYPES` | Function input (localized) | Broken once translated: fixed with food type GID |
+| `extensions/refill-reward/src/refill-reward.ts` | `productType` in `DRY_FOOD_TYPES` | Function input (localized) | Broken once translated: fixed with `custom.bag_grams` |
 | `extensions/refill-radar/blocks/refill-reminder.liquid` | variant species vs. forecast species | Liquid metafield (localized) | Broken: fixed with handle |
 | `vicubites-theme/snippets/icon-species.liquid` | species `dog` / `cat` | Liquid metafield (localized) | Broken: fixed with handle |
 | `vicubites-theme/sections/feeding-calculator.liquid` | product species | Liquid metafield (localized) | Broken: fixed with handle |
