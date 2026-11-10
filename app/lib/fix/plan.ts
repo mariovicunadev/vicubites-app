@@ -15,6 +15,8 @@ export interface PlannedChange {
   type: FixField["type"];
   from: string | null;
   to: string;
+  /** Value written to the store when it differs from `to` (a key field's metaobject GID). */
+  value?: string;
 }
 
 export interface PlannedProduct {
@@ -47,6 +49,8 @@ export interface PlanInput {
   current: ReadonlyMap<string, CurrentProduct>;
   /** Allowed values of choice fields, from the store's metafield definitions. */
   choices: ReadonlyMap<string, readonly string[]>;
+  /** Key fields: metaobject handle -> GID, per field, from the store's entries. */
+  keys?: ReadonlyMap<string, ReadonlyMap<string, string>>;
 }
 
 const KNOWN_COLUMNS: ReadonlySet<string> = new Set([...ID_COLUMNS, ...FIX_FIELDS_BY_KEY.keys()]);
@@ -58,7 +62,7 @@ const INTEGER = /^\d+$/;
  * mean "no change", values equal to the current one are skipped, and a row
  * with any invalid value is skipped entirely so a product is never half fixed.
  */
-export function planFix({ columns, records, current, choices }: PlanInput): FixPlan {
+export function planFix({ columns, records, current, choices, keys }: PlanInput): FixPlan {
   const fileErrors = fileProblems(columns, records);
   if (fileErrors.length > 0) {
     return { fileErrors, products: [], rowErrors: [], unchanged: 0 };
@@ -91,14 +95,21 @@ export function planFix({ columns, records, current, choices }: PlanInput): FixP
     for (const field of FIX_FIELDS) {
       const raw = values[field.key] ?? "";
       if (raw === "") continue;
-      const result = normalize(field, raw, choices.get(field.key));
+      const result = normalize(field, raw, choices.get(field.key), keys?.get(field.key));
       if ("error" in result) {
         messages.push(`${field.label}: ${result.error}`);
         continue;
       }
       const from = product.metafields[field.key] ?? null;
       if (from !== null && sameValue(field, from, result.value)) continue;
-      changes.push({ key: field.key, label: field.label, type: field.type, from, to: result.value });
+      changes.push({
+        key: field.key,
+        label: field.label,
+        type: field.type,
+        from,
+        to: result.value,
+        ...(result.written ? { value: result.written } : {}),
+      });
     }
 
     if (messages.length > 0) rowErrors.push({ line, productId, messages });
@@ -122,7 +133,8 @@ function normalize(
   field: FixField,
   raw: string,
   allowed: readonly string[] | undefined,
-): { value: string } | { error: string } {
+  entries: ReadonlyMap<string, string> | undefined,
+): { value: string; written?: string } | { error: string } {
   switch (field.kind) {
     case "decimal":
       // Guaranteed analysis values are percentages.
@@ -138,9 +150,18 @@ function normalize(
         ? { error: `"${raw}" isn't one of ${allowed.join(", ")}` }
         : { error: "the store has no allowed values for this field" };
     }
+    case "key": {
+      // Handles are the language-independent keys; labels are translated text and never accepted.
+      const handle = raw.trim().toLowerCase();
+      const id = entries?.get(handle);
+      if (id) return { value: handle, written: id };
+      return entries?.size
+        ? { error: `"${raw}" isn't one of ${[...entries.keys()].join(", ")}` }
+        : { error: "the store has no entries for this field" };
+    }
   }
 }
 
 function sameValue(field: FixField, a: string, b: string): boolean {
-  return field.kind === "choice" ? a === b : Number(a) === Number(b);
+  return field.kind === "choice" || field.kind === "key" ? a === b : Number(a) === Number(b);
 }

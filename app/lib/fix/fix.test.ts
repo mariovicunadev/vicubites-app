@@ -17,20 +17,25 @@ const CURRENT = new Map<string, CurrentProduct>([
     {
       id: STEW,
       title: "Hearty Stew for Dogs",
-      metafields: { "custom.protein_min": "8.0", "custom.species": "Dog" },
+      metafields: { "custom.protein_min": "8.0", "custom.species": "dog" },
     },
   ],
 ]);
 
-const CHOICES = new Map<string, readonly string[]>([
-  ["custom.species", ["Dog", "Cat"]],
-  ["custom.life_stage", ["Puppy", "Kitten", "Adult", "Senior"]],
-  ["custom.food_type", ["Dry", "Wet", "Treats"]],
-  ["custom.main_protein", ["Chicken", "Salmon", "Lamb", "Turkey", "Beef"]],
+const CHOICES = new Map<string, readonly string[]>([["custom.life_stage", ["Puppy", "Kitten", "Adult", "Senior"]]]);
+
+const entries = (type: string, handles: string[]) =>
+  new Map(handles.map((handle, i) => [handle, `gid://shopify/Metaobject/${type}-${i}`]));
+
+/** Key fields: metaobject handle -> GID, as the store's entries give them. */
+const KEYS = new Map([
+  ["custom.species", entries("species", ["dog", "cat"])],
+  ["custom.food_type", entries("food_type", ["dry", "wet", "treats"])],
+  ["custom.main_protein", entries("protein", ["chicken", "salmon", "lamb", "turkey", "beef"])],
 ]);
 
 function plan(csv: string) {
-  return planFix({ ...csvRecords(csv), current: CURRENT, choices: CHOICES });
+  return planFix({ ...csvRecords(csv), current: CURRENT, choices: CHOICES, keys: KEYS });
 }
 
 describe("parseCsv", () => {
@@ -68,7 +73,7 @@ describe("planFix", () => {
       [
         "product_id,title,custom.protein_min,custom.kcal_per_kg,custom.species,custom.life_stage",
         `${KITTEN},Kitten Turkey Recipe,36.5,4100,cat,Kitten`,
-        `${STEW},Hearty Stew for Dogs,8,,Dog,`,
+        `${STEW},Hearty Stew for Dogs,8,,dog,`,
       ].join("\n"),
     );
 
@@ -83,8 +88,15 @@ describe("planFix", () => {
         changes: [
           { key: "custom.protein_min", label: "Crude protein (min)", type: "number_decimal", from: null, to: "36.5" },
           { key: "custom.kcal_per_kg", label: "kcal per kg", type: "number_integer", from: null, to: "4100" },
-          // Matched case-insensitively, written with the store's casing.
-          { key: "custom.species", label: "Species", type: "single_line_text_field", from: null, to: "Cat" },
+          // Key fields take the metaobject handle and write the entry's reference.
+          {
+            key: "custom.species",
+            label: "Species",
+            type: "metaobject_reference",
+            from: null,
+            to: "cat",
+            value: "gid://shopify/Metaobject/species-1",
+          },
           { key: "custom.life_stage", label: "Life stage", type: "single_line_text_field", from: null, to: "Kitten" },
         ],
       },
@@ -107,9 +119,17 @@ describe("planFix", () => {
         messages: [
           'Crude fat (min): "abc" is not a percentage between 0 and 100',
           'kcal per kg: "41.5" is not a whole number',
-          'Main protein: "Duck" isn\'t one of Chicken, Salmon, Lamb, Turkey, Beef',
+          'Main protein: "Duck" isn\'t one of chicken, salmon, lamb, turkey, beef',
         ],
       },
+    ]);
+  });
+
+  it("rejects translated labels for key fields: only handles are keys", () => {
+    const result = plan(["product_id,custom.species,custom.food_type", `${KITTEN},Gato,Seco`].join("\n"));
+    expect(result.rowErrors[0]?.messages).toEqual([
+      'Species: "Gato" isn\'t one of dog, cat',
+      'Food type: "Seco" isn\'t one of dry, wet, treats',
     ]);
   });
 
@@ -235,7 +255,7 @@ describe("fixTemplateCsv", () => {
       STEW,
       "hearty-stew",
       "Hearty Stew for Dogs",
-      ...FIX_FIELDS.map((field) => (field.key === "custom.protein_min" ? "8.0" : field.key === "custom.species" ? "Dog" : "")),
+      ...FIX_FIELDS.map((field) => (field.key === "custom.protein_min" ? "8.0" : field.key === "custom.species" ? "dog" : "")),
     ]);
   });
 });

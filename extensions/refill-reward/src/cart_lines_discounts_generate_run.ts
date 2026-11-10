@@ -57,7 +57,7 @@ export function cartLinesDiscountsGenerateRun(
     if (
       !line.sellingPlanAllocation &&
       merchandise.__typename === "ProductVariant" &&
-      isDryFood(merchandise.product.productType)
+      isDryFood(merchandise.bagGrams?.value)
     ) {
       targets.push({ cartLine: { id: line.id } });
     }

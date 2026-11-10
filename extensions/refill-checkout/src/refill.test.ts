@@ -1,12 +1,15 @@
 import { describe, expect, it } from "vitest";
 
-import { bagGrams, hasDryFood, isDryFoodLine, remindersChecked, sameResource, type AppMetafieldEntry } from "./refill";
+import { bagGramsFrom, hasDryFood, isDryFoodLine, remindersChecked, sameResource, type AppMetafieldEntry } from "./refill";
 
 const DOG_FOOD = "gid://shopify/Product/1";
 const TREATS = "gid://shopify/Product/2";
+const DOG_BAG = "gid://shopify/ProductVariant/11";
+const TREAT_PACK = "gid://shopify/ProductVariant/21";
+const DOG = "gid://shopify/Metaobject/101";
 
-function productField(productId: string, key: string, value: string): AppMetafieldEntry {
-  return { target: { type: "product", id: productId }, metafield: { namespace: "custom", key, value } };
+function field(type: string, id: string, key: string, value: string): AppMetafieldEntry {
+  return { target: { type, id }, metafield: { namespace: "custom", key, value } };
 }
 
 function reminders(type: string, value: string): AppMetafieldEntry {
@@ -14,40 +17,50 @@ function reminders(type: string, value: string): AppMetafieldEntry {
 }
 
 const catalog: AppMetafieldEntry[] = [
-  productField(DOG_FOOD, "species", "Dog"),
-  productField(DOG_FOOD, "kcal_per_kg", "3600"),
-  productField(TREATS, "species", "Dog"),
-  productField(TREATS, "kcal_per_kg", "3300"),
+  field("product", DOG_FOOD, "species", DOG),
+  field("product", DOG_FOOD, "kcal_per_kg", "3600"),
+  field("variant", DOG_BAG, "bag_grams", "7000"),
+  field("product", TREATS, "species", DOG),
+  field("product", TREATS, "kcal_per_kg", "3300"),
 ];
 
-const dryBag = { productId: DOG_FOOD, options: [{ name: "Size", value: "7 kg" }] };
-const treatBag = { productId: TREATS, options: [{ name: "Flavor", value: "Chicken" }] };
+const dryBag = { productId: DOG_FOOD, variantId: DOG_BAG };
+const treatBag = { productId: TREATS, variantId: TREAT_PACK };
 
-describe("bagGrams", () => {
-  it("reads kilos and grams", () => {
-    expect(bagGrams("7 kg")).toBe(7000);
-    expect(bagGrams("1.5 kg")).toBe(1500);
-    expect(bagGrams("500 g")).toBe(500);
-    expect(bagGrams("12 cans")).toBeNull();
+describe("bagGramsFrom", () => {
+  it("reads positive integer grams only", () => {
+    expect(bagGramsFrom("7000")).toBe(7000);
+    expect(bagGramsFrom("1500")).toBe(1500);
+    expect(bagGramsFrom("0")).toBeNull();
+    expect(bagGramsFrom("1.5 kg")).toBeNull();
+    expect(bagGramsFrom(null)).toBeNull();
   });
 });
 
 describe("dry food detection", () => {
-  it("needs a bag size, a dog or cat species and calories", () => {
+  it("needs a bag weight, a species reference and calories", () => {
     expect(isDryFoodLine(dryBag, catalog)).toBe(true);
     expect(isDryFoodLine(treatBag, catalog)).toBe(false);
     expect(isDryFoodLine(dryBag, catalog.filter(({ metafield }) => metafield.key !== "kcal_per_kg"))).toBe(false);
-    expect(isDryFoodLine(dryBag, [productField(DOG_FOOD, "species", "Bird"), productField(DOG_FOOD, "kcal_per_kg", "3600")])).toBe(
-      false,
-    );
+    expect(isDryFoodLine(dryBag, catalog.filter(({ metafield }) => metafield.key !== "species"))).toBe(false);
+  });
+
+  it("never reads translated text: a species label or a Size option does not count", () => {
+    const translated = [
+      field("product", DOG_FOOD, "species", "Perro"),
+      field("product", DOG_FOOD, "kcal_per_kg", "3600"),
+      field("variant", DOG_BAG, "bag_grams", "7000"),
+    ];
+    expect(isDryFoodLine(dryBag, translated)).toBe(false);
   });
 
   it("matches metafield targets given as bare IDs, as checkout sends them", () => {
     const fromCheckout: AppMetafieldEntry[] = [
-      { target: { type: "product", id: "9599873810670" }, metafield: { namespace: "custom", key: "species", value: "Dog" } },
-      { target: { type: "product", id: "9599873810670" }, metafield: { namespace: "custom", key: "kcal_per_kg", value: "3700" } },
+      field("product", "9599873810670", "species", DOG),
+      field("product", "9599873810670", "kcal_per_kg", "3700"),
+      field("variant", "52001", "bag_grams", "7000"),
     ];
-    const line = { productId: "gid://shopify/Product/9599873810670", options: [{ name: "Size", value: "7 kg" }] };
+    const line = { productId: "gid://shopify/Product/9599873810670", variantId: "gid://shopify/ProductVariant/52001" };
     expect(isDryFoodLine(line, fromCheckout)).toBe(true);
   });
 

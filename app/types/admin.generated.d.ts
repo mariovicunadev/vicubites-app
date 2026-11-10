@@ -51,7 +51,10 @@ export type BundlesOverviewQuery = { shopifyFunctions: { nodes: Array<Pick<Admin
     & { variants: { nodes: Array<Pick<AdminTypes.ProductVariant, 'id' | 'requiresComponents'>> } }
   )>, recipes: { nodes: Array<(
       Pick<AdminTypes.Product, 'handle' | 'title'>
-      & { variants: { nodes: Array<Pick<AdminTypes.ProductVariant, 'id' | 'title' | 'price'>> } }
+      & { variants: { nodes: Array<(
+          Pick<AdminTypes.ProductVariant, 'id' | 'title' | 'price'>
+          & { bagGrams?: AdminTypes.Maybe<Pick<AdminTypes.Metafield, 'value'>> }
+        )> } }
     )> }, treats?: AdminTypes.Maybe<(
     Pick<AdminTypes.Product, 'status'>
     & { variants: { nodes: Array<Pick<AdminTypes.ProductVariant, 'id' | 'title' | 'price'>> } }
@@ -116,7 +119,10 @@ export type FixCurrentProductsQueryVariables = AdminTypes.Exact<{
 
 export type FixCurrentProductsQuery = { nodes: Array<AdminTypes.Maybe<(
     Pick<AdminTypes.Product, 'id' | 'title' | 'handle'>
-    & { metafields: { nodes: Array<Pick<AdminTypes.Metafield, 'namespace' | 'key' | 'value'>> } }
+    & { metafields: { nodes: Array<(
+        Pick<AdminTypes.Metafield, 'namespace' | 'key' | 'value'>
+        & { reference?: AdminTypes.Maybe<Pick<AdminTypes.Metaobject, 'handle'>> }
+      )> } }
   )>> };
 
 export type FixChoiceDefinitionsQueryVariables = AdminTypes.Exact<{ [key: string]: never; }>;
@@ -126,6 +132,11 @@ export type FixChoiceDefinitionsQuery = { metafieldDefinitions: { nodes: Array<(
       Pick<AdminTypes.MetafieldDefinition, 'namespace' | 'key'>
       & { validations: Array<Pick<AdminTypes.MetafieldDefinitionValidation, 'name' | 'value'>> }
     )> } };
+
+export type FixKeyEntriesQueryVariables = AdminTypes.Exact<{ [key: string]: never; }>;
+
+
+export type FixKeyEntriesQuery = { species: { nodes: Array<Pick<AdminTypes.Metaobject, 'id' | 'handle'>> }, foodType: { nodes: Array<Pick<AdminTypes.Metaobject, 'id' | 'handle'>> }, protein: { nodes: Array<Pick<AdminTypes.Metaobject, 'id' | 'handle'>> } };
 
 export type FlowTriggerRefillDueMutationVariables = AdminTypes.Exact<{
   handle: AdminTypes.Scalars['String']['input'];
@@ -240,7 +251,7 @@ export type RefillOrderQuery = { order?: AdminTypes.Maybe<(
         Pick<AdminTypes.LineItem, 'quantity'>
         & { variant?: AdminTypes.Maybe<(
           Pick<AdminTypes.ProductVariant, 'id'>
-          & { selectedOptions: Array<Pick<AdminTypes.SelectedOption, 'name' | 'value'>>, product: { species?: AdminTypes.Maybe<Pick<AdminTypes.Metafield, 'value'>>, kcalPerKg?: AdminTypes.Maybe<Pick<AdminTypes.Metafield, 'value'>> } }
+          & { bagGrams?: AdminTypes.Maybe<Pick<AdminTypes.Metafield, 'value'>>, product: { species?: AdminTypes.Maybe<{ reference?: AdminTypes.Maybe<Pick<AdminTypes.Metaobject, 'handle'>> }>, kcalPerKg?: AdminTypes.Maybe<Pick<AdminTypes.Metafield, 'value'>> } }
         )> }
       )> } }
   )> };
@@ -252,10 +263,11 @@ export type ShopOverviewQuery = { shop: Pick<AdminTypes.Shop, 'name' | 'myshopif
 
 interface GeneratedQueryTypes {
   "#graphql\n  query bulkOperationStatus($id: ID!) {\n    bulkOperation(id: $id) {\n      id\n      status\n      errorCode\n      objectCount\n      rootObjectCount\n      url\n      partialDataUrl\n      createdAt\n      completedAt\n    }\n  }\n": {return: BulkOperationStatusQuery, variables: BulkOperationStatusQueryVariables},
-  "#graphql\n  query bundlesOverview($kitHandle: String!, $recipeQuery: String!, $treatsHandle: String!) {\n    shopifyFunctions(first: 25) {\n      nodes {\n        id\n        handle\n      }\n    }\n    cartTransforms(first: 5) {\n      nodes {\n        id\n        functionId\n        config: metafield(namespace: \"$app\", key: \"starter-kit-config\") {\n          jsonValue\n        }\n      }\n    }\n    shop {\n      id\n      features {\n        bundles {\n          eligibleForBundles\n        }\n      }\n    }\n    kit: productByIdentifier(identifier: { handle: $kitHandle }) {\n      legacyResourceId\n      status\n      variants(first: 5) {\n        nodes {\n          id\n          requiresComponents\n        }\n      }\n    }\n    recipes: products(first: 25, query: $recipeQuery) {\n      nodes {\n        handle\n        title\n        variants(first: 10) {\n          nodes {\n            id\n            title\n            price\n          }\n        }\n      }\n    }\n    treats: productByIdentifier(identifier: { handle: $treatsHandle }) {\n      status\n      variants(first: 10) {\n        nodes {\n          id\n          title\n          price\n        }\n      }\n    }\n  }\n": {return: BundlesOverviewQuery, variables: BundlesOverviewQueryVariables},
+  "#graphql\n  query bundlesOverview($kitHandle: String!, $recipeQuery: String!, $treatsHandle: String!) {\n    shopifyFunctions(first: 25) {\n      nodes {\n        id\n        handle\n      }\n    }\n    cartTransforms(first: 5) {\n      nodes {\n        id\n        functionId\n        config: metafield(namespace: \"$app\", key: \"starter-kit-config\") {\n          jsonValue\n        }\n      }\n    }\n    shop {\n      id\n      features {\n        bundles {\n          eligibleForBundles\n        }\n      }\n    }\n    kit: productByIdentifier(identifier: { handle: $kitHandle }) {\n      legacyResourceId\n      status\n      variants(first: 5) {\n        nodes {\n          id\n          requiresComponents\n        }\n      }\n    }\n    recipes: products(first: 25, query: $recipeQuery) {\n      nodes {\n        handle\n        title\n        variants(first: 10) {\n          nodes {\n            id\n            title\n            price\n            bagGrams: metafield(namespace: \"custom\", key: \"bag_grams\") {\n              value\n            }\n          }\n        }\n      }\n    }\n    treats: productByIdentifier(identifier: { handle: $treatsHandle }) {\n      status\n      variants(first: 10) {\n        nodes {\n          id\n          title\n          price\n        }\n      }\n    }\n  }\n": {return: BundlesOverviewQuery, variables: BundlesOverviewQueryVariables},
   "#graphql\n  query checkoutRulesOverview {\n    shopifyFunctions(first: 25) {\n      nodes {\n        id\n        handle\n      }\n    }\n    discountNodes(first: 25, query: \"type:app\") {\n      nodes {\n        id\n        config: metafield(namespace: \"$app\", key: \"refill-reward-config\") {\n          jsonValue\n        }\n        discount {\n          __typename\n          ... on DiscountAutomaticApp {\n            title\n            status\n            appDiscountType {\n              functionId\n            }\n          }\n        }\n      }\n    }\n    validations(first: 25) {\n      nodes {\n        id\n        title\n        enabled\n        shopifyFunction {\n          id\n        }\n        config: metafield(namespace: \"$app\", key: \"order-limit-config\") {\n          jsonValue\n        }\n      }\n    }\n  }\n": {return: CheckoutRulesOverviewQuery, variables: CheckoutRulesOverviewQueryVariables},
-  "#graphql\n  query fixCurrentProducts($ids: [ID!]!, $keys: [String!]) {\n    nodes(ids: $ids) {\n      ... on Product {\n        id\n        title\n        handle\n        metafields(first: 20, keys: $keys) {\n          nodes {\n            namespace\n            key\n            value\n          }\n        }\n      }\n    }\n  }\n": {return: FixCurrentProductsQuery, variables: FixCurrentProductsQueryVariables},
+  "#graphql\n  query fixCurrentProducts($ids: [ID!]!, $keys: [String!]) {\n    nodes(ids: $ids) {\n      ... on Product {\n        id\n        title\n        handle\n        metafields(first: 20, keys: $keys) {\n          nodes {\n            namespace\n            key\n            value\n            reference {\n              ... on Metaobject {\n                handle\n              }\n            }\n          }\n        }\n      }\n    }\n  }\n": {return: FixCurrentProductsQuery, variables: FixCurrentProductsQueryVariables},
   "#graphql\n  query fixChoiceDefinitions {\n    metafieldDefinitions(first: 50, ownerType: PRODUCT, namespace: \"custom\") {\n      nodes {\n        namespace\n        key\n        validations {\n          name\n          value\n        }\n      }\n    }\n  }\n": {return: FixChoiceDefinitionsQuery, variables: FixChoiceDefinitionsQueryVariables},
+  "#graphql\n  query fixKeyEntries {\n    species: metaobjects(type: \"species\", first: 50) {\n      nodes {\n        id\n        handle\n      }\n    }\n    foodType: metaobjects(type: \"food_type\", first: 50) {\n      nodes {\n        id\n        handle\n      }\n    }\n    protein: metaobjects(type: \"protein\", first: 50) {\n      nodes {\n        id\n        handle\n      }\n    }\n  }\n": {return: FixKeyEntriesQuery, variables: FixKeyEntriesQueryVariables},
   "#graphql\n  query b2bCatalogs {\n    catalogs(first: 50, type: COMPANY_LOCATION) {\n      nodes {\n        id\n        status\n        publication {\n          id\n        }\n      }\n    }\n  }\n": {return: B2bCatalogsQuery, variables: B2bCatalogsQueryVariables},
   "#graphql\n  query productHealthData($id: ID!) {\n    product(id: $id) {\n      id\n      title\n      handle\n      status\n      requiresSellingPlan\n      variants(first: 250) {\n        nodes {\n          id\n          title\n          sku\n        }\n      }\n      metafields(first: 250) {\n        nodes {\n          namespace\n          key\n          value\n        }\n      }\n      media(first: 250) {\n        nodes {\n          id\n          alt\n        }\n      }\n      resourcePublicationsV2(first: 250, onlyPublished: true) {\n        nodes {\n          publication {\n            id\n          }\n        }\n      }\n    }\n  }\n": {return: ProductHealthDataQuery, variables: ProductHealthDataQueryVariables},
   "#graphql\n  query hubspotCompanies($after: String) {\n    companies(first: 50, after: $after) {\n      pageInfo {\n        hasNextPage\n        endCursor\n      }\n      nodes {\n        id\n        name\n        contacts(first: 50) {\n          nodes {\n            id\n            customer {\n              defaultEmailAddress {\n                emailAddress\n              }\n            }\n          }\n        }\n      }\n    }\n  }\n": {return: HubspotCompaniesQuery, variables: HubspotCompaniesQueryVariables},
@@ -263,7 +275,7 @@ interface GeneratedQueryTypes {
   "#graphql\n  query hubspotCompanyOfContact($id: ID!) {\n    companyContact(id: $id) {\n      company {\n        id\n      }\n    }\n  }\n": {return: HubspotCompanyOfContactQuery, variables: HubspotCompanyOfContactQueryVariables},
   "#graphql\n  query refillPixel {\n    webPixel {\n      id\n      settings\n    }\n  }\n": {return: RefillPixelQuery, variables: RefillPixelQueryVariables},
   "#graphql\n  query refillReminderEmails($ids: [ID!]!) {\n    nodes(ids: $ids) {\n      ... on Customer {\n        id\n        defaultEmailAddress {\n          emailAddress\n        }\n      }\n    }\n  }\n": {return: RefillReminderEmailsQuery, variables: RefillReminderEmailsQueryVariables},
-  "#graphql\n  query refillOrder($id: ID!) {\n    order(id: $id) {\n      id\n      processedAt\n      customer {\n        id\n      }\n      purchasingEntity {\n        __typename\n      }\n      refillReminders: metafield(namespace: \"$app\", key: \"refill_reminders\") {\n        value\n      }\n      lineItems(first: 100) {\n        nodes {\n          quantity\n          variant {\n            id\n            selectedOptions {\n              name\n              value\n            }\n            product {\n              species: metafield(namespace: \"custom\", key: \"species\") {\n                value\n              }\n              kcalPerKg: metafield(namespace: \"custom\", key: \"kcal_per_kg\") {\n                value\n              }\n            }\n          }\n        }\n      }\n    }\n  }\n": {return: RefillOrderQuery, variables: RefillOrderQueryVariables},
+  "#graphql\n  query refillOrder($id: ID!) {\n    order(id: $id) {\n      id\n      processedAt\n      customer {\n        id\n      }\n      purchasingEntity {\n        __typename\n      }\n      refillReminders: metafield(namespace: \"$app\", key: \"refill_reminders\") {\n        value\n      }\n      lineItems(first: 100) {\n        nodes {\n          quantity\n          variant {\n            id\n            bagGrams: metafield(namespace: \"custom\", key: \"bag_grams\") {\n              value\n            }\n            product {\n              species: metafield(namespace: \"custom\", key: \"species\") {\n                reference {\n                  ... on Metaobject {\n                    handle\n                  }\n                }\n              }\n              kcalPerKg: metafield(namespace: \"custom\", key: \"kcal_per_kg\") {\n                value\n              }\n            }\n          }\n        }\n      }\n    }\n  }\n": {return: RefillOrderQuery, variables: RefillOrderQueryVariables},
   "#graphql\n  query shopOverview {\n    shop {\n      name\n      myshopifyDomain\n    }\n    productsCount {\n      count\n      precision\n    }\n    ingredientDefinition: metaobjectDefinitionByType(type: \"ingredient\") {\n      name\n      metaobjectsCount\n    }\n  }\n": {return: ShopOverviewQuery, variables: ShopOverviewQueryVariables},
 }
 

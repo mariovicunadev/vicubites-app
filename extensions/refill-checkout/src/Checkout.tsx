@@ -18,7 +18,7 @@ function Extension() {
   const metafields = shopify.appMetafields.value;
   const lines = shopify.lines.value.map((line) => ({
     productId: line.merchandise.product.id,
-    options: line.merchandise.selectedOptions,
+    variantId: line.merchandise.id,
   }));
   if (!hasDryFood(lines, metafields)) return null;
 

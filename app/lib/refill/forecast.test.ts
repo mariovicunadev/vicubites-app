@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 
 import {
   addDays,
-  bagGrams,
   daysBetween,
   daysLeft,
   forecastCustomer,
@@ -27,26 +26,14 @@ function purchase(processedAt: string, overrides: Partial<Purchase> = {}): Purch
   };
 }
 
-describe("bagGrams", () => {
-  it("reads kilograms and grams", () => {
-    expect(bagGrams("7 kg")).toBe(7000);
-    expect(bagGrams("1.5 kg")).toBe(1500);
-    expect(bagGrams("500 g")).toBe(500);
-    expect(bagGrams(" 12 KG ")).toBe(12000);
-  });
-
-  it("rejects anything that isn't a bag size", () => {
-    expect(bagGrams("Chicken / 12 cans")).toBeNull();
-    expect(bagGrams("12 × 85 g")).toBeNull();
-    expect(bagGrams("")).toBeNull();
-  });
-});
-
 describe("speciesFrom", () => {
   it("normalizes the metafield value", () => {
-    expect(speciesFrom("Dog")).toBe("dog");
-    expect(speciesFrom(" cat ")).toBe("cat");
-    expect(speciesFrom("Bird")).toBeNull();
+    expect(speciesFrom("dog")).toBe("dog");
+    expect(speciesFrom("cat")).toBe("cat");
+    // Labels are translated text, never keys
+    expect(speciesFrom("Dog")).toBeNull();
+    expect(speciesFrom("Perro")).toBeNull();
+    expect(speciesFrom("bird")).toBeNull();
     expect(speciesFrom(null)).toBeNull();
   });
 });

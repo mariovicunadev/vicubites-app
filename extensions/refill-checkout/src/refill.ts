@@ -1,33 +1,24 @@
 /**
  * Pure helpers for the Refill Radar checkout block. They mirror the app's
- * dry food rule (`app/lib/refill/orders.ts`): a bag size in grams or kilos,
- * a dog or cat species and calories per kilo. A contract test in the app
- * keeps the two in sync.
+ * dry food rule (`app/lib/refill/orders.ts`): a bag weight
+ * (`custom.bag_grams`, set only on dry food bags), a species and calories per
+ * kilo. Every value is language-independent: option names and text metafields
+ * reach checkout translated, so the block never reads them. A contract test
+ * in the app keeps the two in sync.
  */
 
 /** Cart and customer metafield the block reads and writes; copied to the order. */
 export const REMINDERS_KEY = "refill_reminders";
 
-/** The bag size option of dry food products. */
-export const SIZE_OPTION = "Size";
-
 export interface CheckoutLine {
   productId: string;
-  options: readonly { name: string; value: string }[];
+  variantId: string;
 }
 
 /** The shape of `shopify.appMetafields` entries the block reads. */
 export interface AppMetafieldEntry {
   target: { type: string; id: string };
   metafield: { namespace: string; key: string; value: string | number | boolean };
-}
-
-/** Reads a bag size option value ("7 kg", "1.5 kg", "500 g") as grams. */
-export function bagGrams(optionValue: string): number | null {
-  const match = /^\s*(\d+(?:\.\d+)?)\s*(kg|g)\s*$/i.exec(optionValue);
-  if (!match) return null;
-  const amount = Number(match[1]);
-  return match[2].toLowerCase() === "kg" ? Math.round(amount * 1000) : amount;
 }
 
 /**
@@ -40,24 +31,42 @@ export function sameResource(a: string, b: string): boolean {
   return tail(a) === tail(b);
 }
 
-function productValue(metafields: readonly AppMetafieldEntry[], productId: string, key: string): string | null {
+function customValue(
+  metafields: readonly AppMetafieldEntry[],
+  type: "product" | "variant",
+  id: string,
+  key: string,
+): string | null {
   const entry = metafields.find(
     ({ target, metafield }) =>
-      target.type === "product" &&
-      sameResource(target.id, productId) &&
+      target.type === type &&
+      sameResource(target.id, id) &&
       metafield.namespace === "custom" &&
       metafield.key === key,
   );
   return entry ? String(entry.metafield.value) : null;
 }
 
-/** A line Refill Radar forecasts from: a dog or cat dry food bag with calories. */
+/** A `custom.bag_grams` value: positive integer grams. */
+export function bagGramsFrom(value: string | null): number | null {
+  const grams = Number(value);
+  return value !== null && value !== "" && Number.isInteger(grams) && grams > 0 ? grams : null;
+}
+
+/**
+ * `appMetafields` gives a metaobject reference as its GID, not its handle. The
+ * species definition only accepts species entries (dog or cat), so a set
+ * reference is enough.
+ */
+export function isMetaobjectReference(value: string | null): boolean {
+  return value?.startsWith("gid://shopify/Metaobject/") ?? false;
+}
+
+/** A line Refill Radar forecasts from: a dry food bag with a species and calories. */
 export function isDryFoodLine(line: CheckoutLine, metafields: readonly AppMetafieldEntry[]): boolean {
-  const size = line.options.find((option) => option.name === SIZE_OPTION)?.value;
-  if (!size || !bagGrams(size)) return false;
-  const species = productValue(metafields, line.productId, "species")?.trim().toLowerCase();
-  if (species !== "dog" && species !== "cat") return false;
-  const kcalPerKg = Number(productValue(metafields, line.productId, "kcal_per_kg"));
+  if (!bagGramsFrom(customValue(metafields, "variant", line.variantId, "bag_grams"))) return false;
+  if (!isMetaobjectReference(customValue(metafields, "product", line.productId, "species"))) return false;
+  const kcalPerKg = Number(customValue(metafields, "product", line.productId, "kcal_per_kg"));
   return Number.isFinite(kcalPerKg) && kcalPerKg > 0;
 }
 

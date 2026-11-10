@@ -32,8 +32,8 @@ query CartInput {
       merchandise {
         __typename
         ... on ProductVariant {
-          product {
-            productType
+          bagGrams: metafield(namespace: "custom", key: "bag_grams") {
+            value
           }
         }
       }

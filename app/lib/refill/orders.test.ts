@@ -14,10 +14,10 @@ const line = (variant: number, rest: Omit<OrderLine, "variantId">): OrderLine =>
   variantId: `gid://shopify/ProductVariant/${variant}`,
   ...rest,
 });
-const DRY_DOG = line(1, { quantity: 1, options: { Size: "7 kg" }, species: "Dog", kcalPerKg: "3700" });
-const DRY_CAT = line(2, { quantity: 2, options: { Size: "1.5 kg" }, species: "Cat", kcalPerKg: "3900" });
-const WET_DOG = line(3, { quantity: 1, options: { Flavor: "Chicken", Pack: "12 cans" }, species: "Dog", kcalPerKg: "1000" });
-const TREATS = line(4, { quantity: 2, options: { Flavor: "Chicken" }, species: "Dog", kcalPerKg: "3300" });
+const DRY_DOG = line(1, { quantity: 1, bagGrams: "7000", species: "dog", kcalPerKg: "3700" });
+const DRY_CAT = line(2, { quantity: 2, bagGrams: "1500", species: "cat", kcalPerKg: "3900" });
+const WET_DOG = line(3, { quantity: 1, bagGrams: null, species: "dog", kcalPerKg: "1000" });
+const TREATS = line(4, { quantity: 2, bagGrams: null, species: "dog", kcalPerKg: "3300" });
 
 function order(lines: OrderLine[], overrides: Partial<OrderData> = {}): OrderData {
   return {
@@ -45,7 +45,7 @@ describe("purchasesFromOrder", () => {
   });
 
   it("adds up the bags of one species and keeps the biggest one's variant", () => {
-    const smallBag = line(5, { quantity: 1, options: { Size: "2 kg" }, species: "Dog", kcalPerKg: "3900" });
+    const smallBag = line(5, { quantity: 1, bagGrams: "2000", species: "dog", kcalPerKg: "3900" });
     const [purchase] = purchasesFromOrder(order([smallBag, DRY_DOG]));
     expect(purchase.kcal).toBe(7_800 + 25_900);
     expect(purchase.variantId).toBe("gid://shopify/ProductVariant/1");
@@ -73,8 +73,8 @@ const LINE_FIELDS = {
   quantity: 1,
   variant: {
     id: "gid://shopify/ProductVariant/1",
-    selectedOptions: [{ name: "Size", value: "7 kg" }],
-    product: { species: { value: "Dog" }, kcalPerKg: { value: "3700" } },
+    bagGrams: { value: "7000" },
+    product: { species: { reference: { handle: "dog" } }, kcalPerKg: { value: "3700" } },
   },
 };
 

@@ -54,6 +54,11 @@ export function catalogQuery({ b2bPublicationIds = [] }: CatalogQueryOptions = {
               key
               type
               value
+              reference {
+                ... on Metaobject {
+                  handle
+                }
+              }
             }
           }
         }
@@ -97,6 +102,15 @@ function metafieldColumn(node: BulkNode): string {
   return `${String(field(node, "namespace"))}.${String(field(node, "key"))}`;
 }
 
+/**
+ * A metaobject reference exports as its handle (`dog`, `dry`): the
+ * language-independent key a bulk fix accepts back. Other values as stored.
+ */
+function metafieldValue(node: BulkNode): unknown {
+  const reference = field(node, "reference") as { handle?: unknown } | null | undefined;
+  return typeof reference?.handle === "string" ? reference.handle : field(node, "value");
+}
+
 /** Media children come back as `MediaImage`, `Video`, `ExternalVideo` or `Model3d`. */
 function mediaOf(product: BulkNode): BulkNode[] {
   return ["MediaImage", "Video", "ExternalVideo", "Model3d"].flatMap(
@@ -123,7 +137,7 @@ export function* catalogCsv(products: readonly BulkNode[]): Generator<string> {
     const metafields = new Map(
       (product.children.Metafield ?? []).map((node) => [
         metafieldColumn(node),
-        field(node, "value"),
+        metafieldValue(node),
       ]),
     );
     const media = mediaOf(product);

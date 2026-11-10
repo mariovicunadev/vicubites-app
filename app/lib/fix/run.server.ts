@@ -30,6 +30,11 @@ const FIX_CURRENT_PRODUCTS_QUERY = `#graphql
             namespace
             key
             value
+            reference {
+              ... on Metaobject {
+                handle
+              }
+            }
           }
         }
       }
@@ -72,12 +77,55 @@ export async function loadCurrentProducts(
         title: node.title,
         handle: node.handle,
         metafields: Object.fromEntries(
-          node.metafields.nodes.map((m) => [metafieldKey(m.namespace, m.key), m.value]),
+          // Key fields compare by metaobject handle, the value the spreadsheet holds
+          node.metafields.nodes.map((m) => [
+            metafieldKey(m.namespace, m.key),
+            m.reference && "handle" in m.reference ? m.reference.handle : m.value,
+          ]),
         ),
       });
     }
   }
   return products;
+}
+
+const FIX_KEY_ENTRIES_QUERY = `#graphql
+  query fixKeyEntries {
+    species: metaobjects(type: "species", first: 50) {
+      nodes {
+        id
+        handle
+      }
+    }
+    foodType: metaobjects(type: "food_type", first: 50) {
+      nodes {
+        id
+        handle
+      }
+    }
+    protein: metaobjects(type: "protein", first: 50) {
+      nodes {
+        id
+        handle
+      }
+    }
+  }
+`;
+
+/** Key fields: metaobject handle -> GID per field, read from the store's entries. */
+export async function loadKeyEntries(graphql: AdminGraphql): Promise<Map<string, Map<string, string>>> {
+  const data = await adminGraphql(graphql, FIX_KEY_ENTRIES_QUERY);
+  const byType: Record<string, { id: string; handle: string }[]> = {
+    species: data.species.nodes,
+    food_type: data.foodType.nodes,
+    protein: data.protein.nodes,
+  };
+  const keys = new Map<string, Map<string, string>>();
+  for (const field of FIX_FIELDS) {
+    if (!("metaobjectType" in field)) continue;
+    keys.set(field.key, new Map((byType[field.metaobjectType] ?? []).map((entry) => [entry.handle, entry.id])));
+  }
+  return keys;
 }
 
 /** Allowed values of choice fields, read from the store instead of hard-coded. */
@@ -116,14 +164,15 @@ export async function templateProducts(graphql: AdminGraphql, shop: string) {
  */
 export async function previewFix(graphql: AdminGraphql, shop: string, csv: string) {
   const { columns, records } = csvRecords(csv);
-  const [current, choices] = await Promise.all([
+  const [current, choices, keys] = await Promise.all([
     loadCurrentProducts(
       graphql,
       records.map((record) => record.values.product_id ?? ""),
     ),
     loadChoices(graphql),
+    loadKeyEntries(graphql),
   ]);
-  const plan = planFix({ columns, records, current, choices });
+  const plan = planFix({ columns, records, current, choices, keys });
 
   // Drafts that were never applied are replaced by the new preview.
   await prisma.fixRun.deleteMany({ where: { shop, jobId: null } });

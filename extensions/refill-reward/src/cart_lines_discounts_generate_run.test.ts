@@ -9,16 +9,17 @@ type Line = CartInput["cart"]["lines"][number];
 
 const TODAY = "2026-11-07";
 
-const product = (id: string, productType: string, sellingPlanId: string | null = null): Line => ({
+/** A variant line; only dry food bags carry `custom.bag_grams`. */
+const product = (id: string, bagGrams: string | null, sellingPlanId: string | null = null): Line => ({
   id,
   sellingPlanAllocation: sellingPlanId ? { sellingPlan: { id: sellingPlanId } } : null,
-  merchandise: { __typename: "ProductVariant", product: { productType } },
+  merchandise: { __typename: "ProductVariant", bagGrams: bagGrams === null ? null : { value: bagGrams } },
 });
 
-const dryFood = (id: string) => product(id, "Dry Dog Food");
-const wetFood = (id: string) => product(id, "Wet Dog Food");
-const treat = (id: string) => product(id, "Dog Treats");
-const dryFoodSubscription = (id: string) => product(id, "Dry Dog Food", "gid://shopify/SellingPlan/1");
+const dryFood = (id: string) => product(id, "7000");
+const wetFood = (id: string) => product(id, null);
+const treat = (id: string) => product(id, null);
+const dryFoodSubscription = (id: string) => product(id, "7000", "gid://shopify/SellingPlan/1");
 
 const customItem = (id: string): Line => ({ id, sellingPlanAllocation: null, merchandise: { __typename: "CustomProduct" } });
 
@@ -56,7 +57,7 @@ describe("cartLinesDiscountsGenerateRun", () => {
         lines: [
           dryFood("gid://shopify/CartLine/1"),
           treat("gid://shopify/CartLine/2"),
-          product("gid://shopify/CartLine/3", "Dry Cat Food"),
+          product("gid://shopify/CartLine/3", "1500"),
           wetFood("gid://shopify/CartLine/4"),
           dryFoodSubscription("gid://shopify/CartLine/5"),
         ],

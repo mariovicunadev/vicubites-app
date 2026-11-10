@@ -26,7 +26,7 @@ export function fixVariablesJsonl(products: readonly PlannedProduct[]): string {
       JSON.stringify({
         metafields: product.changes.map((change) => {
           const [namespace, key] = change.key.split(".");
-          return { ownerId: product.productId, namespace, key, type: change.type, value: change.to };
+          return { ownerId: product.productId, namespace, key, type: change.type, value: change.value ?? change.to };
         }),
       }),
     )
