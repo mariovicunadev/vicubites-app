@@ -6,6 +6,7 @@ import { fireRefillDue } from "../flow/trigger.server";
 import { createKlaviyoEvent } from "../klaviyo/client.server";
 import { refillDueEvent } from "../klaviyo/event";
 import { daysLeft, isDueSoon, type ForecastBasis, type Species } from "./forecast";
+import { optedOutCustomers } from "./preference.server";
 import { pendingFor, REMINDER_CHANNELS, type ReminderChannel } from "./reminder-channels";
 
 type AdminGraphql = AdminApiContext["graphql"];
@@ -112,6 +113,7 @@ function flowDelivery(graphql: AdminGraphql): Deliver {
  * connected channel: a `Refill Due` event in Klaviyo and the `Refill due`
  * Flow trigger. Each channel is deduplicated and recorded on its own, so a
  * failure in one never blocks the other. Flow needs no key: it is always on.
+ * Customers who turned reminders off in checkout are skipped on both channels.
  */
 export async function sendDueReminders(
   graphql: AdminGraphql,
@@ -122,9 +124,11 @@ export async function sendDueReminders(
   const runs: ReminderRuns = { KLAVIYO: apiKey ? emptyRun() : null, FLOW: emptyRun() };
 
   const today = now.toISOString().slice(0, 10);
-  const forecasts = (await prisma.refillForecast.findMany({ where: { shop, ...(customerId ? { customerId } : {}) } }))
+  const dueSoon = (await prisma.refillForecast.findMany({ where: { shop, ...(customerId ? { customerId } : {}) } }))
     .filter((forecast) => isDueSoon(forecast, today));
-  if (forecasts.length === 0) return runs;
+  if (dueSoon.length === 0) return runs;
+  const optedOut = await optedOutCustomers(shop, [...new Set(dueSoon.map((f) => f.customerId))]);
+  const forecasts = dueSoon.filter((forecast) => !optedOut.has(forecast.customerId));
 
   const sent = await prisma.refillReminder.findMany({
     where: { shop, status: "SENT", customerId: { in: [...new Set(forecasts.map((f) => f.customerId))] } },
@@ -135,7 +139,8 @@ export async function sendDueReminders(
     const run = runs[channel];
     if (!run) continue;
     const pending = pendingFor(channel, forecasts, sent);
-    run.skipped = forecasts.length - pending.length;
+    // Already delivered, or the customer turned reminders off.
+    run.skipped = dueSoon.length - pending.length;
     if (pending.length === 0) continue;
 
     let deliver: Deliver;

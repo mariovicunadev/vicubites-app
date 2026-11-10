@@ -58,6 +58,11 @@ export interface OrderData {
   customerId: string | null;
   /** B2B orders restock a business, not a pet. */
   isCompanyPurchase: boolean;
+  /**
+   * The buyer's refill reminder choice from checkout (`$app:refill_reminders`),
+   * or null when the order doesn't carry one. Only the single-order query reads it.
+   */
+  refillReminders: boolean | null;
   lines: readonly OrderLine[];
 }
 
@@ -75,6 +80,7 @@ interface OrderFields {
   processedAt?: unknown;
   customer?: { id: string } | null;
   purchasingEntity?: { __typename?: string } | null;
+  refillReminders?: { value: string } | null;
 }
 
 function lineFrom(fields: LineFields): OrderLine {
@@ -89,12 +95,20 @@ function lineFrom(fields: LineFields): OrderLine {
   };
 }
 
+/** Reads a `boolean` metafield value ("true" / "false"); anything else is no choice. */
+export function reminderChoice(value: string | null | undefined): boolean | null {
+  if (value === "true") return true;
+  if (value === "false") return false;
+  return null;
+}
+
 function orderFrom(fields: OrderFields, lines: LineFields[]): OrderData {
   return {
     id: String(fields.id ?? ""),
     processedAt: String(fields.processedAt ?? ""),
     customerId: fields.customer?.id ?? null,
     isCompanyPurchase: fields.purchasingEntity?.__typename === "PurchasingCompany",
+    refillReminders: reminderChoice(fields.refillReminders?.value),
     lines: lines.map(lineFrom),
   };
 }

@@ -128,6 +128,32 @@ anything else about the customer itself. Klaviyo and Flow are separate channels,
 and deduplicated on its own (customer, species, run-out date), so an outage in one never blocks
 the other, and Flow works without Klaviyo.
 
+**In checkout and customer accounts.** Two UI extensions bring the forecast to the places where
+a customer decides:
+
+| Extension | Target | What it does |
+|---|---|---|
+| `extensions/refill-checkout/` | `purchase.checkout.block.render` | When the cart holds dog or cat dry food, explains the reminder and shows a "Remind me before this food runs out" checkbox. The choice is written to the `$app.refill_reminders` cart metafield. |
+| `extensions/refill-account/` | `customer-account.page.render` | A "Refill Radar" page in the customer account: one card per species with days left, run-out date and a "Reorder the same bag" cart link, plus whether reminders are on. |
+
+Reminders are on unless the customer turns them off. The checkbox starts from the choice made
+in this checkout, then the signed-in customer's saved choice, then on. It writes only when the
+customer changes it. The order metafield definition is `cart_to_order_copyable`, so Shopify copies
+the cart value to the order. The `orders/create` webhook stores it per customer (latest order
+wins) in the app database and in the `$app.refill_reminders` customer metafield. Customers who
+opted out get no Klaviyo event and no Flow trigger, and the admin page counts them.
+
+Both extensions are rendering only. The checkout block reads product metafields through
+`appMetafields`, and the account page reads the customer's two metafields through the Customer
+Account API. Neither has network access or calls the app backend. The dry food rule and the
+forecast format are duplicated in the extensions, with contract tests in the app that keep both
+copies in sync.
+
+| Scope | Why |
+|---|---|
+| `write_orders` | Required to own an `$app` order metafield definition. The app never edits orders. |
+| `customer_read_customers` | Customer Account API, so the account page can query `customer`. Read-only, and limited to the signed-in customer. |
+
 A production setup would also:
 - send from the brand's own domain, authenticated with SPF, DKIM and DMARC (a free mailbox
   address as sender lands in spam);

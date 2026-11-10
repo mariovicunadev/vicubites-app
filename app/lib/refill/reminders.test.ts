@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const db = vi.hoisted(() => ({
   refillForecast: { findMany: vi.fn() },
   refillReminder: { findMany: vi.fn(), upsert: vi.fn() },
+  refillPreference: { findMany: vi.fn() },
 }));
 const fireRefillDue = vi.hoisted(() => vi.fn());
 const createKlaviyoEvent = vi.hoisted(() => vi.fn());
@@ -31,6 +32,7 @@ describe("sendDueReminders", () => {
     db.refillForecast.findMany.mockResolvedValue([forecast]);
     db.refillReminder.findMany.mockResolvedValue([]);
     db.refillReminder.upsert.mockResolvedValue({});
+    db.refillPreference.findMany.mockResolvedValue([]);
     adminGraphql.mockResolvedValue({
       nodes: [{ id: forecast.customerId, defaultEmailAddress: { emailAddress: "a@example.com" } }],
     });
@@ -77,5 +79,19 @@ describe("sendDueReminders", () => {
     expect(runs.FLOW).toEqual({ sent: 0, skipped: 1, failed: 0 });
     expect(runs.KLAVIYO).toEqual({ sent: 1, skipped: 0, failed: 0 });
     expect(fireRefillDue).not.toHaveBeenCalled();
+  });
+
+  it("skips customers who turned reminders off, on both channels", async () => {
+    vi.stubEnv("KLAVIYO_PRIVATE_KEY", "test-key");
+    db.refillPreference.findMany.mockResolvedValue([{ customerId: forecast.customerId }]);
+    const runs = await sendDueReminders(graphql, forecast.shop, { now });
+    expect(runs.KLAVIYO).toEqual({ sent: 0, skipped: 1, failed: 0 });
+    expect(runs.FLOW).toEqual({ sent: 0, skipped: 1, failed: 0 });
+    expect(db.refillPreference.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: expect.objectContaining({ reminders: false }) }),
+    );
+    expect(fireRefillDue).not.toHaveBeenCalled();
+    expect(createKlaviyoEvent).not.toHaveBeenCalled();
+    expect(db.refillReminder.upsert).not.toHaveBeenCalled();
   });
 });

@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
 
 import type { BulkNode } from "../bulk/jsonl";
-import { orderFromBulkNode, orderFromQuery, purchasesFromOrder, type OrderData, type OrderLine } from "./orders";
+import {
+  orderFromBulkNode,
+  orderFromQuery,
+  purchasesFromOrder,
+  reminderChoice,
+  type OrderData,
+  type OrderLine,
+} from "./orders";
 
 const line = (variant: number, rest: Omit<OrderLine, "variantId">): OrderLine => ({
   variantId: `gid://shopify/ProductVariant/${variant}`,
@@ -18,6 +25,7 @@ function order(lines: OrderLine[], overrides: Partial<OrderData> = {}): OrderDat
     processedAt: "2026-10-14T10:00:00Z",
     customerId: "gid://shopify/Customer/1",
     isCompanyPurchase: false,
+    refillReminders: null,
     lines,
     ...overrides,
   };
@@ -98,6 +106,22 @@ describe("order adapters", () => {
       purchasingEntity: { __typename: "PurchasingCompany" },
       lineItems: { nodes: [] },
     });
-    expect(fromQuery).toMatchObject({ customerId: null, isCompanyPurchase: true });
+    expect(fromQuery).toMatchObject({ customerId: null, isCompanyPurchase: true, refillReminders: null });
+  });
+
+  it("reads the buyer's reminder choice from the order metafield", () => {
+    const base = { id: "gid://shopify/Order/3", processedAt: "2026-11-09T10:00:00Z", lineItems: { nodes: [] } };
+    expect(orderFromQuery({ ...base, refillReminders: { value: "false" } }).refillReminders).toBe(false);
+    expect(orderFromQuery({ ...base, refillReminders: { value: "true" } }).refillReminders).toBe(true);
+    expect(orderFromQuery({ ...base, refillReminders: null }).refillReminders).toBeNull();
+  });
+});
+
+describe("reminderChoice", () => {
+  it("accepts only boolean metafield values", () => {
+    expect(reminderChoice("true")).toBe(true);
+    expect(reminderChoice("false")).toBe(false);
+    expect(reminderChoice("no")).toBeNull();
+    expect(reminderChoice(undefined)).toBeNull();
   });
 });

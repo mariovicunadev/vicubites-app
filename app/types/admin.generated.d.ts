@@ -192,6 +192,13 @@ export type HubspotCompanyOfContactQueryVariables = AdminTypes.Exact<{
 
 export type HubspotCompanyOfContactQuery = { companyContact?: AdminTypes.Maybe<{ company: Pick<AdminTypes.Company, 'id'> }> };
 
+export type RefillMetafieldsSetMutationVariables = AdminTypes.Exact<{
+  metafields: Array<AdminTypes.MetafieldsSetInput> | AdminTypes.MetafieldsSetInput;
+}>;
+
+
+export type RefillMetafieldsSetMutation = { metafieldsSet?: AdminTypes.Maybe<{ metafields?: AdminTypes.Maybe<Array<Pick<AdminTypes.Metafield, 'key'>>>, userErrors: Array<Pick<AdminTypes.MetafieldsSetUserError, 'field' | 'message'>> }> };
+
 export type RefillPixelQueryVariables = AdminTypes.Exact<{ [key: string]: never; }>;
 
 
@@ -229,7 +236,7 @@ export type RefillOrderQueryVariables = AdminTypes.Exact<{
 
 export type RefillOrderQuery = { order?: AdminTypes.Maybe<(
     Pick<AdminTypes.Order, 'id' | 'processedAt'>
-    & { customer?: AdminTypes.Maybe<Pick<AdminTypes.Customer, 'id'>>, purchasingEntity?: AdminTypes.Maybe<{ __typename: 'Customer' | 'PurchasingCompany' }>, lineItems: { nodes: Array<(
+    & { customer?: AdminTypes.Maybe<Pick<AdminTypes.Customer, 'id'>>, purchasingEntity?: AdminTypes.Maybe<{ __typename: 'Customer' | 'PurchasingCompany' }>, refillReminders?: AdminTypes.Maybe<Pick<AdminTypes.Metafield, 'value'>>, lineItems: { nodes: Array<(
         Pick<AdminTypes.LineItem, 'quantity'>
         & { variant?: AdminTypes.Maybe<(
           Pick<AdminTypes.ProductVariant, 'id'>
@@ -237,13 +244,6 @@ export type RefillOrderQuery = { order?: AdminTypes.Maybe<(
         )> }
       )> } }
   )> };
-
-export type RefillMetafieldsSetMutationVariables = AdminTypes.Exact<{
-  metafields: Array<AdminTypes.MetafieldsSetInput> | AdminTypes.MetafieldsSetInput;
-}>;
-
-
-export type RefillMetafieldsSetMutation = { metafieldsSet?: AdminTypes.Maybe<{ metafields?: AdminTypes.Maybe<Array<Pick<AdminTypes.Metafield, 'key'>>>, userErrors: Array<Pick<AdminTypes.MetafieldsSetUserError, 'field' | 'message'>> }> };
 
 export type ShopOverviewQueryVariables = AdminTypes.Exact<{ [key: string]: never; }>;
 
@@ -263,7 +263,7 @@ interface GeneratedQueryTypes {
   "#graphql\n  query hubspotCompanyOfContact($id: ID!) {\n    companyContact(id: $id) {\n      company {\n        id\n      }\n    }\n  }\n": {return: HubspotCompanyOfContactQuery, variables: HubspotCompanyOfContactQueryVariables},
   "#graphql\n  query refillPixel {\n    webPixel {\n      id\n      settings\n    }\n  }\n": {return: RefillPixelQuery, variables: RefillPixelQueryVariables},
   "#graphql\n  query refillReminderEmails($ids: [ID!]!) {\n    nodes(ids: $ids) {\n      ... on Customer {\n        id\n        defaultEmailAddress {\n          emailAddress\n        }\n      }\n    }\n  }\n": {return: RefillReminderEmailsQuery, variables: RefillReminderEmailsQueryVariables},
-  "#graphql\n  query refillOrder($id: ID!) {\n    order(id: $id) {\n      id\n      processedAt\n      customer {\n        id\n      }\n      purchasingEntity {\n        __typename\n      }\n      lineItems(first: 100) {\n        nodes {\n          quantity\n          variant {\n            id\n            selectedOptions {\n              name\n              value\n            }\n            product {\n              species: metafield(namespace: \"custom\", key: \"species\") {\n                value\n              }\n              kcalPerKg: metafield(namespace: \"custom\", key: \"kcal_per_kg\") {\n                value\n              }\n            }\n          }\n        }\n      }\n    }\n  }\n": {return: RefillOrderQuery, variables: RefillOrderQueryVariables},
+  "#graphql\n  query refillOrder($id: ID!) {\n    order(id: $id) {\n      id\n      processedAt\n      customer {\n        id\n      }\n      purchasingEntity {\n        __typename\n      }\n      refillReminders: metafield(namespace: \"$app\", key: \"refill_reminders\") {\n        value\n      }\n      lineItems(first: 100) {\n        nodes {\n          quantity\n          variant {\n            id\n            selectedOptions {\n              name\n              value\n            }\n            product {\n              species: metafield(namespace: \"custom\", key: \"species\") {\n                value\n              }\n              kcalPerKg: metafield(namespace: \"custom\", key: \"kcal_per_kg\") {\n                value\n              }\n            }\n          }\n        }\n      }\n    }\n  }\n": {return: RefillOrderQuery, variables: RefillOrderQueryVariables},
   "#graphql\n  query shopOverview {\n    shop {\n      name\n      myshopifyDomain\n    }\n    productsCount {\n      count\n      precision\n    }\n    ingredientDefinition: metaobjectDefinitionByType(type: \"ingredient\") {\n      name\n      metaobjectsCount\n    }\n  }\n": {return: ShopOverviewQuery, variables: ShopOverviewQueryVariables},
 }
 
@@ -277,9 +277,9 @@ interface GeneratedMutationTypes {
   "#graphql\n  mutation orderLimitCreate($validation: ValidationCreateInput!) {\n    validationCreate(validation: $validation) {\n      validation {\n        id\n      }\n      userErrors {\n        field\n        message\n        code\n      }\n    }\n  }\n": {return: OrderLimitCreateMutation, variables: OrderLimitCreateMutationVariables},
   "#graphql\n  mutation checkoutRuleConfigSet($metafields: [MetafieldsSetInput!]!) {\n    metafieldsSet(metafields: $metafields) {\n      metafields {\n        id\n      }\n      userErrors {\n        field\n        message\n        code\n      }\n    }\n  }\n": {return: CheckoutRuleConfigSetMutation, variables: CheckoutRuleConfigSetMutationVariables},
   "#graphql\n  mutation flowTriggerRefillDue($handle: String!, $payload: JSON!) {\n    flowTriggerReceive(handle: $handle, payload: $payload) {\n      userErrors {\n        field\n        message\n      }\n    }\n  }\n": {return: FlowTriggerRefillDueMutation, variables: FlowTriggerRefillDueMutationVariables},
+  "#graphql\n  mutation refillMetafieldsSet($metafields: [MetafieldsSetInput!]!) {\n    metafieldsSet(metafields: $metafields) {\n      metafields {\n        key\n      }\n      userErrors {\n        field\n        message\n      }\n    }\n  }\n": {return: RefillMetafieldsSetMutation, variables: RefillMetafieldsSetMutationVariables},
   "#graphql\n  mutation refillPixelCreate($settings: JSON!) {\n    webPixelCreate(webPixel: { settings: $settings }) {\n      webPixel {\n        id\n      }\n      userErrors {\n        code\n        field\n        message\n      }\n    }\n  }\n": {return: RefillPixelCreateMutation, variables: RefillPixelCreateMutationVariables},
   "#graphql\n  mutation refillPixelUpdate($id: ID!, $settings: JSON!) {\n    webPixelUpdate(id: $id, webPixel: { settings: $settings }) {\n      webPixel {\n        id\n      }\n      userErrors {\n        code\n        field\n        message\n      }\n    }\n  }\n": {return: RefillPixelUpdateMutation, variables: RefillPixelUpdateMutationVariables},
-  "#graphql\n  mutation refillMetafieldsSet($metafields: [MetafieldsSetInput!]!) {\n    metafieldsSet(metafields: $metafields) {\n      metafields {\n        key\n      }\n      userErrors {\n        field\n        message\n      }\n    }\n  }\n": {return: RefillMetafieldsSetMutation, variables: RefillMetafieldsSetMutationVariables},
 }
 declare module '@shopify/admin-api-client' {
   type InputMaybe<T> = AdminTypes.InputMaybe<T>;

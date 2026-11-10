@@ -1,0 +1,32 @@
+api_version = "2026-10"
+
+[[extensions]]
+name = "Refill Radar checkout"
+handle = "refill-checkout"
+type = "ui_extension"
+uid = "defd12e5-5288-35f4-1483-911e327ad62539d75ba0"
+
+# Dynamic target: the merchant places the block in the checkout editor.
+[[extensions.targeting]]
+module = "./src/Checkout.tsx"
+target = "purchase.checkout.block.render"
+
+# The reminder choice: written as a cart metafield (copied to the order) and
+# read back from the cart or, for a signed-in buyer, from their saved choice.
+[[extensions.targeting.metafields]]
+namespace = "$app"
+key = "refill_reminders"
+
+# Dry food detection, the same fields the app's forecast reads.
+[[extensions.targeting.metafields]]
+namespace = "custom"
+key = "species"
+
+[[extensions.targeting.metafields]]
+namespace = "custom"
+key = "kcal_per_kg"
+
+# No Storefront API or network calls: everything comes from the checkout APIs.
+[extensions.capabilities]
+api_access = false
+network_access = false
