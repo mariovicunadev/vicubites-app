@@ -17,7 +17,8 @@ import { DUE_SOON_DAYS, REFERENCE_DAILY_KCAL } from "../lib/refill/forecast";
 import { connectRefillPixel, findRefillPixel, syncRefillPixel } from "../lib/refill/pixel.server";
 import { countOptedOut } from "../lib/refill/preference.server";
 import { loadReminderStatus, sendDueReminders, type ChannelStatus } from "../lib/refill/reminders.server";
-import { loadForecasts, processLatestRefillLoad, startRefillLoad } from "../lib/refill/store.server";
+import { loadMissingDefinitions } from "../lib/refill/definitions.server";
+import { loadForecasts, processLatestRefillLoad, rewriteForecasts, startRefillLoad } from "../lib/refill/store.server";
 import { toRefillRow, type RefillRow } from "../lib/refill/view";
 import { authenticate } from "../shopify.server";
 
@@ -29,7 +30,9 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   let error: string | null = null;
   let load = null;
   let pixelConnected = false;
+  let missingDefinitions: { key: string; type: string }[] = [];
   try {
+    missingDefinitions = await loadMissingDefinitions(admin.graphql);
     await refreshStaleJobs(admin.graphql, session.shop);
     load = await processLatestRefillLoad(admin.graphql, session.shop);
     const pixel = await findRefillPixel(admin.graphql);
@@ -54,6 +57,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     dueSoon: rows.filter((row) => row.dueSoon),
     later: rows.filter((row) => !row.dueSoon),
     pixelConnected,
+    missingDefinitions,
     funnel: await loadReminderMetrics(session.shop),
     reminders: await loadReminderStatus(session.shop),
     optedOut: await countOptedOut(session.shop),
@@ -66,6 +70,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   try {
     if (intent === "connect-pixel") await connectRefillPixel(admin.graphql, getAppUrl());
     else if (intent === "send-reminders") return { error: null, runs: await sendDueReminders(admin.graphql, session.shop) };
+    else if (intent === "rewrite-forecasts") return { error: null, rewritten: await rewriteForecasts(admin.graphql, session.shop) };
     else await startRefillLoad(admin.graphql, session.shop);
     return { error: null };
   } catch (error) {
@@ -75,15 +80,18 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 };
 
 export default function RefillRadar() {
-  const { load, dueSoon, later, pixelConnected, funnel, reminders, optedOut, error: loadError } =
+  const { load, dueSoon, later, pixelConnected, missingDefinitions, funnel, reminders, optedOut, error: loadError } =
     useLoaderData<typeof loader>();
   const fetcher = useFetcher<typeof action>();
+  const rewriteFetcher = useFetcher<typeof action>();
+  const rewritten = rewriteFetcher.data && "rewritten" in rewriteFetcher.data ? rewriteFetcher.data.rewritten : null;
   const pixelFetcher = useFetcher<typeof action>();
   const reminderFetcher = useFetcher<typeof action>();
   const runs = reminderFetcher.data && "runs" in reminderFetcher.data ? reminderFetcher.data.runs : null;
   const revalidator = useRevalidator();
   const running = fetcher.state !== "idle" || Boolean(load?.running);
-  const error = fetcher.data?.error ?? pixelFetcher.data?.error ?? reminderFetcher.data?.error ?? loadError;
+  const error =
+    fetcher.data?.error ?? pixelFetcher.data?.error ?? reminderFetcher.data?.error ?? rewriteFetcher.data?.error ?? loadError;
   const total = dueSoon.length + later.length;
 
   useEffect(() => {
@@ -104,6 +112,26 @@ export default function RefillRadar() {
       >
         Rebuild from orders
       </s-button>
+      <s-button
+        slot="secondary-actions"
+        onClick={() => rewriteFetcher.submit({ intent: "rewrite-forecasts" }, { method: "post" })}
+        {...(running || rewriteFetcher.state !== "idle" ? { disabled: true } : {})}
+      >
+        Rewrite forecasts
+      </s-button>
+
+      {missingDefinitions.length > 0 && (
+        <s-banner heading="Customer metafield definitions are missing" tone="warning">
+          The store lacks {missingDefinitions.map((definition) => `${definition.key} (${definition.type})`).join(", ")}.
+          Reminders, the Reorder button or the refill reward stop working without them. Deploy a new app
+          version that changes those entries in the app configuration, then rewrite forecasts.
+        </s-banner>
+      )}
+      {rewritten !== null && (
+        <s-banner heading="Forecasts rewritten" tone="success">
+          {rewritten} customers updated from stored purchases. No reminders were sent.
+        </s-banner>
+      )}
 
       {error && (
         <s-banner heading="Refill Radar could not be updated" tone="critical">

@@ -39,7 +39,7 @@ api_version = "2026-10"
 [customer.metafields.app.refill_run_out]
 type = "date"
 name = "Refill run-out date"
-description = "Earliest date this customer's dry food is expected to run out (Refill Radar)."
+description = "Earliest date any of this customer's pets is expected to run out of dry food (Refill Radar)."
 access.admin = "merchant_read"
 
 [customer.metafields.app.refill_forecast]
@@ -52,7 +52,7 @@ access.customer_account = "read"
 [customer.metafields.app.refill_variants]
 type = "list.variant_reference"
 name = "Refill last bags"
-description = "Last dry food variant bought per species, for the storefront reorder button (Refill Radar)."
+description = "Last dry food bag (variant) bought for each species, used by the storefront reorder button (Refill Radar)."
 access.admin = "merchant_read"
 
 [customer.metafields.app.refill_reminders]

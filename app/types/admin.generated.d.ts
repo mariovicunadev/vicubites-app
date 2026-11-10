@@ -203,6 +203,14 @@ export type HubspotCompanyOfContactQueryVariables = AdminTypes.Exact<{
 
 export type HubspotCompanyOfContactQuery = { companyContact?: AdminTypes.Maybe<{ company: Pick<AdminTypes.Company, 'id'> }> };
 
+export type RefillCustomerDefinitionsQueryVariables = AdminTypes.Exact<{ [key: string]: never; }>;
+
+
+export type RefillCustomerDefinitionsQuery = { metafieldDefinitions: { nodes: Array<(
+      Pick<AdminTypes.MetafieldDefinition, 'key'>
+      & { type: Pick<AdminTypes.MetafieldDefinitionType, 'name'> }
+    )> } };
+
 export type RefillMetafieldsSetMutationVariables = AdminTypes.Exact<{
   metafields: Array<AdminTypes.MetafieldsSetInput> | AdminTypes.MetafieldsSetInput;
 }>;
@@ -273,6 +281,7 @@ interface GeneratedQueryTypes {
   "#graphql\n  query hubspotCompanies($after: String) {\n    companies(first: 50, after: $after) {\n      pageInfo {\n        hasNextPage\n        endCursor\n      }\n      nodes {\n        id\n        name\n        contacts(first: 50) {\n          nodes {\n            id\n            customer {\n              defaultEmailAddress {\n                emailAddress\n              }\n            }\n          }\n        }\n      }\n    }\n  }\n": {return: HubspotCompaniesQuery, variables: HubspotCompaniesQueryVariables},
   "#graphql\n  query hubspotCompany($id: ID!) {\n    company(id: $id) {\n      id\n      name\n      contacts(first: 50) {\n        nodes {\n          id\n          customer {\n            defaultEmailAddress {\n              emailAddress\n            }\n          }\n        }\n      }\n    }\n  }\n": {return: HubspotCompanyQuery, variables: HubspotCompanyQueryVariables},
   "#graphql\n  query hubspotCompanyOfContact($id: ID!) {\n    companyContact(id: $id) {\n      company {\n        id\n      }\n    }\n  }\n": {return: HubspotCompanyOfContactQuery, variables: HubspotCompanyOfContactQueryVariables},
+  "#graphql\n  query refillCustomerDefinitions {\n    metafieldDefinitions(first: 50, ownerType: CUSTOMER, namespace: \"$app\") {\n      nodes {\n        key\n        type {\n          name\n        }\n      }\n    }\n  }\n": {return: RefillCustomerDefinitionsQuery, variables: RefillCustomerDefinitionsQueryVariables},
   "#graphql\n  query refillPixel {\n    webPixel {\n      id\n      settings\n    }\n  }\n": {return: RefillPixelQuery, variables: RefillPixelQueryVariables},
   "#graphql\n  query refillReminderEmails($ids: [ID!]!) {\n    nodes(ids: $ids) {\n      ... on Customer {\n        id\n        defaultEmailAddress {\n          emailAddress\n        }\n      }\n    }\n  }\n": {return: RefillReminderEmailsQuery, variables: RefillReminderEmailsQueryVariables},
   "#graphql\n  query refillOrder($id: ID!) {\n    order(id: $id) {\n      id\n      processedAt\n      customer {\n        id\n      }\n      purchasingEntity {\n        __typename\n      }\n      refillReminders: metafield(namespace: \"$app\", key: \"refill_reminders\") {\n        value\n      }\n      lineItems(first: 100) {\n        nodes {\n          quantity\n          variant {\n            id\n            bagGrams: metafield(namespace: \"custom\", key: \"bag_grams\") {\n              value\n            }\n            product {\n              species: metafield(namespace: \"custom\", key: \"species\") {\n                reference {\n                  ... on Metaobject {\n                    handle\n                  }\n                }\n              }\n              kcalPerKg: metafield(namespace: \"custom\", key: \"kcal_per_kg\") {\n                value\n              }\n            }\n          }\n        }\n      }\n    }\n  }\n": {return: RefillOrderQuery, variables: RefillOrderQueryVariables},
