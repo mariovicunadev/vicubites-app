@@ -53,10 +53,11 @@ GID of the `dry` entry, which the app writes into the discount's configuration m
 ## Scope
 
 **In scope**
-- Metaobject definitions `species` (entries `dog`, `cat`) and `food_type` (entries `dry`, `wet`,
-  `treats`), each with a translatable `label`, storefront read access and the translatable capability;
-  Spanish labels registered.
-- Product metafield definitions `custom.species` and `custom.food_type` recreated as
+- Metaobject definitions `species` (entries `dog`, `cat`), `food_type` (entries `dry`, `wet`,
+  `treats`) and `protein` (entries `chicken`, `salmon`, `lamb`, `turkey`, `beef`), each with a
+  translatable `label`, storefront read access and the translatable capability; Spanish labels
+  registered. The protein handle drives the card and recipe stamp accent color.
+- Product metafield definitions `custom.species`, `custom.food_type` and `custom.main_protein` recreated as
   `metaobject_reference` (a metafield can't change type), restricted to their definition, with filter
   access; every product migrated from the old text value to the matching entry.
 - Seed script in the theme repo (idempotent) that creates the definitions and entries, recreates the
@@ -71,8 +72,8 @@ GID of the `dry` entry, which the app writes into the discount's configuration m
 - Automatic collections and the Search & Discovery filters that use these metafields, rebuilt on the
   new definitions.
 - Bag size as a variant metafield `custom.bag_grams` (integer, not translatable), seeded from the
-  `Size` option; the checkout block and the backend forecast read it instead of the option name and
-  value. The starter kit's recipe variant is matched by ID or SKU, not by title.
+  `Size` option; the checkout block, the backend forecast, the feeding calculator and the product
+  comparison read it instead of the option name and value. The starter kit's recipe variant is matched by ID or SKU, not by title.
 - A full sweep of both repos (app, extensions, Functions, theme Liquid and JS) for logic that keys on
   translatable content (metafield text, product type, titles, option names and values, selling plan
   names, collection titles); every hit is fixed here or listed in this spec with the reason it is safe.
@@ -85,8 +86,8 @@ GID of the `dry` entry, which the app writes into the discount's configuration m
   `feeding-calculator` text, `product-comparison` text): theme spec.
 - Missing `refill_run_out` / `refill_variants` definitions and values: separate fix.
 - Aligning the develop and published themes, so the published theme gets these changes.
-- Life stage and main protein: no logic compares them (confirmed by the sweep); they stay text and are
-  translated as content.
+- Life stage: no logic compares it (confirmed by the sweep); it stays text and is translated as
+  content.
 - Product type values: still merchant data, no longer read by logic.
 
 ## Acceptance criteria
@@ -146,11 +147,34 @@ GID of the `dry` entry, which the app writes into the discount's configuration m
 
 ## Sweep results
 
-Filled during implementation: file, what it compares, source (Admin API original or localized
-surface), outcome.
+File, what it compares, source (Admin API original or localized surface), outcome. Storefront
+Liquid, checkout UI extensions and Function input receive translated values; the app backend reads
+the original through the Admin API.
 
 | File | Compares | Source | Outcome |
 |---|---|---|---|
+| `extensions/refill-checkout/src/refill.ts` | option name `Size` | checkout `selectedOptions` (localized) | Broken: fixed with `custom.bag_grams` |
+| `extensions/refill-checkout/src/refill.ts` | `bagGrams()` parses the option value ("1.5 kg") | checkout `selectedOptions` (localized) | At risk ("1,5 kg"): fixed with `custom.bag_grams` |
+| `extensions/refill-checkout/src/refill.ts` | species `dog` / `cat` | `appMetafields` (localized) | Broken: fixed with species reference |
+| `extensions/refill-reward/src/refill-reward.ts` | `productType` in `DRY_FOOD_TYPES` | Function input (localized) | Broken once translated: fixed with food type GID |
+| `extensions/refill-radar/blocks/refill-reminder.liquid` | variant species vs. forecast species | Liquid metafield (localized) | Broken: fixed with handle |
+| `vicubites-theme/snippets/icon-species.liquid` | species `dog` / `cat` | Liquid metafield (localized) | Broken: fixed with handle |
+| `vicubites-theme/sections/feeding-calculator.liquid` | product species | Liquid metafield (localized) | Broken: fixed with handle |
+| `vicubites-theme/sections/feeding-calculator.liquid` | `options_by_name['Size']` | option name (localized) | Broken: fixed with `custom.bag_grams` |
+| `vicubites-theme/sections/product-comparison.liquid` | options `where: 'name', 'Size'` | option name (localized) | Broken: fixed with `custom.bag_grams` |
+| `vicubites-theme/blocks/_card-data.liquid`, `blocks/recipe-stamp.liquid` | `data-protein` = `main_protein \| handleize`, matched by CSS | Liquid metafield (localized) | Broken (protein accent lost): fixed with protein reference |
+| `extensions/refill-radar/snippets/refill-line.liquid`, `assets/refill-reminder.js`, `refill-radar-pixel`, `app/lib/refill/events.ts` | species from the forecast | `$app` forecast (fixed values) | Safe |
+| `extensions/refill-account/src/forecast-view.ts` | species `dog` / `cat` | `$app` forecast via Customer Account API | Safe |
+| `extensions/refill-radar/blocks/starter-kit-picker.liquid`, `extensions/starter-kit-expand` | product and variant IDs, recipe slugs | `$app` config and line attributes | Safe |
+| `extensions/order-limit` | variant IDs (title only in the message) | Function input | Safe |
+| `app/lib/refill/orders.ts`, `forecast.ts` | option `Size`, species text | Admin API (original) | Safe, moved to the shared keys for one rule |
+| `app/lib/bundles/starter-kit.ts` | product type search, variant title `1.5 kg` | Admin API (original) | Safe, moved to `custom.bag_grams` (breaks on a rename) |
+| `app/lib/fix/plan.ts` | CSV value vs. definition choices | Admin API (original) | Safe, choices become entries |
+| `vicubites-theme/snippets/product-attributes.liquid` | attribute keys, tag prefixes | settings and tags | Safe |
+| `vicubites-theme/blocks/guaranteed-analysis.liquid` | numeric metafield keys | number metafields | Safe (hard-coded labels: theme strings spec) |
+| `vicubites-theme/blocks/selling-plan-picker.liquid` and JS | selling plan and group IDs | IDs | Safe |
+| `vicubites-theme/snippets/variant-main-picker.liquid`, `assets/variant-picker.js` | option name rendered and read in the same locale; option value IDs | same locale | Safe |
+| `vicubites-theme/sections/ingredient-detail.liquid`, `cart-upsell.liquid`, disclosures | metaobject handles, IDs, enums | — | Safe |
 
 ## References
 
