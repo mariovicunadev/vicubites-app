@@ -92,35 +92,39 @@ accepts `species` entries).
 
 ## Acceptance criteria
 
-- [ ] Given the `species` and `food_type` metaobject definitions, when listed by Admin API, then they
+- [x] Given the `species` and `food_type` metaobject definitions, when listed by Admin API, then they
       hold exactly `dog`, `cat` and `dry`, `wet`, `treats`, each with an English label and a Spanish
       translation
-- [ ] Given every product, when read by Admin API, then `custom.species` and `custom.food_type` are
+- [x] Given every product, when read by Admin API, then `custom.species` and `custom.food_type` are
       references whose handles match the previous text values (count before = count after)
-- [ ] Given a Spanish buyer with dry dog food in checkout, when the checkout loads, then the Refill
+- [x] Given a Spanish buyer with dry dog food in checkout, when the checkout loads, then the Refill
       block shows (same as English)
 - [ ] Given a customer with a forecast, when the reminder renders in Spanish, then "Reorder" links the
       right variant
+      _Open: same blocker as the reward: no customer has a forecast today._
 - [ ] Given a qualifying refill order in Spanish, when the cart is evaluated, then the refill reward
       applies exactly as in English, and wet food or treats never get it
-- [ ] Given a product page in Spanish, then the species icon shows and the feeding calculator defaults
+      _Open: unit-tested (`bag_grams` in, product type out); the store check needs a customer with `refill_run_out`, which no customer has today (separate fix)._
+- [x] Given a product page in Spanish, then the species icon shows and the feeding calculator defaults
       to the product's species; cards, recipe stamp and comparison show Spanish labels
-- [ ] Given the collection pages in Spanish, then the species and food type filters list Spanish labels
+- [x] Given the collection pages in Spanish, then the species and food type filters list Spanish labels
       and filter correctly; automatic collections keep their product counts
 - [ ] Given the app (forecast, health score, bulk fix, export), when run against the migrated catalog,
       then results match the pre-migration results
-- [ ] Given every dry food variant, then `custom.bag_grams` matches its `Size` option, and the checkout
+      _Open: covered by unit and contract tests; the store run (forecast rebuild, bulk fix preview) happens with the refill metafields fix._
+- [x] Given every dry food variant, then `custom.bag_grams` matches its `Size` option, and the checkout
       block and forecast give the same result as before in English and Spanish
-- [ ] The sweep table (below, filled during implementation) lists every comparison found and its
+- [x] The sweep table (below, filled during implementation) lists every comparison found and its
       outcome: fixed, or safe with the reason
-- [ ] A test in the app and one in the theme fail if logic compares species or food type against
+- [x] A test in the app and one in the theme fail if logic compares species or food type against
       English words, keys on the `Size` option name or reads `productType`
 - [ ] Walkthrough in English and Spanish (home, collection, product, cart, checkout, account) with no
       broken feature; one announced axe pass on the touched pages with 0 new violations
-- [ ] Access scopes: `read_metaobjects` added (the backend reads metaobject handles through
+      _Open: home, collection, product and checkout checked in both languages (axe: 0 theme violations on product and collection; the only hit is Shopify's preview bar iframe). Cart, account and the reminder are checked with the refill metafields fix, since no customer has a forecast today._
+- [x] Access scopes: `read_metaobjects` added (the backend reads metaobject handles through
       metafield references and lists entries for the bulk fix); nothing else
-- [ ] Every Admin GraphQL operation is typed by codegen and validated against the pinned API version
-- [ ] `npm run typecheck`, `npm run lint`, `npm test` and `shopify theme check` pass
+- [x] Every Admin GraphQL operation is typed by codegen and validated against the pinned API version
+- [x] `npm run typecheck`, `npm run lint`, `npm test` and `shopify theme check` pass
 
 ## Technical approach
 
