@@ -161,6 +161,24 @@ async function writeMetafields(
   assertNoUserErrors("metafieldsSet", metafieldsSet?.userErrors);
 }
 
+/**
+ * Recomputes every customer's forecast from the purchases already stored and writes the metafields
+ * again, for example after a definition was restored. Sends no reminders (no Klaviyo event, no Flow
+ * trigger), unlike the load from orders.
+ * @returns How many customers were rewritten
+ */
+export async function rewriteForecasts(graphql: AdminGraphql, shop: string) {
+  const customers = await prisma.refillPurchase.findMany({
+    where: { shop },
+    distinct: ["customerId"],
+    select: { customerId: true },
+  });
+  for (const { customerId } of customers) {
+    await refreshCustomer(graphql, shop, customerId);
+  }
+  return customers.length;
+}
+
 /** Starts the initial load: one bulk query over the orders the app can read. */
 export function startRefillLoad(graphql: AdminGraphql, shop: string) {
   return createBulkJob(graphql, shop, "refill", REFILL_ORDERS_BULK_QUERY);
