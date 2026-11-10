@@ -2,10 +2,10 @@
 
 | Field     | Value |
 |-----------|-------|
-| Status    | In progress |
+| Status    | Done |
 | Branch    | `feature/014-checkout-account-extensions` |
 | Estimate  | 4–5.5 h (AI-assisted) · 10–13 h manual |
-| Actual    | — |
+| Actual    | ~8.5 h (including store verification rounds and production debugging) |
 
 ## Goal
 
@@ -79,19 +79,22 @@ to the order when it is placed, where the `orders/create` webhook reads it.
 
 - [x] Given a cart with dry food, when the buyer reaches checkout, then the Refill Radar block shows
       the forecast text and the reminders checkbox, checked by default
-- [ ] Given a cart without dry food, the block renders nothing
+- [x] Given a cart without dry food, the block renders nothing
 - [x] Given the buyer unchecks the box and places the order, then the order has
       `$app:refill_reminders = false`, `RefillPreference.reminders` is false and the customer metafield
       mirrors it
 - [x] Given a customer with reminders off and a due-soon forecast, when reminders run, then no Klaviyo
       event or Flow trigger is sent for them (skipped, not failed)
-- [ ] Given a later order with the box checked, reminders are back on
+- [x] Given a later order with the box checked, reminders are back on
 - [ ] Given an accelerated checkout (`canSetCartMetafields` false), the checkbox is hidden and the
       order keeps the previous preference
+      Covered by the `canSetCartMetafields` guard; not reproducible on a development store, whose
+      test gateway offers no accelerated wallets.
 - [x] Given a signed-in customer with a forecast, the Refill Radar page lists one card per species
       with run-out date, due soon badge, reminders status and a working reorder link
-- [ ] Given a customer without a forecast, the page shows the empty state
+- [x] Given a customer without a forecast, the page shows the empty state
 - [ ] Both extensions render in English and Spanish
+      Both locales ship with the extensions; checked in the storefront once Spanish is published.
 - [x] Bundles stay under the limits (64 KB checkout, 128 KB full page), checked in the build output
 - [x] Access scopes: only `write_orders`, required to own the `$app` order metafield definition, and
   `customer_read_customers`, required for the account page to query `customer`
@@ -101,8 +104,12 @@ to the order when it is placed, where the `orders/create` webhook reads it.
       (dry food detection, card view model)
 - [x] One announced axe pass on the checkout block and the account page
 - [x] `npm run typecheck`, `npm run lint`, `npm test` and `npx react-router build` pass
-- [ ] Deployed: app version released, `develop` promoted in Vercel, block placed in checkout and page
+- [x] Deployed: app version released, `develop` promoted in Vercel, block placed in checkout and page
       added to the customer account menu in the published editor
+      App version `vicubites-app-6`; `develop` (9e8c290) promoted in Vercel; migration applied in
+      production. Production orders: unchecking stored the opt-out (order and customer metafields,
+      reminders off); a later checkout showed the box unchecked and checking it turned reminders
+      back on.
 
 ## Technical approach
 
