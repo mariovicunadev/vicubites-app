@@ -1,4 +1,4 @@
-import type { CartValidationsGenerateRunInput } from "../generated/api";
+import { LanguageCode, type CartValidationsGenerateRunInput } from "../generated/api";
 
 /** Settings stored in the validation's `$app.order-limit-config` metafield. */
 export interface OrderLimitConfig {
@@ -64,7 +64,17 @@ export function variantsOverLimit(lines: readonly CartLine[], maxPerVariant: num
   return overLimit;
 }
 
-export function orderLimitMessage(maxPerVariant: number, productTitle: string): string {
+/**
+ * Checkout error in the buyer's language (English otherwise). `productTitle`
+ * already arrives localized from the function input.
+ */
+export function orderLimitMessage(maxPerVariant: number, productTitle: string, language: LanguageCode): string {
+  if (language === LanguageCode.Es) {
+    return (
+      `Límite de ${maxPerVariant} por pedido para ${productTitle}. ` +
+      "Para compras al por mayor, contáctanos para abrir una cuenta de empresa."
+    );
+  }
   return (
     `Limit of ${maxPerVariant} per order for ${productTitle}. ` +
     "For wholesale, contact us about a business account."

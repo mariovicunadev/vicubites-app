@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { LanguageCode } from "../generated/api";
 import { orderLimitMessage, parseOrderLimitConfig, variantsOverLimit, type CartLine } from "./order-limit";
 
 describe("parseOrderLimitConfig", () => {
@@ -61,8 +62,19 @@ describe("variantsOverLimit", () => {
 
 describe("orderLimitMessage", () => {
   it("names the limit and the product", () => {
-    expect(orderLimitMessage(6, "Adult Chicken Recipe")).toBe(
+    expect(orderLimitMessage(6, "Adult Chicken Recipe", LanguageCode.En)).toBe(
       "Limit of 6 per order for Adult Chicken Recipe. For wholesale, contact us about a business account.",
     );
+  });
+
+  it("speaks Spanish to a Spanish checkout, with the localized title", () => {
+    expect(orderLimitMessage(6, "Receta de pollo para adultos", LanguageCode.Es)).toBe(
+      "Límite de 6 por pedido para Receta de pollo para adultos. " +
+        "Para compras al por mayor, contáctanos para abrir una cuenta de empresa.",
+    );
+  });
+
+  it("falls back to English for other languages", () => {
+    expect(orderLimitMessage(6, "Adult Chicken Recipe", LanguageCode.Fr)).toMatch(/^Limit of 6 per order/);
   });
 });

@@ -38,7 +38,11 @@ export function cartValidationsGenerateRun(
       {
         validationAdd: {
           errors: overLimit.map((variant) => ({
-            message: orderLimitMessage(config.maxPerVariant, variant.productTitle),
+            message: orderLimitMessage(
+              config.maxPerVariant,
+              variant.productTitle,
+              input.localization.language.isoCode,
+            ),
             target: "$.cart",
           })),
         },
