@@ -2,7 +2,7 @@
 
 | Field     | Value |
 |-----------|-------|
-| Status    | In progress |
+| Status    | In review |
 | Branch    | `feature/015-markets-translations` |
 | Estimate  | 2.5–3.5 h (AI-assisted) · 6–8 h manual |
 | Actual    | — |
@@ -73,14 +73,20 @@ Text that apps render follows the buyer's language separately:
 - [x] No translatable resource that buyers can see has a Spanish original: sweep report lists zero
   remaining.
 - [x] Every rewritten resource has an up-to-date Spanish translation (not outdated against the digest).
-- [ ] The shipping discount shows an English title in an English checkout and the expected title in a
-  Spanish checkout (or the documented limitation if titles are not translatable).
-- [ ] `refill-radar` block renders in Spanish on `/es` and in English on the default URL.
+- [x] The shipping discount shows an English title in an English checkout and the expected title in a
+  Spanish checkout (or the documented limitation if titles are not translatable). Renamed to "Free
+  shipping" and read back by API; titles are not translatable (see Findings).
+- [x] `refill-radar` block renders in Spanish on `/es` and in English on the default URL (heading,
+  sentence, localized run-out date and note checked on the storefront in both languages).
 - [x] `refill-reward` message and `order-limit` error are returned in the buyer language; function tests
   cover `EN` and `ES`.
 - [ ] Walkthrough in English and in Spanish with nothing mixed: product page, cart, checkout with the
-  Refill Radar block, customer account Refill Radar page.
-- [ ] One axe pass on the Spanish product page and checkout (announced); no new violations.
+  Refill Radar block, customer account Refill Radar page. **Open, moved to follow-up work:** the
+  Spanish product page still shows hardcoded English in theme code (purchase options), the checkout
+  block does not render in Spanish because the translated `custom.species` value no longer matches
+  (see Known limitations), and the refill reward cannot be checked while `refill_run_out` is missing.
+- [ ] One axe pass on the Spanish product page and checkout (announced); no new violations. **Open:**
+  runs with the follow-up walkthrough.
 - [x] Access scopes: only the ones this feature needs, listed below
 - [x] Every Admin GraphQL operation is validated against the pinned API version; function input queries
   are typed by codegen
@@ -130,6 +136,22 @@ Access scopes: none added to the app. The CLI store session needs `read_translat
   localized name, so the `order-limit` error needs only its sentence translated.
 - **Dates in the theme app extension:** `%B` is not translated; the block now uses a named format
   (`date: format: 'refill_day'`) defined under `date_formats` in each locale file.
+
+- **Theme content translations are per theme.** The unpublished theme had almost no Spanish for its
+  sections; 82 translations were registered on it (78 reused from the live theme by key and text).
+
+## Known limitations (follow-up work)
+
+- **Translated values used as keys.** Automatic translation localised `custom.species` ("Dog" →
+  "Perro"), `custom.food_type` and `product_type`. Code that compares those values breaks in Spanish:
+  the checkout block (`species` must be `dog` or `cat`), the reorder match in the refill reminder and
+  the theme's species icon. Follow-up: language-independent product keys (metaobject references with
+  fixed handles for logic and translatable labels for display).
+- **Hardcoded English in theme code.** Custom theme blocks and sections (purchase options, guaranteed
+  analysis, feeding calculator, product comparison) render fixed English strings. Follow-up: move them
+  to the theme's locale files.
+- **Missing refill metafields.** The `refill_run_out` and `refill_variants` customer definitions and
+  their values are missing in the store, so the refill reward does not apply. Follow-up fix in the app.
 
 ## Risks and open questions
 
