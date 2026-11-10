@@ -2,10 +2,10 @@
 
 | Field     | Value |
 |-----------|-------|
-| Status    | In review |
+| Status    | Done |
 | Branch    | `feature/015-markets-translations` |
 | Estimate  | 2.5–3.5 h (AI-assisted) · 6–8 h manual |
-| Actual    | — |
+| Actual    | ~1.5 h (store sweep and translations, two app releases; the full walkthrough and axe pass moved to follow-up work) |
 
 ## Goal
 
