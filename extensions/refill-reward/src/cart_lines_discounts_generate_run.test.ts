@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { DiscountClass, type CartInput } from "../generated/api";
+import { DiscountClass, LanguageCode, type CartInput } from "../generated/api";
 import {
-  REFILL_REWARD_MESSAGE,
+  REFILL_REWARD_MESSAGES,
   cartLinesDiscountsGenerateRun,
 } from "./cart_lines_discounts_generate_run";
 
@@ -30,8 +30,10 @@ function cartInput({
   b2b = false,
   config = { percentage: 10, windowDays: 14 } as unknown,
   discountClasses = [DiscountClass.Product],
+  language = LanguageCode.En as LanguageCode,
 } = {}): CartInput {
   return {
+    localization: { language: { isoCode: language } },
     shop: { localTime: { date: TODAY } },
     cart: {
       buyerIdentity: {
@@ -67,7 +69,7 @@ describe("cartLinesDiscountsGenerateRun", () => {
           productDiscountsAdd: {
             candidates: [
               {
-                message: REFILL_REWARD_MESSAGE,
+                message: REFILL_REWARD_MESSAGES.en,
                 targets: [
                   { cartLine: { id: "gid://shopify/CartLine/1" } },
                   { cartLine: { id: "gid://shopify/CartLine/3" } },
@@ -101,5 +103,20 @@ describe("cartLinesDiscountsGenerateRun", () => {
     ["a discount without the product class", cartInput({ discountClasses: [DiscountClass.Order] })],
   ])("returns no operations for %s", (_label, input) => {
     expect(cartLinesDiscountsGenerateRun(input)).toEqual({ operations: [] });
+  });
+});
+
+describe("discount message language", () => {
+  const messageFor = (language: LanguageCode) => {
+    const [operation] = cartLinesDiscountsGenerateRun(cartInput({ language })).operations;
+    return operation?.productDiscountsAdd?.candidates[0].message;
+  };
+
+  it("labels the discount in Spanish for a Spanish checkout", () => {
+    expect(messageFor(LanguageCode.Es)).toBe(REFILL_REWARD_MESSAGES.es);
+  });
+
+  it.each([LanguageCode.En, LanguageCode.Fr])("falls back to English for %s", (language) => {
+    expect(messageFor(language)).toBe(REFILL_REWARD_MESSAGES.en);
   });
 });

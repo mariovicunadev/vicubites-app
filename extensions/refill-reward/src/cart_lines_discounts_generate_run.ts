@@ -1,12 +1,21 @@
 import {
   DiscountClass,
+  LanguageCode,
   ProductDiscountSelectionStrategy,
   type CartInput,
   type CartLinesDiscountsGenerateRunResult,
 } from "../generated/api";
 import { isDryFood, isRefillDue, parseRefillRewardConfig } from "./refill-reward";
 
-export const REFILL_REWARD_MESSAGE = "Refill reward";
+/** Discount label shown in cart and checkout, in the buyer's language (English otherwise). */
+export const REFILL_REWARD_MESSAGES = {
+  en: "Refill reward",
+  es: "Recompensa por recompra",
+} as const;
+
+export function refillRewardMessage(language: LanguageCode): string {
+  return language === LanguageCode.Es ? REFILL_REWARD_MESSAGES.es : REFILL_REWARD_MESSAGES.en;
+}
 
 const NO_DISCOUNT: CartLinesDiscountsGenerateRunResult = { operations: [] };
 
@@ -62,7 +71,7 @@ export function cartLinesDiscountsGenerateRun(
         productDiscountsAdd: {
           candidates: [
             {
-              message: REFILL_REWARD_MESSAGE,
+              message: refillRewardMessage(input.localization.language.isoCode),
               targets,
               // `Decimal` is serialized as a string.
               value: { percentage: { value: String(config.percentage) } },
