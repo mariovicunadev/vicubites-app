@@ -1,4 +1,9 @@
 query CartInput {
+  localization {
+    language {
+      isoCode
+    }
+  }
   shop {
     localTime {
       date

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BuyerJourneyStep, type CartValidationsGenerateRunInput } from "../generated/api";
+import { BuyerJourneyStep, LanguageCode, type CartValidationsGenerateRunInput } from "../generated/api";
 import { cartValidationsGenerateRun } from "./cart_validations_generate_run";
 
 type Line = CartValidationsGenerateRunInput["cart"]["lines"][number];
@@ -17,8 +17,10 @@ function cartInput({
   lines = [variant("gid://shopify/ProductVariant/1", 7)],
   b2b = false,
   config = { maxPerVariant: 6 } as unknown,
+  language = LanguageCode.En as LanguageCode,
 } = {}): CartValidationsGenerateRunInput {
   return {
+    localization: { language: { isoCode: language } },
     buyerJourney: { step },
     cart: {
       buyerIdentity: {
@@ -80,5 +82,14 @@ describe("cartValidationsGenerateRun", () => {
     ["an invalid configuration", cartInput({ config: { maxPerVariant: 0 } })],
   ])("returns no operations for %s", (_label, input) => {
     expect(cartValidationsGenerateRun(input)).toEqual({ operations: [] });
+  });
+});
+
+describe("validation message language", () => {
+  it("returns the error in Spanish for a Spanish checkout", () => {
+    const [operation] = cartValidationsGenerateRun(
+      cartInput({ language: LanguageCode.Es, lines: [variant("gid://shopify/ProductVariant/1", 7, "Paté para gatos")] }),
+    ).operations;
+    expect(operation?.validationAdd.errors[0].message).toMatch(/^Límite de 6 por pedido para Paté para gatos\./);
   });
 });

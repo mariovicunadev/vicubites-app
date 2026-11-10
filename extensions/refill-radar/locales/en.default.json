@@ -13,7 +13,9 @@
     "sample_bag": "Chicken & Rice · 7 kg",
     "reorder": "Reorder",
     "view_product": "View product",
-    "note": "An estimate to help you reorder in time, not feeding advice."
+    "note": "An estimate to help you reorder in time, not feeding advice.",
+    "month_names": "January,February,March,April,May,June,July,August,September,October,November,December",
+    "date_pattern": "{{ month }} {{ day }}"
   },
   "starter_kit": {
     "recipe": "Dry food recipe",

@@ -1,4 +1,9 @@
 query CartValidationsGenerateRunInput {
+  localization {
+    language {
+      isoCode
+    }
+  }
   buyerJourney {
     step
   }

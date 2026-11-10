@@ -311,6 +311,24 @@ nothing. The margin is thin: each extra recipe or flavor adds possible kit lines
 kit lines in a 200-line cart would pass the 11 M limit. Growing the options would mean moving
 the Function to Rust, the language Shopify recommends when instruction counts matter.
 
+## Languages
+
+The store sells through one Worldwide market with English as the primary language and Spanish
+published. Every buyer-facing string follows the buyer's language, and each kind of text is
+translated where it lives:
+
+| Text | Where the Spanish comes from |
+|---|---|
+| Products, collections, alt text, selling plans, menus, pages, theme content | Translations registered on the original (`translationsRegister`, managed in Translate & Adapt) |
+| Checkout block and customer account page | `locales/es.json` in each UI extension |
+| Refill reminder and starter kit picker (theme app extension) | `locales/es.json`, including the localized `date_formats` used for the run-out date |
+| Refill reward discount label, order limit error (Functions) | The Function reads `localization.language.isoCode` and picks the message; English otherwise |
+| Product titles inside Function messages | Already localized in the Function input |
+
+Discount titles are not a translatable resource in Admin API 2026-10, so native discounts keep one
+English title (for example, "Free shipping") in every language. Function locale files only
+translate the Function's name and description in the admin.
+
 ## Production
 
 ```
