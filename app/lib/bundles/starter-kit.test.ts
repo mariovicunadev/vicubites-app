@@ -12,7 +12,10 @@ const variant = (id: number, title: string, price: string) => ({
 const recipe = (handle: string, title: string, price = "21.99") => ({
   handle,
   title,
-  variants: [variant(handle.length * 10, "1.5 kg", price), variant(handle.length * 10 + 1, "4 kg", "46.99")],
+  variants: [
+    { ...variant(handle.length * 10, "1.5 kg", price), bagGrams: "1500" },
+    { ...variant(handle.length * 10 + 1, "4 kg", "46.99"), bagGrams: "4000" },
+  ],
 });
 
 /** A store with everything in place; each test changes one thing. */
@@ -77,7 +80,7 @@ describe("buildStarterKit", () => {
   });
 
   it("leaves out recipes without the kit's bag size and unpriced variants", () => {
-    const noSmallBag = { handle: "x", title: "X", variants: [variant(1, "4 kg", "46.99")] };
+    const noSmallBag = { handle: "x", title: "X", variants: [{ ...variant(1, "1.5 kg", "46.99"), bagGrams: "4000" }] };
     const free = recipe("free-recipe", "Free", "0.00");
     const build = buildStarterKit(source({ recipes: [...source().recipes, noSmallBag, free] }));
     if (!build.ok) throw new Error(build.problems.join(" "));

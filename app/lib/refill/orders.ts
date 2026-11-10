@@ -1,8 +1,6 @@
 import type { BulkNode } from "../bulk/jsonl";
-import { bagGrams, bagKcal, speciesFrom, type Purchase, type Species } from "./forecast";
-
-/** The bag size option of dry food products. */
-export const SIZE_OPTION = "Size";
+import { bagGramsFrom, keyHandle, type KeyReference } from "../catalog/product-keys";
+import { bagKcal, speciesFrom, type Purchase, type Species } from "./forecast";
 
 /** Order fields shared by the bulk load and the single-order query. */
 const ORDER_FIELDS = `
@@ -15,9 +13,9 @@ const LINE_ITEM_FIELDS = `
   quantity
   variant {
     id
-    selectedOptions { name value }
+    bagGrams: metafield(namespace: "custom", key: "bag_grams") { value }
     product {
-      species: metafield(namespace: "custom", key: "species") { value }
+      species: metafield(namespace: "custom", key: "species") { reference { ... on Metaobject { handle } } }
       kcalPerKg: metafield(namespace: "custom", key: "kcal_per_kg") { value }
     }
   }`;
@@ -45,8 +43,9 @@ export const REFILL_ORDERS_BULK_QUERY = `{
 export interface OrderLine {
   quantity: number;
   variantId: string | null;
-  /** Variant option values keyed by option name. */
-  options: Readonly<Record<string, string>>;
+  /** `custom.bag_grams` of the variant: set only on dry food bags. */
+  bagGrams: string | null;
+  /** Handle of the species metaobject (`dog`, `cat`). */
   species: string | null;
   kcalPerKg: string | null;
 }
@@ -70,8 +69,8 @@ interface LineFields {
   quantity?: unknown;
   variant?: {
     id?: string;
-    selectedOptions?: { name: string; value: string }[];
-    product?: { species?: { value: string } | null; kcalPerKg?: { value: string } | null } | null;
+    bagGrams?: { value: string } | null;
+    product?: { species?: KeyReference | null; kcalPerKg?: { value: string } | null } | null;
   } | null;
 }
 
@@ -84,13 +83,11 @@ interface OrderFields {
 }
 
 function lineFrom(fields: LineFields): OrderLine {
-  const options: Record<string, string> = {};
-  for (const { name, value } of fields.variant?.selectedOptions ?? []) options[name] = value;
   return {
     quantity: typeof fields.quantity === "number" ? fields.quantity : 0,
     variantId: fields.variant?.id ?? null,
-    options,
-    species: fields.variant?.product?.species?.value ?? null,
+    bagGrams: fields.variant?.bagGrams?.value ?? null,
+    species: keyHandle(fields.variant?.product?.species),
     kcalPerKg: fields.variant?.product?.kcalPerKg?.value ?? null,
   };
 }
@@ -126,7 +123,8 @@ export function orderFromQuery(order: OrderFields & { lineItems: { nodes: LineFi
 
 /**
  * The dry food in an order, one purchase per species. Lines without a bag
- * size, species or calories (wet food, treats, incomplete products) are
+ * weight (`custom.bag_grams`), species or calories (wet food, treats,
+ * incomplete products) are
  * skipped, and so are B2B orders and orders without a customer. The
  * purchase's variant is the line with the most calories: the main bag.
  */
@@ -134,8 +132,7 @@ export function purchasesFromOrder(order: OrderData): Purchase[] {
   if (!order.customerId || order.isCompanyPurchase) return [];
   const bySpecies = new Map<Species, { kcal: number; mainKcal: number; variantId: string | null }>();
   for (const line of order.lines) {
-    const size = line.options[SIZE_OPTION];
-    const grams = size ? bagGrams(size) : null;
+    const grams = bagGramsFrom(line.bagGrams);
     const species = speciesFrom(line.species);
     const kcalPerKg = Number(line.kcalPerKg);
     if (!grams || !species || !Number.isFinite(kcalPerKg) || kcalPerKg <= 0 || line.quantity <= 0) continue;

@@ -64,6 +64,9 @@ const BUNDLES_OVERVIEW = `#graphql
             id
             title
             price
+            bagGrams: metafield(namespace: "custom", key: "bag_grams") {
+              value
+            }
           }
         }
       }
@@ -148,7 +151,10 @@ async function readBundles(graphql: AdminGraphql): Promise<BundlesState> {
           variants: data.kit.variants.nodes,
         }
       : null,
-    recipes: data.recipes.nodes.map((product) => ({ ...product, variants: product.variants.nodes })),
+    recipes: data.recipes.nodes.map((product) => ({
+      ...product,
+      variants: product.variants.nodes.map(({ bagGrams, ...variant }) => ({ ...variant, bagGrams: bagGrams?.value ?? null })),
+    })),
     treats: data.treats ? { status: data.treats.status, variants: data.treats.variants.nodes } : null,
   });
 

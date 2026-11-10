@@ -17,7 +17,12 @@ target = "purchase.checkout.block.render"
 namespace = "$app"
 key = "refill_reminders"
 
-# Dry food detection, the same fields the app's forecast reads.
+# Dry food detection, the same fields the app's forecast reads: language-independent
+# keys only (bag weight on the variant, species reference, calories).
+[[extensions.targeting.metafields]]
+namespace = "custom"
+key = "bag_grams"
+
 [[extensions.targeting.metafields]]
 namespace = "custom"
 key = "species"

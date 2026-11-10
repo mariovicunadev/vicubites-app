@@ -45,13 +45,16 @@ const REFILL_ORDER_QUERY = `#graphql
           quantity
           variant {
             id
-            selectedOptions {
-              name
+            bagGrams: metafield(namespace: "custom", key: "bag_grams") {
               value
             }
             product {
               species: metafield(namespace: "custom", key: "species") {
-                value
+                reference {
+                  ... on Metaobject {
+                    handle
+                  }
+                }
               }
               kcalPerKg: metafield(namespace: "custom", key: "kcal_per_kg") {
                 value

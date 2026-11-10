@@ -6,8 +6,8 @@ const SHOP = "vicubites.myshopify.com";
 const body = (fields: Record<string, unknown>) => JSON.stringify({ shop: SHOP, ...fields });
 
 describe("parsePixelEvent", () => {
-  it("accepts a reminder event and normalizes the species", () => {
-    expect(parsePixelEvent(body({ name: "reminder_viewed", clientId: "abc-123", species: "Dog", bucket: "0-7" }))).toEqual({
+  it("accepts a reminder event with its species key", () => {
+    expect(parsePixelEvent(body({ name: "reminder_viewed", clientId: "abc-123", species: "dog", bucket: "0-7" }))).toEqual({
       shop: SHOP,
       name: "reminder_viewed",
       clientId: "abc-123",

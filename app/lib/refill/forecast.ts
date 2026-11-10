@@ -1,3 +1,4 @@
+import { knownKey, SPECIES } from "../catalog/product-keys";
 export type Species = "dog" | "cat";
 
 /** How the days of food were worked out. */
@@ -37,18 +38,9 @@ export interface Forecast {
   runOutOn: string;
 }
 
-/** Reads a bag size option value ("7 kg", "1.5 kg", "500 g") as grams. */
-export function bagGrams(optionValue: string): number | null {
-  const match = /^\s*(\d+(?:\.\d+)?)\s*(kg|g)\s*$/i.exec(optionValue);
-  if (!match) return null;
-  const amount = Number(match[1]);
-  return match[2].toLowerCase() === "kg" ? Math.round(amount * 1000) : amount;
-}
-
-/** Reads the `custom.species` metafield ("Dog", "Cat"). */
-export function speciesFrom(value: string | null | undefined): Species | null {
-  const normalized = value?.trim().toLowerCase();
-  return normalized === "dog" || normalized === "cat" ? normalized : null;
+/** Reads a species key: the handle of the `custom.species` metaobject, never its translated label. */
+export function speciesFrom(handle: string | null | undefined): Species | null {
+  return knownKey(SPECIES, handle);
 }
 
 /** Calories in `quantity` bags of `grams` each. */

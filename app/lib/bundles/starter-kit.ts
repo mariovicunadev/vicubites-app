@@ -11,12 +11,18 @@
  * in the function too.
  */
 
+import { bagGramsFrom } from "../catalog/product-keys";
+
 /** Where the kit and its components come from. */
 export const STARTER_KIT = {
   kitHandle: "cat-starter-kit",
-  /** Every active dry cat food; the kit takes its smallest bag. */
+  /**
+   * Every active dry cat food; the kit takes its 1.5 kg bag. The Admin API
+   * searches the original product type, never a translation.
+   */
   recipeQuery: "product_type:'Dry Cat Food' AND status:active",
-  recipeVariantTitle: "1.5 kg",
+  /** Bag picked by its `custom.bag_grams`, not by the translatable variant title. */
+  recipeBagGrams: 1500,
   treatsHandle: "crunchy-treats-for-cats",
   defaultRecipe: "adult-chicken-and-turkey-recipe-dry-cat-food",
   defaultTreat: "chicken",
@@ -42,7 +48,7 @@ export interface StarterKitSource {
     status: string;
     variants: { id: string; requiresComponents: boolean }[];
   } | null;
-  recipes: { handle: string; title: string; variants: VariantData[] }[];
+  recipes: { handle: string; title: string; variants: (VariantData & { bagGrams: string | null })[] }[];
   treats: { status: string; variants: VariantData[] } | null;
 }
 
@@ -113,13 +119,13 @@ export function buildStarterKit(source: StarterKitSource): StarterKitBuild {
 
   const recipes = source.recipes
     .flatMap((product) => {
-      const variant = product.variants.find((v) => v.title === STARTER_KIT.recipeVariantTitle);
+      const variant = product.variants.find((v) => bagGramsFrom(v.bagGrams) === STARTER_KIT.recipeBagGrams);
       const option = variant ? toOption(product.handle, product.title, variant) : null;
       return option ? [option] : [];
     })
     .sort((a, b) => a.label.localeCompare(b.label));
   if (recipes.length === 0) {
-    problems.push(`No active dry cat food has a ${STARTER_KIT.recipeVariantTitle} variant.`);
+    problems.push(`No active dry cat food has a ${STARTER_KIT.recipeBagGrams / 1000} kg bag (custom.bag_grams).`);
   }
 
   const treats = (source.treats?.status === "ACTIVE" ? source.treats.variants : []).flatMap((variant) => {
