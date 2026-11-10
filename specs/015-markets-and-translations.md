@@ -134,9 +134,9 @@ Access scopes: none added to the app. The CLI store session needs `read_translat
 - Handles (URLs) stay in English on purpose.
 - **Function input titles are localized:** `Product.title` in the Function input is the buyer-facing
   localized name, so the `order-limit` error needs only its sentence translated.
-- **Dates in the theme app extension:** `%B` is not translated; the block now uses a named format
-  (`date: format: 'refill_day'`) defined under `date_formats` in each locale file.
-
+- **Dates in the theme app extension:** `%B` is not translated, and named formats (`date: format:`)
+  resolve only against the theme's locale files, so they render empty inside an app extension. The
+  block builds the date from its own `refill.month_names` and `refill.date_pattern` keys.
 - **Theme content translations are per theme.** The unpublished theme had almost no Spanish for its
   sections; 82 translations were registered on it (78 reused from the live theme by key and text).
 
@@ -144,8 +144,9 @@ Access scopes: none added to the app. The CLI store session needs `read_translat
 
 - **Translated values used as keys.** Automatic translation localised `custom.species` ("Dog" →
   "Perro"), `custom.food_type` and `product_type`. Code that compares those values breaks in Spanish:
-  the checkout block (`species` must be `dog` or `cat`), the reorder match in the refill reminder and
-  the theme's species icon. Follow-up: language-independent product keys (metaobject references with
+  the checkout block (`species` must be `dog` or `cat`), the reorder match in the refill reminder, the
+  theme's species icon, the feeding calculator's default species and, likely, the refill reward Function
+  (`productType`). Follow-up: language-independent product keys (metaobject references with
   fixed handles for logic and translatable labels for display).
 - **Hardcoded English in theme code.** Custom theme blocks and sections (purchase options, guaranteed
   analysis, feeding calculator, product comparison) render fixed English strings. Follow-up: move them
