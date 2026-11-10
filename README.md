@@ -321,7 +321,7 @@ translated where it lives:
 |---|---|
 | Products, collections, alt text, selling plans, menus, pages, theme content | Translations registered on the original (`translationsRegister`, managed in Translate & Adapt) |
 | Checkout block and customer account page | `locales/es.json` in each UI extension |
-| Refill reminder and starter kit picker (theme app extension) | `locales/es.json`, including the localized `date_formats` used for the run-out date |
+| Refill reminder and starter kit picker (theme app extension) | `locales/es.json`, including the month names and word order of the run-out date |
 | Refill reward discount label, order limit error (Functions) | The Function reads `localization.language.isoCode` and picks the message; English otherwise |
 | Product titles inside Function messages | Already localized in the Function input |
 
