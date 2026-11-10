@@ -77,30 +77,30 @@ to the order when it is placed, where the `orders/create` webhook reads it.
 
 ## Acceptance criteria
 
-- [ ] Given a cart with dry food, when the buyer reaches checkout, then the Refill Radar block shows
+- [x] Given a cart with dry food, when the buyer reaches checkout, then the Refill Radar block shows
       the forecast text and the reminders checkbox, checked by default
 - [ ] Given a cart without dry food, the block renders nothing
-- [ ] Given the buyer unchecks the box and places the order, then the order has
+- [x] Given the buyer unchecks the box and places the order, then the order has
       `$app:refill_reminders = false`, `RefillPreference.reminders` is false and the customer metafield
       mirrors it
-- [ ] Given a customer with reminders off and a due-soon forecast, when reminders run, then no Klaviyo
+- [x] Given a customer with reminders off and a due-soon forecast, when reminders run, then no Klaviyo
       event or Flow trigger is sent for them (skipped, not failed)
 - [ ] Given a later order with the box checked, reminders are back on
 - [ ] Given an accelerated checkout (`canSetCartMetafields` false), the checkbox is hidden and the
       order keeps the previous preference
-- [ ] Given a signed-in customer with a forecast, the Refill Radar page lists one card per species
+- [x] Given a signed-in customer with a forecast, the Refill Radar page lists one card per species
       with run-out date, due soon badge, reminders status and a working reorder link
 - [ ] Given a customer without a forecast, the page shows the empty state
 - [ ] Both extensions render in English and Spanish
-- [ ] Bundles stay under the limits (64 KB checkout, 128 KB full page), checked in the build output
-- [ ] Access scopes: only `write_orders`, required to own the `$app` order metafield definition, and
+- [x] Bundles stay under the limits (64 KB checkout, 128 KB full page), checked in the build output
+- [x] Access scopes: only `write_orders`, required to own the `$app` order metafield definition, and
   `customer_read_customers`, required for the account page to query `customer`
-- [ ] Every Admin GraphQL operation is typed by codegen and validated against 2026-10; the Customer
+- [x] Every Admin GraphQL operation is typed by codegen and validated against 2026-10; the Customer
       Account API query is validated against `customer` 2026-10
-- [ ] Unit tests: preference from order, reminder skipping, forecast `variantId`, extension helpers
+- [x] Unit tests: preference from order, reminder skipping, forecast `variantId`, extension helpers
       (dry food detection, card view model)
-- [ ] One announced axe pass on the checkout block and the account page
-- [ ] `npm run typecheck`, `npm run lint`, `npm test` and `npx react-router build` pass
+- [x] One announced axe pass on the checkout block and the account page
+- [x] `npm run typecheck`, `npm run lint`, `npm test` and `npx react-router build` pass
 - [ ] Deployed: app version released, `develop` promoted in Vercel, block placed in checkout and page
       added to the customer account menu in the published editor
 
