@@ -18,7 +18,12 @@
   else
     assign basis_text = 'refill.basis.estimate' | t
   endif
-  assign run_out_date = run_out_on | date: format: 'refill_day'
+  # Month names and word order come from the extension's locales: named date
+  # formats (`date: format:`) only resolve against the theme's locale files.
+  assign month_names = 'refill.month_names' | t | split: ','
+  assign month_index = run_out_on | date: '%-m' | minus: 1
+  assign run_out_day = run_out_on | date: '%-d'
+  assign run_out_date = 'refill.date_pattern' | t: month: month_names[month_index], day: run_out_day
   assign today_s = 'now' | date: '%Y-%m-%d' | date: '%s' | plus: 0
   assign run_out_s = run_out_on | date: '%s' | plus: 0
   assign days_left = run_out_s | minus: today_s | divided_by: 86400

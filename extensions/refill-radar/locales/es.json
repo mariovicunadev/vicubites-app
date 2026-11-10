@@ -13,7 +13,9 @@
     "sample_bag": "Pollo y arroz · 7 kg",
     "reorder": "Volver a pedir",
     "view_product": "Ver producto",
-    "note": "Una estimación para ayudarte a pedir a tiempo, no una recomendación de alimentación."
+    "note": "Una estimación para ayudarte a pedir a tiempo, no una recomendación de alimentación.",
+    "month_names": "enero,febrero,marzo,abril,mayo,junio,julio,agosto,septiembre,octubre,noviembre,diciembre",
+    "date_pattern": "{{ day }} de {{ month }}"
   },
   "starter_kit": {
     "recipe": "Receta de alimento seco",
@@ -21,8 +23,5 @@
     "note": "Tu kit se envía con la receta y el premio que elijas.",
     "hint_inactive": "Selector del kit de inicio: activa los bundles en la app Vicubites Ops para mostrar las opciones.",
     "hint_other_product": "Selector del kit de inicio: solo se muestra en el producto del kit de inicio."
-  },
-  "date_formats": {
-    "refill_day": "%-d de %B"
   }
 }
