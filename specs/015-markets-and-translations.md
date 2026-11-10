@@ -2,7 +2,7 @@
 
 | Field     | Value |
 |-----------|-------|
-| Status    | Approved |
+| Status    | In progress |
 | Branch    | `feature/015-markets-translations` |
 | Estimate  | 2.5–3.5 h (AI-assisted) · 6–8 h manual |
 | Actual    | — |
@@ -67,23 +67,24 @@ Text that apps render follows the buyer's language separately:
 
 ## Acceptance criteria
 
-- [ ] Shop locales: English primary and published, Spanish published for the Worldwide market
-  (`shopLocales` read by API).
-- [ ] No translatable resource that buyers can see has a Spanish original: sweep report lists zero
+- [x] Shop locales: English primary and published, Spanish published for the Worldwide market
+  (`shopLocales` read by API; the market assignment is confirmed in the admin, since
+  `marketWebPresences` needs `read_markets`).
+- [x] No translatable resource that buyers can see has a Spanish original: sweep report lists zero
   remaining.
-- [ ] Every rewritten resource has an up-to-date Spanish translation (not outdated against the digest).
+- [x] Every rewritten resource has an up-to-date Spanish translation (not outdated against the digest).
 - [ ] The shipping discount shows an English title in an English checkout and the expected title in a
   Spanish checkout (or the documented limitation if titles are not translatable).
 - [ ] `refill-radar` block renders in Spanish on `/es` and in English on the default URL.
-- [ ] `refill-reward` message and `order-limit` error are returned in the buyer language; function tests
+- [x] `refill-reward` message and `order-limit` error are returned in the buyer language; function tests
   cover `EN` and `ES`.
 - [ ] Walkthrough in English and in Spanish with nothing mixed: product page, cart, checkout with the
   Refill Radar block, customer account Refill Radar page.
 - [ ] One axe pass on the Spanish product page and checkout (announced); no new violations.
-- [ ] Access scopes: only the ones this feature needs, listed below
-- [ ] Every Admin GraphQL operation is validated against the pinned API version; function input queries
+- [x] Access scopes: only the ones this feature needs, listed below
+- [x] Every Admin GraphQL operation is validated against the pinned API version; function input queries
   are typed by codegen
-- [ ] `npm run typecheck`, `npm run lint` and `npm test` pass
+- [x] `npm run typecheck`, `npm run lint` and `npm test` pass
 
 ## Technical approach
 
@@ -112,9 +113,26 @@ Access scopes: none added to the app. The CLI store session needs `read_translat
 - https://shopify.dev/docs/api/admin-graphql/2026-10/enums/TranslatableResourceType
 - https://shopify.dev/docs/apps/build/functions/localization-practices-shopify-functions
 
+## Findings
+
+- **Discount titles are not translatable.** `TranslatableResourceType` in 2026-10 has no discount type,
+  so the native shipping discount was renamed to "Free shipping" and shows that title in both
+  languages. It was the only Spanish original in the store.
+- **Metafields are nested resources.** There is no `METAFIELD` resource type in 2026-10; product
+  metafields come through `nestedTranslatableResources` of each product.
+- **Gaps in the automatic translation:** selling plan and selling plan group names, and every image alt
+  text (products and collections) had no Spanish. Registered: 8 selling plan fields, 83 alt texts.
+- **Corrections to the automatic translation:** two cat products had Spanish meta titles naming dogs;
+  mixed regional terms for the guaranteed analysis and for beef; inconsistent capitalisation. 25 fields
+  corrected so titles, alt texts and descriptions use the same names.
+- Handles (URLs) stay in English on purpose.
+- **Function input titles are localized:** `Product.title` in the Function input is the buyer-facing
+  localized name, so the `order-limit` error needs only its sentence translated.
+- **Dates in the theme app extension:** `%B` is not translated; the block now uses a named format
+  (`date: format: 'refill_day'`) defined under `date_formats` in each locale file.
+
 ## Risks and open questions
 
-- Discount titles may not be translatable; then one English title serves both languages.
 - Automatic translations may reword product copy; every change to buyer-facing copy is reviewed.
 - Theme content edited in the admin after the sweep produces outdated translations; Translate & Adapt
   shows them.
