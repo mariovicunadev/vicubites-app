@@ -2,10 +2,10 @@
 
 | Field     | Value |
 |-----------|-------|
-| Status    | In progress |
+| Status    | Done |
 | Branch    | `feature/017-refill-metafields-recovery` |
 | Estimate  | 2–3 h (AI-assisted) · 5–7 h manual |
-| Actual    | — |
+| Actual    | ~1 h |
 
 ## Goal
 
@@ -56,20 +56,25 @@ the values come from the app's forecast data.
 
 ## Acceptance criteria
 
-- [ ] Given the deployed version, then `metafieldDefinitions(ownerType: CUSTOMER, namespace: "$app")`
+- [x] Given the deployed version, then `metafieldDefinitions(ownerType: CUSTOMER, namespace: "$app")`
       returns `refill_run_out` (`date`), `refill_forecast`, `refill_variants` (`list.variant_reference`)
       and `refill_reminders`, each with the access declared in the TOML
-- [ ] Given stored purchases, when the merchant runs "Rewrite forecasts", then every customer with a
+      _Verified after `vicubites-app-10`: all four exist with the declared type and access._
+- [x] Given stored purchases, when the merchant runs "Rewrite forecasts", then every customer with a
       forecast has `refill_run_out` and `refill_forecast`, and `refill_variants` when a variant is known;
       no Klaviyo event or Flow trigger is sent
-- [ ] Given a declared definition missing in the store, then the Refill Radar page names it and says how
+      _Verified in production: "6 customers updated from stored purchases. No reminders were sent."; by API,
+      `refill_run_out` and `refill_variants` have 6 values each._
+- [x] Given a declared definition missing in the store, then the Refill Radar page names it and says how
       to fix it; with all four present, no warning shows
-- [ ] Given a demo customer whose run-out date is close, when they open a dry food product, then the
+      _With all four present the page shows no warning (production). The missing case is covered by the
+      `missingDefinitions` unit tests; the banner renders that list as is._
+- [x] Given a demo customer whose run-out date is close, when they open a dry food product, then the
       reminder shows the date in the buyer's language and "Reorder" adds the last bag
-- [ ] Given that customer in the Spanish checkout with a dry food bag, then the refill reward applies
-- [ ] Access scopes: none added
-- [ ] Every Admin GraphQL operation is typed by codegen and validated against the pinned API version
-- [ ] `npm run typecheck`, `npm run lint`, `npm test` and `npx react-router build` pass
+- [x] Given that customer in the Spanish checkout with a dry food bag, then the refill reward applies
+- [x] Access scopes: none added
+- [x] Every Admin GraphQL operation is typed by codegen and validated against the pinned API version
+- [x] `npm run typecheck`, `npm run lint`, `npm test` and `npx react-router build` pass
 
 ## Technical approach
 

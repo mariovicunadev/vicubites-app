@@ -99,19 +99,23 @@ accepts `species` entries).
       references whose handles match the previous text values (count before = count after)
 - [x] Given a Spanish buyer with dry dog food in checkout, when the checkout loads, then the Refill
       block shows (same as English)
-- [ ] Given a customer with a forecast, when the reminder renders in Spanish, then "Reorder" links the
+- [x] Given a customer with a forecast, when the reminder renders in Spanish, then "Reorder" links the
       right variant
-      _Open: same blocker as the reward: no customer has a forecast today._
-- [ ] Given a qualifying refill order in Spanish, when the cart is evaluated, then the refill reward
+      _Verified after spec 017 on a demo customer: the reminder lists the dog and cat bags with Spanish dates
+      ("10 de noviembre"); "Volver a pedir" added the puppy 2 kg variant to the cart._
+- [x] Given a qualifying refill order in Spanish, when the cart is evaluated, then the refill reward
       applies exactly as in English, and wet food or treats never get it
-      _Open: unit-tested (`bag_grams` in, product type out); the store check needs a customer with `refill_run_out`, which no customer has today (separate fix)._
+      _Verified in the Spanish cart and checkout: "Recompensa por recompra" (−$2.39, 10 %) on the dry 2 kg bag and
+      none on the wet food line; the test-gateway order (#1034) carries the discount._
 - [x] Given a product page in Spanish, then the species icon shows and the feeding calculator defaults
       to the product's species; cards, recipe stamp and comparison show Spanish labels
 - [x] Given the collection pages in Spanish, then the species and food type filters list Spanish labels
       and filter correctly; automatic collections keep their product counts
 - [ ] Given the app (forecast, health score, bulk fix, export), when run against the migrated catalog,
       then results match the pre-migration results
-      _Open: covered by unit and contract tests; the store run (forecast rebuild, bulk fix preview) happens with the refill metafields fix._
+      _Forecast verified in the store: "Rewrite forecasts" recomputed 6 customers, and order #1034 (Spanish
+      checkout) updated the buyer's forecast through `orders/create`. Open: health score, bulk fix preview and
+      export, opened in the app once._
 - [x] Given every dry food variant, then `custom.bag_grams` matches its `Size` option, and the checkout
       block and forecast give the same result as before in English and Spanish
 - [x] The sweep table (below, filled during implementation) lists every comparison found and its
@@ -120,7 +124,9 @@ accepts `species` entries).
       English words, keys on the `Size` option name or reads `productType`
 - [ ] Walkthrough in English and Spanish (home, collection, product, cart, checkout, account) with no
       broken feature; one announced axe pass on the touched pages with 0 new violations
-      _Open: home, collection, product and checkout checked in both languages (axe: 0 theme violations on product and collection; the only hit is Shopify's preview bar iframe). Cart, account and the reminder are checked with the refill metafields fix, since no customer has a forecast today._
+      _Home, collection, product and checkout checked in both languages (axe: 0 theme violations on product and
+      collection; the only hit is Shopify's preview bar iframe). Spanish cart, reminder and account page checked
+      after spec 017. Open: cart and account in English._
 - [x] Access scopes: `read_metaobjects` added (the backend reads metaobject handles through
       metafield references and lists entries for the bulk fix); nothing else
 - [x] Every Admin GraphQL operation is typed by codegen and validated against the pinned API version
