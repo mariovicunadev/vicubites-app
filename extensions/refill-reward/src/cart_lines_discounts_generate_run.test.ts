@@ -70,7 +70,7 @@ describe("cartLinesDiscountsGenerateRun", () => {
           productDiscountsAdd: {
             candidates: [
               {
-                message: REFILL_REWARD_MESSAGES.en,
+                message: REFILL_REWARD_MESSAGES[LanguageCode.En],
                 targets: [
                   { cartLine: { id: "gid://shopify/CartLine/1" } },
                   { cartLine: { id: "gid://shopify/CartLine/3" } },
@@ -114,10 +114,10 @@ describe("discount message language", () => {
   };
 
   it("labels the discount in Spanish for a Spanish checkout", () => {
-    expect(messageFor(LanguageCode.Es)).toBe(REFILL_REWARD_MESSAGES.es);
+    expect(messageFor(LanguageCode.Es)).toBe(REFILL_REWARD_MESSAGES[LanguageCode.Es]);
   });
 
   it.each([LanguageCode.En, LanguageCode.Fr])("falls back to English for %s", (language) => {
-    expect(messageFor(language)).toBe(REFILL_REWARD_MESSAGES.en);
+    expect(messageFor(language)).toBe(REFILL_REWARD_MESSAGES[LanguageCode.En]);
   });
 });

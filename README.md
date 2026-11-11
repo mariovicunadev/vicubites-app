@@ -329,6 +329,32 @@ Discount titles are not a translatable resource in Admin API 2026-10, so native 
 English title (for example, "Free shipping") in every language. Function locale files only
 translate the Function's name and description in the admin.
 
+Logic never keys on translated text: species, food type and protein are metaobject handles, and bag
+size is the variant's `custom.bag_grams`. A new language therefore needs translations, not code changes.
+`app/lib/i18n/languages.test.ts` checks that buyer-facing extensions and Function messages cover every
+language in `SUPPORTED_LANGUAGES`.
+
+### Adding a language
+
+1. **Admin:** Settings → Languages, then add and publish the language for the market.
+2. **Content:** translate products, collections, metaobject labels (species, food type, protein,
+   ingredients), selling plans, filters and theme content in Translate & Adapt, or register the
+   translations with `translationsRegister`.
+3. **Theme:** fill the `vicubites.*` keys in `locales/<code>.json` of the theme. Horizon ships the
+   rest, and new keys start with an English fallback.
+4. **App:** add the code to `SUPPORTED_LANGUAGES` (`app/lib/i18n/languages.ts`) and run `npm test`.
+   The failing tests list every file and message that is still missing:
+   - `extensions/<name>/locales/<code>.json` for `refill-radar`, `refill-checkout` and `refill-account`.
+     The run-out date needs `refill.month_names` and `refill.date_pattern` in the language's word order.
+   - One entry in `REFILL_REWARD_MESSAGES` (`refill-reward`) and one in `ORDER_LIMIT_MESSAGES`
+     (`order-limit`), keyed by the uppercase `LanguageCode`.
+5. **Release:** run `shopify app deploy`, then push the theme.
+6. **Verify:** in the new language, check the product page (species icon, calculator), the collection
+   filters, the cart with the refill reward, the checkout block and the customer account page.
+
+Limits that stay: discount titles keep one title in every language, and admin-only extensions stay in
+English.
+
 ## Production
 
 ```

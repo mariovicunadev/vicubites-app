@@ -7,14 +7,19 @@ import {
 } from "../generated/api";
 import { isDryFood, isRefillDue, parseRefillRewardConfig } from "./refill-reward";
 
-/** Discount label shown in cart and checkout, in the buyer's language (English otherwise). */
+/**
+ * Discount label shown in cart and checkout, by buyer language. A Function's locale files translate only its
+ * name and description, so buyer-facing text lives here: add one entry per supported language.
+ */
 export const REFILL_REWARD_MESSAGES = {
-  en: "Refill reward",
-  es: "Recompensa por recompra",
-} as const;
+  [LanguageCode.En]: "Refill reward",
+  [LanguageCode.Es]: "Recompensa por recompra",
+} satisfies Partial<Record<LanguageCode, string>>;
 
+/** The label in the buyer's language, or English when there is no entry for it. */
 export function refillRewardMessage(language: LanguageCode): string {
-  return language === LanguageCode.Es ? REFILL_REWARD_MESSAGES.es : REFILL_REWARD_MESSAGES.en;
+  const messages: Partial<Record<LanguageCode, string>> = REFILL_REWARD_MESSAGES;
+  return messages[language] ?? REFILL_REWARD_MESSAGES[LanguageCode.En];
 }
 
 const NO_DISCOUNT: CartLinesDiscountsGenerateRunResult = { operations: [] };

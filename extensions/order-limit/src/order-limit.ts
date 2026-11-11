@@ -69,14 +69,20 @@ export function variantsOverLimit(lines: readonly CartLine[], maxPerVariant: num
  * already arrives localized from the function input.
  */
 export function orderLimitMessage(maxPerVariant: number, productTitle: string, language: LanguageCode): string {
-  if (language === LanguageCode.Es) {
-    return (
-      `Límite de ${maxPerVariant} por pedido para ${productTitle}. ` +
-      "Para compras al por mayor, contáctanos para abrir una cuenta de empresa."
-    );
-  }
-  return (
-    `Limit of ${maxPerVariant} per order for ${productTitle}. ` +
-    "For wholesale, contact us about a business account."
-  );
+  const messages: Partial<Record<LanguageCode, OrderLimitTemplate>> = ORDER_LIMIT_MESSAGES;
+  return (messages[language] ?? ORDER_LIMIT_MESSAGES[LanguageCode.En])(maxPerVariant, productTitle);
 }
+
+type OrderLimitTemplate = (maxPerVariant: number, productTitle: string) => string;
+
+/**
+ * The checkout error by buyer language. A Function's locale files translate only its name and description,
+ * so buyer-facing text lives here: add one entry per supported language.
+ */
+export const ORDER_LIMIT_MESSAGES = {
+  [LanguageCode.En]: (maxPerVariant, productTitle) =>
+    `Limit of ${maxPerVariant} per order for ${productTitle}. For wholesale, contact us about a business account.`,
+  [LanguageCode.Es]: (maxPerVariant, productTitle) =>
+    `Límite de ${maxPerVariant} por pedido para ${productTitle}. ` +
+    "Para compras al por mayor, contáctanos para abrir una cuenta de empresa.",
+} satisfies Partial<Record<LanguageCode, OrderLimitTemplate>>;
