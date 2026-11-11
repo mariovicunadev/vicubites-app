@@ -2,7 +2,7 @@
 
 | Field     | Value |
 |-----------|-------|
-| Status    | In progress |
+| Status    | In review |
 | Branch    | `feature/018-language-ready` |
 | Estimate  | 1–1.5 h (AI-assisted) · 3–4 h manual |
 | Actual    | — |
@@ -46,14 +46,14 @@ values, and content is translated with Translate & Adapt. Two gaps remain before
 
 ## Acceptance criteria
 
-- [ ] Given a buyer language with a map entry, then each Function returns that message; given any other
+- [x] Given a buyer language with a map entry, then each Function returns that message; given any other
       language, then it returns English (unit tests for EN, ES and a third code)
-- [ ] Given a supported language, when a buyer-facing extension has no locale file for it or the file lacks
+- [x] Given a supported language, when a buyer-facing extension has no locale file for it or the file lacks
       a key from `en.default.json`, then the locale test fails and names the extension, file and key
-- [ ] Given a Function message map without a supported language, then the test fails
-- [ ] Given English and Spanish today, then the locale test passes and every message reads as before
-- [ ] The README runbook lists every step to add a language, including the platform limits
-- [ ] Access scopes: none added
+- [x] Given a Function message map without a supported language, then the test fails
+- [x] Given English and Spanish today, then the locale test passes and every message reads as before
+- [x] The README runbook lists every step to add a language, including the platform limits
+- [x] Access scopes: none added
 - [ ] `npm run typecheck`, `npm run lint`, `npm test` and `npx react-router build` pass; Function tests
       pass and `shopify app deploy` releases the Functions unchanged in behavior
 
@@ -67,6 +67,13 @@ values, and content is translated with Translate & Adapt. Two gaps remain before
   locales/`, flattens the JSON keys and compares each supported language file with `en.default.json`. It
   imports the Function maps (pure modules) and checks their language keys.
 - README `## Languages`: the runbook.
+
+## Verification
+
+- Adding `fr` to `SUPPORTED_LANGUAGES` makes five tests fail, naming the three extension locale files and the
+  two Function maps; removing it makes them pass again.
+- Unit tests: refill reward and order limit return English, Spanish and the English fallback for French as before.
+- Both Functions build with `shopify app function build`; 340 tests, typecheck, lint and build pass.
 
 ## References
 
