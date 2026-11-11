@@ -60,10 +60,10 @@ values, and content is translated with Translate & Adapt. Two gaps remain before
 ## Technical approach
 
 - `app/lib/i18n/languages.ts`: `SUPPORTED_LANGUAGES = ["en", "es"] as const`.
-- Functions: `MESSAGES: Partial<Record<LanguageCode, …>>` plus `messageFor(language)` that falls back to
-  `EN`. `order-limit` keeps a template function per language, since its message takes the limit and the
+- Functions: `REFILL_REWARD_MESSAGES` and `ORDER_LIMIT_MESSAGES` (`satisfies Partial<Record<LanguageCode, …>>`),
+  read through `refillRewardMessage(language)` and `orderLimitMessage(…)`, which fall back to `EN`. `order-limit` keeps a template function per language, since its message takes the limit and the
   product title.
-- `app/lib/i18n/extension-locales.test.ts`: reads `extensions/{refill-radar,refill-checkout,refill-account}/
+- `app/lib/i18n/languages.test.ts`: reads `extensions/{refill-radar,refill-checkout,refill-account}/
   locales/`, flattens the JSON keys and compares each supported language file with `en.default.json`. It
   imports the Function maps (pure modules) and checks their language keys.
 - README `## Languages`: the runbook.
@@ -84,5 +84,5 @@ values, and content is translated with Translate & Adapt. Two gaps remain before
 ## Risks and open questions
 
 - The Functions are compiled separately from the app. The test imports their pure message modules, so
-  those modules must not import generated runtime enums that exist only in the Function build. Compare by
-  the string values of `LanguageCode` instead.
+  those modules must not import code that runs only in the Function build. Resolved: the Functions'
+  generated `LanguageCode` enum exists at runtime and the app's Vitest imports it without issue.
