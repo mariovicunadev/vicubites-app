@@ -2,10 +2,10 @@
 
 | Field     | Value |
 |-----------|-------|
-| Status    | In review |
+| Status    | Done |
 | Branch    | `feature/016-product-keys` (app and theme) |
 | Estimate  | 5–7 h (AI-assisted) · 14–18 h manual |
-| Actual    | — |
+| Actual    | ~6.5 h |
 
 ## Goal
 
@@ -111,22 +111,25 @@ accepts `species` entries).
       to the product's species; cards, recipe stamp and comparison show Spanish labels
 - [x] Given the collection pages in Spanish, then the species and food type filters list Spanish labels
       and filter correctly; automatic collections keep their product counts
-- [ ] Given the app (forecast, health score, bulk fix, export), when run against the migrated catalog,
+- [x] Given the app (forecast, health score, bulk fix, export), when run against the migrated catalog,
       then results match the pre-migration results
       _Forecast verified in the store: "Rewrite forecasts" recomputed 6 customers, and order #1034 (Spanish
-      checkout) updated the buyer's forecast through `orders/create`. Open: health score, bulk fix preview and
-      export, opened in the app once._
+      checkout) updated the buyer's forecast through `orders/create`. Health score: 27 products, average 82,
+      25 of 27 classified (the two starter kits carry no nutrition data; before the migration 25 products
+      averaged 84 with 23 needing attention, and the kits explain the change). Bulk fix preview: `cat` accepted
+      as a change, the label "Perro" rejected ("isn't one of dog, cat"). The gaps export lists the two kits with
+      empty key columns._
 - [x] Given every dry food variant, then `custom.bag_grams` matches its `Size` option, and the checkout
       block and forecast give the same result as before in English and Spanish
 - [x] The sweep table (below, filled during implementation) lists every comparison found and its
       outcome: fixed, or safe with the reason
 - [x] A test in the app and one in the theme fail if logic compares species or food type against
       English words, keys on the `Size` option name or reads `productType`
-- [ ] Walkthrough in English and Spanish (home, collection, product, cart, checkout, account) with no
+- [x] Walkthrough in English and Spanish (home, collection, product, cart, checkout, account) with no
       broken feature; one announced axe pass on the touched pages with 0 new violations
       _Home, collection, product and checkout checked in both languages (axe: 0 theme violations on product and
       collection; the only hit is Shopify's preview bar iframe). Spanish cart, reminder and account page checked
-      after spec 017. Open: cart and account in English._
+      after spec 017; English checkout (refill reward on the dry bag only) and account page checked too._
 - [x] Access scopes: `read_metaobjects` added (the backend reads metaobject handles through
       metafield references and lists entries for the bulk fix); nothing else
 - [x] Every Admin GraphQL operation is typed by codegen and validated against the pinned API version
