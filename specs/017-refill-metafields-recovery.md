@@ -5,7 +5,7 @@
 | Status    | Done |
 | Branch    | `feature/017-refill-metafields-recovery` |
 | Estimate  | 2–3 h (AI-assisted) · 5–7 h manual |
-| Actual    | ~1 h |
+| Actual    | ~1.5 h (plus owner steps: promote, storefront check) |
 
 ## Goal
 
