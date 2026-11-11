@@ -2,10 +2,10 @@
 
 | Field     | Value |
 |-----------|-------|
-| Status    | In review |
+| Status    | Done      |
 | Branch    | `feature/018-language-ready` |
 | Estimate  | 1–1.5 h (AI-assisted) · 3–4 h manual |
-| Actual    | — |
+| Actual    | ~1.25 h |
 
 ## Goal
 
@@ -54,7 +54,7 @@ values, and content is translated with Translate & Adapt. Two gaps remain before
 - [x] Given English and Spanish today, then the locale test passes and every message reads as before
 - [x] The README runbook lists every step to add a language, including the platform limits
 - [x] Access scopes: none added
-- [ ] `npm run typecheck`, `npm run lint`, `npm test` and `npx react-router build` pass; Function tests
+- [x] `npm run typecheck`, `npm run lint`, `npm test` and `npx react-router build` pass; Function tests
       pass and `shopify app deploy` releases the Functions unchanged in behavior
 
 ## Technical approach
