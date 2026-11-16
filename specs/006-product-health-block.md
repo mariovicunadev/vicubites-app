@@ -4,8 +4,7 @@
 |-----------|-------|
 | Status    | Done |
 | Branch    | `feature/006-product-health-block` |
-| Estimate  | 4 h · ~2.5–3.5 h (AI-assisted) · ~6–8 h manual |
-| Actual    | ~1 h |
+
 
 ## Goal
 

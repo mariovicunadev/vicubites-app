@@ -4,8 +4,7 @@
 |-----------|-------|
 | Status    | Done |
 | Branch    | `feature/004-b2b-catalog-coverage` |
-| Estimate  | 4–5 h · ~2.5–3 h (AI-assisted) · ~5–6 h manual |
-| Actual    | ~1.5 h |
+
 
 ## Goal
 

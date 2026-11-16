@@ -4,8 +4,7 @@
 |-----------|-------|
 | Status    | Done |
 | Branch    | `feature/005-bulk-fix` |
-| Estimate  | 5–6 h · ~4–5 h (AI-assisted) · ~9–11 h manual |
-| Actual    | ~1.5 h |
+
 
 ## Goal
 

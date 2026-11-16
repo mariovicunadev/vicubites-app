@@ -4,8 +4,7 @@
 |-----------|-------|
 | Status    | Done |
 | Branch    | `feature/001-app-foundation` |
-| Estimate  | ~3.5 h (AI-assisted) · ~6.5 h manual |
-| Actual    | ~2.5 h |
+
 
 ## Goal
 

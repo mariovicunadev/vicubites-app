@@ -448,8 +448,7 @@ Optional, in the same `.env`:
 
 ## Development workflow
 
-- Spec-driven: each feature starts as `specs/NNN-name.md` with goal, scope, acceptance criteria
-  and an estimate, and closes with the actual time.
+- Spec-driven: each feature starts as `specs/NNN-name.md` with goal, scope and acceptance criteria.
 - GitFlow: `main` (released), `develop` (integration), `feature/NNN-name` per spec; every merge
   goes through a pull request with a self-review.
 - Continuous integration: GitHub Actions runs typecheck, lint, tests and the production build on

@@ -4,8 +4,7 @@
 |-----------|-------|
 | Status    | Done |
 | Branch    | `feature/003-nutrition-data-health` |
-| Estimate  | 6–8 h · ~4 h (AI-assisted) · ~8 h manual |
-| Actual    | ~3.5 h (+ ~0.5 h incident) |
+
 
 ## Goal
 

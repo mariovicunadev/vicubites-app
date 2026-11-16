@@ -4,8 +4,7 @@
 |-----------|-------|
 | Status    | Draft / Approved / In progress / Done |
 | Branch    | `feature/NNN-name` |
-| Estimate  | X h |
-| Actual    | — |
+
 
 ## Goal
 

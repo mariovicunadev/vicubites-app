@@ -29,7 +29,7 @@ Admin API version **2026-10**, pinned in `app/shopify.server.ts`, `.graphqlrc.ts
 ## Engineering workflow
 
 1. **Spec-driven.** Every feature starts with a spec in `specs/NNN-name.md` (copy
-   `specs/000-template.md`): goal, why it belongs in an app, acceptance criteria, estimate.
+   `specs/000-template.md`): goal, why it belongs in an app, acceptance criteria.
    No implementation without an approved spec.
 2. **GitFlow.** `main` (released) and `develop` (integration); one `feature/NNN-name` branch per
    spec from `develop`; small commits; self-review the diff before opening a PR; merge only

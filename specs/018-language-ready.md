@@ -4,8 +4,7 @@
 |-----------|-------|
 | Status    | Done      |
 | Branch    | `feature/018-language-ready` |
-| Estimate  | 1–1.5 h (AI-assisted) · 3–4 h manual |
-| Actual    | ~1.25 h |
+
 
 ## Goal
 

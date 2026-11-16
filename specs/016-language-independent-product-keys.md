@@ -4,8 +4,7 @@
 |-----------|-------|
 | Status    | Done |
 | Branch    | `feature/016-product-keys` (app and theme) |
-| Estimate  | 5–7 h (AI-assisted) · 14–18 h manual |
-| Actual    | ~6.5 h |
+
 
 ## Goal
 

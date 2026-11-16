@@ -4,8 +4,7 @@
 |-----------|-------|
 | Status    | Done |
 | Branch    | `feature/011-production-deploy` |
-| Estimate  | 2 h · ~3–4 h (AI-assisted) · ~7–9 h manual |
-| Actual    | ~3.5 h |
+
 
 ## Goal
 

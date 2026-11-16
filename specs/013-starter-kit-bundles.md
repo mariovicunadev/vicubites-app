@@ -4,8 +4,7 @@
 |-----------|-------|
 | Status    | Done |
 | Branch    | `feature/013-starter-kit-bundles` |
-| Estimate  | 3–4 h (AI-assisted) · 8–10 h manual |
-| Actual    | ~7.5 h (including store verification rounds) |
+
 
 ## Goal
 

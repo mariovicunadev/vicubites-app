@@ -4,8 +4,7 @@
 |-----------|-------|
 | Status    | Done |
 | Branch    | `feature/012-discount-validation-functions` |
-| Estimate  | 3.5–4.5 h (AI-assisted) · 9–11 h manual |
-| Actual    | ~10 h (including store verification rounds) |
+
 
 ## Goal
 
