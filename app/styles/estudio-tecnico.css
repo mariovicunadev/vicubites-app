@@ -83,6 +83,14 @@
 .et .et-banner { padding: var(--et-space-3) var(--et-space-4); border: 1.3px solid var(--et-edge); border-left: 5px solid var(--et-error); border-radius: 7px; background: var(--et-sheet); box-shadow: var(--et-relief); font-size: 12px; }
 .et .et-banner strong { display: block; font-size: 12px; }
 
+/* Inherit the .et font into Polaris host elements; it only reaches shadow
+   children that don't set their own font-family. */
+.et s-text, .et s-paragraph, .et s-heading, .et s-span, .et s-link,
+.et s-badge, .et s-button, .et s-table, .et s-th, .et s-td,
+.et s-text-field, .et s-select, .et s-checkbox, .et s-stack, .et s-box {
+  font-family: var(--et-font);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .et *, .et *::before, .et *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
 }
