@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Spec 019 mock — Vicubites Ops Overview, "Estudio Técnico" skin</title>
+<!--
+  Static mock for spec 019 (Estudio Técnico visual adoption, pilot: /app Overview).
+  Token values and .et component classes are an exact snapshot of the source of
+  truth in the design artifact (tokens.css, "Estudio Técnico"). Layout mimics the
+  real route's Polaris composition (s-page > s-section > s-grid + aside) so the
+  owner can approve the look before any code is written.
+-->
+<style>
+  /* -- et tokens: snapshot of tokens.css (Estudio Técnico) --------------- */
+  .et {
+    --et-paper: #f4ebe0;
+    --et-sheet: #f9f2e8;
+    --et-card: #f8f0e6;
+    --et-ink: #1d1b18;
+    --et-muted: #70685e;
+    --et-line: #ddd3c5;
+    --et-edge: #46413b;
+    --et-green: #cfe3b2;
+    --et-green-deep: #467340;
+    --et-violet: #e7ddf5;
+    --et-blue: #b4cce5;
+    --et-yellow: #f5d58e;
+    --et-orange: #edb27e;
+    --et-error: #aa3932;
+    --et-radius: 12px;
+    --et-relief: 1.5px 2.5px 0 var(--et-ink);
+    --et-shadow: 0 8px 24px -16px #58432e55;
+    --et-font: 'JetBrains Mono', 'Cascadia Code', 'SFMono-Regular', Consolas, monospace;
+    --et-space-1: 4px;
+    --et-space-2: 8px;
+    --et-space-3: 12px;
+    --et-space-4: 16px;
+    --et-space-6: 24px;
+    --et-space-8: 32px;
+    --et-ease: cubic-bezier(.2,.7,.2,1);
+    color: var(--et-ink);
+    font-family: var(--et-font);
+    line-height: 1.6;
+    color-scheme: light;
+  }
+  .et *, .et *::before, .et *::after { box-sizing: border-box; }
+  .et .et-panel { border: 1px solid var(--et-line); border-radius: var(--et-radius); background: var(--et-sheet); box-shadow: var(--et-shadow); }
+  .et .et-tag { display: inline-block; padding: 3px 9px; border: 1px solid var(--et-edge); border-radius: 30px; font-size: 10px; font-weight: 600; background: var(--et-green); }
+  .et :focus-visible { outline: 3px solid var(--et-green-deep); outline-offset: 4px; }
+  @media (prefers-reduced-motion: reduce) {
+    .et *, .et *::before, .et *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+  }
+
+  /* -- mock-only layout (stands in for the Polaris page chrome) ---------- */
+  html, body { margin: 0; }
+  body.et { background: var(--et-paper); min-height: 100vh; }
+  .mock-nav { display: flex; gap: var(--et-space-4); padding: var(--et-space-3) var(--et-space-6); border-bottom: 1px solid var(--et-line); font-size: 11px; background: var(--et-sheet); }
+  .mock-nav a { color: var(--et-muted); text-decoration: none; }
+  .mock-nav a[aria-current] { color: var(--et-ink); font-weight: 700; }
+  .mock-page { max-width: 980px; margin: 0 auto; padding: var(--et-space-6); }
+  .mock-page h1 { font-size: 20px; margin: 0 0 var(--et-space-6); letter-spacing: -0.02em; }
+  .mock-cols { display: grid; grid-template-columns: 1fr 260px; gap: var(--et-space-6); align-items: start; }
+  .mock-section { margin-bottom: var(--et-space-6); }
+  .mock-section > h2 { font-size: 11px; text-transform: uppercase; letter-spacing: .12em; color: var(--et-muted); margin: 0 0 var(--et-space-3); font-weight: 600; }
+  .mock-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--et-space-4); }
+
+  /* -- proposed .et components for the pilot ------------------------------ */
+  .et-metric { padding: var(--et-space-4) var(--et-space-4) var(--et-space-3); }
+  .et-metric__label { font-size: 10px; text-transform: uppercase; letter-spacing: .12em; color: var(--et-muted); }
+  .et-metric__value { font-size: 28px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.25; }
+  .et-module { padding: var(--et-space-4); }
+  .et-module + .et-module { border-top: 1px dashed var(--et-line); }
+  .et-module__head { display: flex; align-items: center; gap: var(--et-space-3); }
+  .et-module__head strong { font-size: 13px; }
+  .et-module p { margin: var(--et-space-2) 0 0; font-size: 12px; color: var(--et-muted); }
+  .et-tag--violet { background: var(--et-violet); }
+  .et-aside { padding: var(--et-space-4); font-size: 12px; }
+  .et-aside strong { display: block; font-size: 13px; }
+  .et-aside .et-muted { color: var(--et-muted); display: block; }
+  .et-banner { padding: var(--et-space-3) var(--et-space-4); border: 1.3px solid var(--et-edge); border-left: 5px solid var(--et-error); border-radius: 7px; background: var(--et-sheet); box-shadow: var(--et-relief); font-size: 12px; margin-bottom: var(--et-space-6); }
+  .et-banner strong { display: block; font-size: 12px; }
+
+  @media (max-width: 720px) {
+    .mock-cols { grid-template-columns: 1fr; }
+    .mock-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body class="et">
+  <!-- stands in for s-app-nav (kept as Polaris in the real app) -->
+  <nav class="mock-nav">
+    <a href="#" aria-current="page">Home</a>
+    <a href="#">Data health</a>
+    <a href="#">Refill Radar</a>
+    <a href="#">B2B CRM</a>
+    <a href="#">Checkout rules</a>
+    <a href="#">Exports</a>
+  </nav>
+
+  <main class="mock-page">
+    <h1>Overview</h1>
+
+    <!-- error state (kept: s-banner tone=critical in the real route) -->
+    <div class="et-banner" role="alert" hidden>
+      <strong>Store data could not be loaded</strong>
+      Admin API error …
+    </div>
+
+    <div class="mock-cols">
+      <div>
+        <section class="mock-section" aria-labelledby="m-catalog">
+          <h2 id="m-catalog">Catalog</h2>
+          <div class="mock-grid">
+            <div class="et-panel et-metric">
+              <div class="et-metric__label">Products</div>
+              <div class="et-metric__value">27</div>
+            </div>
+            <div class="et-panel et-metric">
+              <div class="et-metric__label">Ingredient entries</div>
+              <div class="et-metric__value">142</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="mock-section" aria-labelledby="m-modules">
+          <h2 id="m-modules">Modules</h2>
+          <div class="et-panel">
+            <div class="et-module">
+              <div class="et-module__head">
+                <strong>Nutrition Data Health</strong>
+                <span class="et-tag">In development</span>
+              </div>
+              <p>Scores every product on the completeness of its nutrition data: guaranteed analysis, ingredients, feeding guide, image alt text and B2B catalog coverage.</p>
+            </div>
+            <div class="et-module">
+              <div class="et-module__head">
+                <strong>Refill Radar</strong>
+                <span class="et-tag et-tag--violet">In development</span>
+              </div>
+              <p>Predicts when each customer runs out of food from bag size and daily portion, and triggers a timely reorder reminder.</p>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <aside class="et-panel et-aside" aria-labelledby="m-conn">
+        <h2 id="m-conn" style="font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--et-muted);margin:0 0 var(--et-space-3);font-weight:600">Connection</h2>
+        <strong>Vicubites Dev</strong>
+        <span class="et-muted">vicubites.myshopify.com</span>
+        <span class="et-muted">Admin API 2026-10</span>
+      </aside>
+    </div>
+  </main>
+</body>
+</html>

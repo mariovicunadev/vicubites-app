@@ -1,0 +1,80 @@
+/*
+ * Estudio Técnico — scoped visual layer for the embedded app UI.
+ * Tokens and the .et-panel/.et-tag/.et-button/.et-input primitives are a
+ * verbatim extract of the design artifact's tokens.css (spec 019). Port
+ * future source changes manually. Everything lives under `.et`; no global
+ * selectors and no overrides of Polaris `s-*` internals or admin chrome.
+ * Pilot-derived classes (et-metric, et-module, et-aside, et-banner) are
+ * documented in specs/mocks/019-estudio-tecnico-overview.html.
+ */
+
+.et {
+  --et-paper: #f4ebe0;
+  --et-sheet: #f9f2e8;
+  --et-card: #f8f0e6;
+  --et-ink: #1d1b18;
+  --et-muted: #70685e;
+  --et-line: #ddd3c5;
+  --et-edge: #46413b;
+  --et-green: #cfe3b2;
+  --et-green-deep: #467340;
+  --et-violet: #e7ddf5;
+  --et-blue: #b4cce5;
+  --et-yellow: #f5d58e;
+  --et-orange: #edb27e;
+  --et-error: #aa3932;
+  --et-radius: 12px;
+  --et-relief: 1.5px 2.5px 0 var(--et-ink);
+  --et-shadow: 0 8px 24px -16px #58432e55;
+  --et-font: 'JetBrains Mono', 'Cascadia Code', 'SFMono-Regular', Consolas, monospace;
+  --et-space-1: 4px;
+  --et-space-2: 8px;
+  --et-space-3: 12px;
+  --et-space-4: 16px;
+  --et-space-6: 24px;
+  --et-space-8: 32px;
+  --et-ease: cubic-bezier(.2,.7,.2,1);
+  color: var(--et-ink);
+  font-family: var(--et-font);
+  line-height: 1.6;
+  color-scheme: light;
+  background: var(--et-paper);
+}
+.et *, .et *::before, .et *::after { box-sizing: border-box; }
+.et .et-panel { border: 1px solid var(--et-line); border-radius: var(--et-radius); background: var(--et-sheet); box-shadow: var(--et-shadow); }
+.et .et-tag { display: inline-block; padding: 3px 9px; border: 1px solid var(--et-edge); border-radius: 30px; font-size: 10px; font-weight: 600; background: var(--et-green); }
+.et .et-tag--violet { background: var(--et-violet); }
+.et .et-button {
+  display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+  min-height: 38px; padding: 8px 14px; border: 1.3px solid var(--et-edge);
+  border-radius: 7px; background: var(--et-sheet); color: var(--et-ink);
+  font: inherit; font-size: 12px; font-weight: 600; text-decoration: none;
+  cursor: pointer; box-shadow: var(--et-relief);
+  transition: transform 150ms, box-shadow 150ms, background 150ms;
+}
+.et .et-button:hover { background: var(--et-card); transform: translateY(-1px); }
+.et .et-button:active { transform: translate(1.5px,2.5px); box-shadow: 0 0 0 var(--et-ink); }
+.et .et-button--primary { background: var(--et-green); }
+.et .et-button:disabled { cursor: not-allowed; opacity: .45; transform: none; box-shadow: none; }
+.et .et-input { width: 100%; padding: 11px 13px; border: 1px solid var(--et-edge); border-radius: 7px; background: var(--et-sheet); color: var(--et-ink); font: inherit; font-size: 12px; }
+.et :focus-visible { outline: 3px solid var(--et-green-deep); outline-offset: 4px; }
+
+/* Pilot components (Overview). */
+.et .et-metric { padding: var(--et-space-4) var(--et-space-4) var(--et-space-3); }
+.et .et-metric__label { font-size: 10px; text-transform: uppercase; letter-spacing: .12em; color: var(--et-muted); }
+.et .et-metric__value { font-size: 28px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.25; }
+.et .et-module { padding: var(--et-space-4); }
+.et .et-module + .et-module { border-top: 1px dashed var(--et-line); }
+.et .et-module__head { display: flex; align-items: center; gap: var(--et-space-3); }
+.et .et-module__head strong { font-size: 13px; }
+.et .et-module p { margin: var(--et-space-2) 0 0; font-size: 12px; color: var(--et-muted); }
+.et .et-aside { padding: var(--et-space-4); font-size: 12px; }
+.et .et-aside__heading { margin: 0 0 var(--et-space-3); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .12em; color: var(--et-muted); }
+.et .et-aside strong { display: block; font-size: 13px; }
+.et .et-aside .et-muted { display: block; color: var(--et-muted); }
+.et .et-banner { padding: var(--et-space-3) var(--et-space-4); border: 1.3px solid var(--et-edge); border-left: 5px solid var(--et-error); border-radius: 7px; background: var(--et-sheet); box-shadow: var(--et-relief); font-size: 12px; }
+.et .et-banner strong { display: block; font-size: 12px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .et *, .et *::before, .et *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}

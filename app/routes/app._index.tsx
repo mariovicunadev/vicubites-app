@@ -70,50 +70,49 @@ export default function Index() {
         <>
           <s-section heading="Catalog">
             <s-grid gridTemplateColumns="1fr 1fr" gap="base">
-              <s-box padding="base" border="base" borderRadius="base">
-                <s-stack direction="block" gap="small-200">
-                  <s-text color="subdued">Products</s-text>
-                  <s-heading>{overview.products}</s-heading>
-                </s-stack>
-              </s-box>
-              <s-box padding="base" border="base" borderRadius="base">
-                <s-stack direction="block" gap="small-200">
-                  <s-text color="subdued">Ingredient entries</s-text>
-                  <s-heading>{overview.ingredients}</s-heading>
-                </s-stack>
-              </s-box>
+              <div className="et-panel et-metric">
+                <div className="et-metric__label">Products</div>
+                <div className="et-metric__value">{overview.products}</div>
+              </div>
+              <div className="et-panel et-metric">
+                <div className="et-metric__label">Ingredient entries</div>
+                <div className="et-metric__value">{overview.ingredients}</div>
+              </div>
             </s-grid>
           </s-section>
 
           <s-section heading="Modules">
-            <s-stack direction="block" gap="base">
-              <s-stack direction="inline" gap="small-200" alignItems="center">
-                <s-text type="strong">Nutrition Data Health</s-text>
-                <s-badge tone="info">In development</s-badge>
-              </s-stack>
-              <s-paragraph>
-                Scores every product on the completeness of its nutrition data:
-                guaranteed analysis, ingredients, feeding guide, image alt text
-                and B2B catalog coverage.
-              </s-paragraph>
-              <s-stack direction="inline" gap="small-200" alignItems="center">
-                <s-text type="strong">Refill Radar</s-text>
-                <s-badge tone="info">In development</s-badge>
-              </s-stack>
-              <s-paragraph>
-                Predicts when each customer runs out of food from bag size and
-                daily portion, and triggers a timely reorder reminder.
-              </s-paragraph>
-            </s-stack>
+            <div className="et-panel">
+              <div className="et-module">
+                <div className="et-module__head">
+                  <strong>Nutrition Data Health</strong>
+                  <span className="et-tag">In development</span>
+                </div>
+                <p>
+                  Scores every product on the completeness of its nutrition
+                  data: guaranteed analysis, ingredients, feeding guide, image
+                  alt text and B2B catalog coverage.
+                </p>
+              </div>
+              <div className="et-module">
+                <div className="et-module__head">
+                  <strong>Refill Radar</strong>
+                  <span className="et-tag et-tag--violet">In development</span>
+                </div>
+                <p>
+                  Predicts when each customer runs out of food from bag size and
+                  daily portion, and triggers a timely reorder reminder.
+                </p>
+              </div>
+            </div>
           </s-section>
 
-          <s-section slot="aside" heading="Connection">
-            <s-stack direction="block" gap="small-200">
-              <s-text type="strong">{overview.shopName}</s-text>
-              <s-text color="subdued">{overview.shopDomain}</s-text>
-              <s-text color="subdued">Admin API {overview.apiVersion}</s-text>
-            </s-stack>
-          </s-section>
+          <aside slot="aside" className="et-panel et-aside">
+            <h2 className="et-aside__heading">Connection</h2>
+            <strong>{overview.shopName}</strong>
+            <span className="et-muted">{overview.shopDomain}</span>
+            <span className="et-muted">Admin API {overview.apiVersion}</span>
+          </aside>
         </>
       )}
     </s-page>
