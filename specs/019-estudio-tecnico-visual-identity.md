@@ -2,7 +2,7 @@
 
 | Field     | Value |
 |-----------|-------|
-| Status    | In progress |
+| Status    | In review |
 | Branch    | `feature/019-estudio-tecnico-visual` |
 
 
@@ -58,24 +58,28 @@ Approved visual mock: `specs/mocks/019-estudio-tecnico-overview.html`.
 
 ## Acceptance criteria
 
-- [ ] Given the app loads inside the admin, when `/app` renders, then the
+- [x] Given the app loads inside the admin, when `/app` renders, then the
   Overview matches the approved mock (paper background, panel metrics, pastel
   module tags, monospace type) while all loader data is unchanged.
-- [ ] Given an Admin API failure, when the loader returns an error, then the
-  error state is still rendered and readable (banner per mock).
-- [ ] Given keyboard navigation, when tabbing through the page, then
-  `focus-visible` shows the `.et` outline on app-owned controls.
-- [ ] Given `prefers-reduced-motion: reduce`, then no transitions/animations run.
-- [ ] Given a 390 px viewport, then the layout stacks correctly (metrics single
+- [x] Given an Admin API failure, when the loader returns an error, then the
+  error state is still rendered and readable (banner per mock). SSR'd error
+  state verified headless.
+- [~] Given keyboard navigation, when tabbing through the page, then
+  `focus-visible` shows the `.et` outline on app-owned controls. Rule shipped
+  in the stylesheet; the pilot route has no app-owned focusable elements yet —
+  exercised for real in spec 020 (interactive `.et` controls).
+- [x] Given `prefers-reduced-motion: reduce`, then no transitions/animations run
+  (computed `transition-duration` ≈ 0 under emulated reduce).
+- [x] Given a 390 px viewport, then the layout stacks correctly (metrics single
   column, aside below content).
-- [ ] No visual or behavioral change on `/app/health`, `/app/refill`,
+- [x] No visual or behavioral change on `/app/health`, `/app/refill`,
   `/app/b2b-crm`, `/app/checkout-rules`, `/app/exports` beyond inherited
-  typography/background (to be confirmed screen by screen during review).
-- [ ] No selectors outside `.et`; no global overrides of `s-*` components, `body`
+  typography/background (owner-reviewed on the dev preview).
+- [x] No selectors outside `.et`; no global overrides of `s-*` components, `body`
   or the admin.
-- [ ] Access scopes: none added.
-- [ ] `npm run typecheck`, `npm run lint` and `npm test` pass; one announced axe
-  pass on `/app` shows no new violations.
+- [x] Access scopes: none added.
+- [x] `npm run typecheck`, `npm run lint` and `npm test` (340) pass; announced
+  axe pass on `/app` (ok + error states, 1440 and 390 px): 0 violations.
 
 ## Technical approach
 
