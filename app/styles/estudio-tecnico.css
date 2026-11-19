@@ -62,7 +62,14 @@
 .et :focus-visible { outline: 3px solid var(--et-green-deep); outline-offset: 4px; }
 .et .et-banner { padding: var(--et-space-3) var(--et-space-4); border: 1.3px solid var(--et-edge); border-left: 5px solid var(--et-error); border-radius: 7px; background: var(--et-sheet); box-shadow: var(--et-relief); font-size: 12px; margin-bottom: var(--et-space-4); }
 .et .et-banner--info { border-left-color: var(--et-blue); }
+.et .et-banner--warning { border-left-color: var(--et-orange); }
+.et .et-banner--success { border-left-color: var(--et-green-deep); }
 .et .et-banner strong { display: block; }
+.et .et-inline { display: flex; align-items: center; flex-wrap: wrap; gap: var(--et-space-2); }
+.et .et-copy { padding: var(--et-space-4); font-size: 12px; }
+.et .et-copy p { margin: 0 0 var(--et-space-3); }
+.et .et-copy p:last-child { margin-bottom: 0; }
+.et .et-copy .muted { color: var(--et-muted); }
 .et .et-badge { display: inline-block; padding: 2px 8px; border: 1px solid var(--et-edge); border-radius: 30px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
 .et .et-badge--success { background: var(--et-green); }
 .et .et-badge--neutral { background: var(--et-sheet); color: var(--et-muted); }
