@@ -311,7 +311,7 @@ function ForecastTable({ rows }: { rows: RefillRow[] }) {
             </td>
             <td>{row.species}</td>
             <td>
-              <span className="et-inline">
+              <span className="et-inline nowrap">
                 <span>{row.runOutOn}</span>
                 <span className={`et-badge et-badge--${row.tone}`}>{row.due}</span>
               </span>

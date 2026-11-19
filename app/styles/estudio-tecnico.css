@@ -70,11 +70,11 @@
 .et .et-copy p { margin: 0 0 var(--et-space-3); }
 .et .et-copy p:last-child { margin-bottom: 0; }
 .et .et-copy .muted { color: var(--et-muted); }
-.et .et-badge { display: inline-block; padding: 2px 8px; border: 1px solid var(--et-edge); border-radius: 30px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+.et .et-badge { display: inline-block; padding: 2px 8px; border: 1px solid var(--et-edge); border-radius: 30px; font-size: 10px; font-weight: 700; text-transform: uppercase; white-space: nowrap; }
 .et .et-badge--success { background: var(--et-green); }
 .et .et-badge--neutral { background: var(--et-sheet); color: var(--et-muted); }
 .et .et-badge--caution { background: var(--et-yellow); }
-.et .et-badge--critical { background: #f3c4bd; color: var(--et-error); }
+.et .et-badge--critical { background: #f3c4bd; }
 .et .et-badge--info { background: var(--et-blue); }
 
 /* Pilot components (Overview). */
@@ -112,6 +112,7 @@
 .et .et-table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .et .et-table th { text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: .1em; color: var(--et-muted); font-weight: 600; padding: var(--et-space-3) var(--et-space-4); border-bottom: 1.3px solid var(--et-edge); }
 .et .et-table .num { text-align: right; }
+.et .et-table .nowrap { white-space: nowrap; }
 .et .et-table td { padding: var(--et-space-3) var(--et-space-4); border-bottom: 1px solid var(--et-line); vertical-align: top; }
 .et .et-table tr:last-child td { border-bottom: 0; }
 .et .et-table a { color: var(--et-ink); font-weight: 600; text-decoration: underline; text-decoration-color: var(--et-blue); text-underline-offset: 3px; }
