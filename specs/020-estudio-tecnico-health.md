@@ -2,7 +2,7 @@
 
 | Field     | Value |
 |-----------|-------|
-| Status    | Draft |
+| Status    | In review |
 | Branch    | `feature/020-estudio-tecnico-health` |
 
 
@@ -48,27 +48,30 @@ Approved visual mock: `specs/mocks/020-estudio-tecnico-health.html`.
 
 ## Acceptance criteria
 
-- [ ] `/app/health` renders the approved mock: mono type throughout, paper
+- [x] `/app/health` renders the approved mock: mono type throughout, paper
   background, metric panels, rule rows with bordered progress bars, `.et`
   table with tone badges, `.et` banners and empty state.
-- [ ] "Run audit" posts the action and disables while running (fetcher state
+- [x] "Run audit" posts the action and disables while running (fetcher state
   or `audit.running`), the polling `useEffect` still revalidates every 3 s,
   and both info and critical banners render their `.et` variants.
-- [ ] "Fix in bulk" still navigates to `/app/health/fix`; product links still
+- [x] "Fix in bulk" still navigates to `/app/health/fix`; product links still
   open `shopify://admin/products/<id>` in `_top`.
-- [ ] Empty state (`summary.products === 0`) renders `.et-empty` with a working
+- [x] Empty state (`summary.products === 0`) renders `.et-empty` with a working
   "Run audit" button.
-- [ ] Keyboard: every `et-button`/link shows the `.et` focus outline; table
-  keeps `<th>` semantics; progress bars carry `role="progressbar"` with
-  `aria-valuenow`/`aria-valuemin`/`aria-valuemax`/`aria-label`.
-- [ ] `prefers-reduced-motion`: no transitions. 390 px: metrics stack, table
-  scrolls horizontally inside its panel (`overflow-x`).
-- [ ] No selectors outside `.et`; no `s-*` styling beyond the existing
+- [x] Keyboard: every `et-button`/link shows the `.et` focus outline (verified:
+  solid 3px outline on Tab); table keeps `<th>` semantics; progress bars carry
+  `role="progressbar"` with `aria-valuenow`/`aria-valuemin`/`aria-valuemax`/
+  `aria-label` (verified in DOM).
+- [x] `prefers-reduced-motion`: no transitions (global `.et` guard). 390 px:
+  metrics stack, table scrolls horizontally inside its panel (`overflow-x`,
+  scrollWidth 351 > clientWidth 308).
+- [x] No selectors outside `.et`; no `s-*` styling beyond the existing
   host-level font rule; `s-page`/`s-app-nav` unchanged.
-- [ ] Access scopes: none added.
-- [ ] `npm run typecheck`, `npm run lint`, `npm test`, `npx react-router build`
-  pass; one announced axe pass on `/app/health` (populated + empty states) in
-  isolated Chrome via the SSR-harness pattern from spec 019.
+- [x] Access scopes: none added.
+- [x] `npm run typecheck`, `npm run lint`, `npm test` (340),
+  `npx react-router build` pass; announced axe pass on `/app/health`
+  (populated + empty states, 1440 and 390 px, isolated Chrome on SSR'd markup
+  from the real route): **0 violations**.
 
 ## Technical approach
 
