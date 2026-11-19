@@ -60,11 +60,21 @@
 .et .et-button:disabled { cursor: not-allowed; opacity: .45; transform: none; box-shadow: none; }
 .et .et-input { width: 100%; padding: 11px 13px; border: 1px solid var(--et-edge); border-radius: 7px; background: var(--et-sheet); color: var(--et-ink); font: inherit; font-size: 12px; }
 .et :focus-visible { outline: 3px solid var(--et-green-deep); outline-offset: 4px; }
+.et .et-banner { padding: var(--et-space-3) var(--et-space-4); border: 1.3px solid var(--et-edge); border-left: 5px solid var(--et-error); border-radius: 7px; background: var(--et-sheet); box-shadow: var(--et-relief); font-size: 12px; margin-bottom: var(--et-space-4); }
+.et .et-banner--info { border-left-color: var(--et-blue); }
+.et .et-banner strong { display: block; }
+.et .et-badge { display: inline-block; padding: 2px 8px; border: 1px solid var(--et-edge); border-radius: 30px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+.et .et-badge--success { background: var(--et-green); }
+.et .et-badge--neutral { background: var(--et-sheet); color: var(--et-muted); }
+.et .et-badge--caution { background: var(--et-yellow); }
+.et .et-badge--critical { background: #f3c4bd; color: var(--et-error); }
+.et .et-badge--info { background: var(--et-blue); }
 
 /* Pilot components (Overview). */
+.et .et-actions { display: flex; justify-content: flex-end; gap: var(--et-space-3); margin-bottom: var(--et-space-6); }
 .et .et-section { margin-bottom: var(--et-space-6); }
 .et .et-section__heading { margin: 0 0 var(--et-space-3); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .12em; color: var(--et-muted); }
-.et .et-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: var(--et-space-4); }
+.et .et-metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--et-space-4); }
 @media (max-width: 720px) {
   .et .et-metrics { grid-template-columns: 1fr; }
 }
@@ -80,8 +90,29 @@
 .et .et-aside__heading { margin: 0 0 var(--et-space-3); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .12em; color: var(--et-muted); }
 .et .et-aside strong { display: block; font-size: 13px; }
 .et .et-aside .et-muted { display: block; color: var(--et-muted); }
-.et .et-banner { padding: var(--et-space-3) var(--et-space-4); border: 1.3px solid var(--et-edge); border-left: 5px solid var(--et-error); border-radius: 7px; background: var(--et-sheet); box-shadow: var(--et-relief); font-size: 12px; }
-.et .et-banner strong { display: block; font-size: 12px; }
+.et .et-metric__value--sm { font-size: 16px; }
+.et .et-metric__value .muted { font-size: 14px; font-weight: 400; color: var(--et-muted); }
+
+/* Data health components (spec 020). */
+.et .et-rule { padding: var(--et-space-3) var(--et-space-4); }
+.et .et-rule + .et-rule { border-top: 1px dashed var(--et-line); }
+.et .et-rule__head { display: flex; justify-content: space-between; gap: var(--et-space-3); font-size: 12px; margin-bottom: var(--et-space-2); }
+.et .et-rule__head .muted { color: var(--et-muted); }
+.et .et-progress { height: 8px; border: 1px solid var(--et-edge); border-radius: 30px; background: var(--et-paper); overflow: hidden; }
+.et .et-progress__bar { height: 100%; background: var(--et-yellow); }
+.et .et-progress--success .et-progress__bar { background: var(--et-green-deep); }
+.et .et-table__scroll { overflow-x: auto; }
+.et .et-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.et .et-table th { text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: .1em; color: var(--et-muted); font-weight: 600; padding: var(--et-space-3) var(--et-space-4); border-bottom: 1.3px solid var(--et-edge); }
+.et .et-table .num { text-align: right; }
+.et .et-table td { padding: var(--et-space-3) var(--et-space-4); border-bottom: 1px solid var(--et-line); vertical-align: top; }
+.et .et-table tr:last-child td { border-bottom: 0; }
+.et .et-table a { color: var(--et-ink); font-weight: 600; text-decoration: underline; text-decoration-color: var(--et-blue); text-underline-offset: 3px; }
+.et .et-table .issues { display: block; color: var(--et-muted); font-size: 12px; line-height: 1.6; }
+.et .et-table .issues strong { color: var(--et-ink); }
+.et .et-empty { padding: var(--et-space-8); text-align: center; }
+.et .et-empty h3 { margin: 0 0 var(--et-space-2); font-size: 14px; }
+.et .et-empty p { margin: 0 0 var(--et-space-4); color: var(--et-muted); font-size: 12px; }
 
 /* Inherit the .et font into Polaris host elements; it only reaches shadow
    children that don't set their own font-family. */

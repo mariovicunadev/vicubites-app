@@ -73,80 +73,113 @@ export default function DataHealth() {
 
   return (
     <s-page heading="Data health">
-      <s-button
-        slot="primary-action"
-        variant="primary"
-        onClick={() => fetcher.submit({}, { method: "post" })}
-        {...(running ? { disabled: true } : {})}
-      >
-        Run audit
-      </s-button>
-      <s-button slot="secondary-actions" href="/app/health/fix">
-        Fix in bulk
-      </s-button>
+      <div className="et-actions">
+        <a className="et-button" href="/app/health/fix">
+          Fix in bulk
+        </a>
+        <button
+          type="button"
+          className="et-button et-button--primary"
+          onClick={() => fetcher.submit({}, { method: "post" })}
+          disabled={running}
+        >
+          Run audit
+        </button>
+      </div>
 
       {error && (
-        <s-banner heading="The audit could not be updated" tone="critical">
+        <div className="et-banner" role="alert">
+          <strong>The audit could not be updated</strong>
           {error}
-        </s-banner>
+        </div>
       )}
       {audit?.failed && (
-        <s-banner heading="The last audit failed" tone="critical">
+        <div className="et-banner" role="alert">
+          <strong>The last audit failed</strong>
           Shopify reported {audit.failed}. Run the audit again.
-        </s-banner>
+        </div>
       )}
       {running && (
-        <s-banner heading="Audit in progress" tone="info">
-          Reading the catalog through a bulk operation. Results appear here when it finishes.
-        </s-banner>
+        <div className="et-banner et-banner--info" role="status">
+          <strong>Audit in progress</strong>
+          Reading the catalog through a bulk operation. Results appear here
+          when it finishes.
+        </div>
       )}
 
       {summary.products === 0 ? (
-        <s-section>
-          <s-empty-state heading="No audit yet">
-            <s-paragraph>
-              Run an audit to score every product on the completeness of its nutrition data.
-            </s-paragraph>
-          </s-empty-state>
-        </s-section>
+        <div className="et-panel et-empty">
+          <h3>No audit yet</h3>
+          <p>
+            Run an audit to score every product on the completeness of its
+            nutrition data.
+          </p>
+          <button
+            type="button"
+            className="et-button et-button--primary"
+            onClick={() => fetcher.submit({}, { method: "post" })}
+            disabled={running}
+          >
+            Run audit
+          </button>
+        </div>
       ) : (
         <>
-          <s-section heading="Catalog">
-            <s-grid gridTemplateColumns="1fr 1fr 1fr" gap="base">
+          <section className="et-section" aria-labelledby="health-catalog">
+            <h2 id="health-catalog" className="et-section__heading">
+              Catalog
+            </h2>
+            <div className="et-metrics">
               <Metric label="Average score" value={`${summary.averageScore} / 100`} />
               <Metric
                 label="Products needing attention"
                 value={`${summary.needsAttention} of ${summary.products}`}
               />
-              <Metric label="Last audit" value={audit?.completedAt ?? "—"} />
-            </s-grid>
-          </s-section>
+              <Metric label="Last audit" value={audit?.completedAt ?? "—"} small />
+            </div>
+          </section>
 
-          <s-section heading="Rules">
-            <s-stack direction="block" gap="base">
+          <section className="et-section" aria-labelledby="health-rules">
+            <h2 id="health-rules" className="et-section__heading">
+              Rules
+            </h2>
+            <div className="et-panel">
               {summary.rules.map((rule) => (
                 <RuleBar key={rule.ruleId} {...rule} />
               ))}
-            </s-stack>
-          </s-section>
+            </div>
+          </section>
 
-          <s-section heading="Products">
-            <ProductsTable rows={rows} />
-          </s-section>
+          <section className="et-section" aria-labelledby="health-products">
+            <h2 id="health-products" className="et-section__heading">
+              Products
+            </h2>
+            <div className="et-panel et-table__scroll">
+              <ProductsTable rows={rows} />
+            </div>
+          </section>
         </>
       )}
     </s-page>
   );
 }
 
-function Metric({ label, value }: { label: string; value: string }) {
+function Metric({
+  label,
+  value,
+  small,
+}: {
+  label: string;
+  value: string;
+  small?: boolean;
+}) {
   return (
-    <s-box padding="base" border="base" borderRadius="base">
-      <s-stack direction="block" gap="small-200">
-        <s-text color="subdued">{label}</s-text>
-        <s-heading>{value}</s-heading>
-      </s-stack>
-    </s-box>
+    <div className="et-panel et-metric">
+      <div className="et-metric__label">{label}</div>
+      <div className={`et-metric__value${small ? " et-metric__value--sm" : ""}`}>
+        {value}
+      </div>
+    </div>
   );
 }
 
@@ -164,68 +197,79 @@ function RuleBar({
   total: number;
 }) {
   const complete = passing === total;
+  const pct = total > 0 ? Math.round((passing / total) * 100) : 0;
   return (
-    <s-stack direction="block" gap="small-300">
-      <s-stack direction="inline" gap="small-200" justifyContent="space-between">
-        <s-text type="strong">
+    <div className="et-rule">
+      <div className="et-rule__head">
+        <strong>
           {label} · {RULE_WEIGHTS.get(ruleId)} pts
-        </s-text>
-        <s-text color="subdued">
+        </strong>
+        <span className="muted">
           {passing} of {total} products
-        </s-text>
-      </s-stack>
-      <s-progress
-        value={passing}
-        max={total}
-        tone={complete ? "success" : "caution"}
-        accessibilityLabel={`${label}: ${passing} of ${total} products pass`}
-      ></s-progress>
-    </s-stack>
+        </span>
+      </div>
+      <div
+        className={`et-progress${complete ? " et-progress--success" : ""}`}
+        role="progressbar"
+        aria-valuenow={passing}
+        aria-valuemin={0}
+        aria-valuemax={total}
+        aria-label={`${label}: ${passing} of ${total} products pass`}
+      >
+        <div className="et-progress__bar" style={{ width: `${pct}%` }} />
+      </div>
+    </div>
   );
 }
 
 function ProductsTable({ rows }: { rows: HealthRow[] }) {
   return (
-    <s-table>
-      <s-table-header-row>
-        <s-table-header>Product</s-table-header>
-        <s-table-header>Status</s-table-header>
-        <s-table-header format="numeric">Score</s-table-header>
-        <s-table-header>Missing</s-table-header>
-      </s-table-header-row>
-      <s-table-body>
+    <table className="et-table">
+      <thead>
+        <tr>
+          <th scope="col">Product</th>
+          <th scope="col">Status</th>
+          <th scope="col" className="num">
+            Score
+          </th>
+          <th scope="col">Missing</th>
+        </tr>
+      </thead>
+      <tbody>
         {rows.map((row) => (
-          <s-table-row key={row.productId}>
-            <s-table-cell>
-              <s-link href={`shopify://admin/products/${row.adminId}`} target="_top">
+          <tr key={row.productId}>
+            <td>
+              <a href={`shopify://admin/products/${row.adminId}`} target="_top">
                 {row.title}
-              </s-link>
-            </s-table-cell>
-            <s-table-cell>
-              <s-badge tone={row.status === "ACTIVE" ? "success" : "neutral"}>
+              </a>
+            </td>
+            <td>
+              <span
+                className={`et-badge et-badge--${
+                  row.status === "ACTIVE" ? "success" : "neutral"
+                }`}
+              >
                 {row.status}
-              </s-badge>
-            </s-table-cell>
-            <s-table-cell>
-              <s-badge tone={row.tone}>{row.score}</s-badge>
-            </s-table-cell>
-            <s-table-cell>
+              </span>
+            </td>
+            <td className="num">
+              <span className={`et-badge et-badge--${row.tone}`}>{row.score}</span>
+            </td>
+            <td>
               {row.issues.length === 0 ? (
-                <s-text color="subdued">Complete</s-text>
+                <span className="issues">Complete</span>
               ) : (
-                <s-stack direction="block" gap="small-300">
-                  {row.issues.map((issue) => (
-                    <s-text key={issue.ruleId}>
-                      <s-text type="strong">{issue.label}:</s-text> {issue.missing.join(", ")}
-                    </s-text>
-                  ))}
-                </s-stack>
+                row.issues.map((issue) => (
+                  <span className="issues" key={issue.ruleId}>
+                    <strong>{issue.label}:</strong> {issue.missing.join(", ")}
+                  </span>
+                ))
               )}
-            </s-table-cell>
-          </s-table-row>
+            </td>
+          </tr>
         ))}
-      </s-table-body>
-    </s-table>
+      </tbody>
+    </table>
   );
 }
 

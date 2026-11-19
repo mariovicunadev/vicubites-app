@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Spec 020 mock — Data health, "Estudio Técnico" skin</title>
+<!--
+  Static mock for spec 020 (.et component kit + Data health migration).
+  Same token/component snapshot as the spec-019 mock; new kit pieces shown
+  here: et-progress, et-badge tones, et-table, et-empty-state, et-button
+  variants and banner tones.
+-->
+<style>
+  .et {
+    --et-paper: #f4ebe0; --et-sheet: #f9f2e8; --et-card: #f8f0e6;
+    --et-ink: #1d1b18; --et-muted: #70685e; --et-line: #ddd3c5; --et-edge: #46413b;
+    --et-green: #cfe3b2; --et-green-deep: #467340; --et-violet: #e7ddf5;
+    --et-blue: #b4cce5; --et-yellow: #f5d58e; --et-orange: #edb27e; --et-error: #aa3932;
+    --et-radius: 12px; --et-relief: 1.5px 2.5px 0 var(--et-ink);
+    --et-shadow: 0 8px 24px -16px #58432e55;
+    --et-font: 'JetBrains Mono', 'Cascadia Code', 'SFMono-Regular', Consolas, monospace;
+    --et-space-1: 4px; --et-space-2: 8px; --et-space-3: 12px; --et-space-4: 16px;
+    --et-space-6: 24px; --et-space-8: 32px; --et-ease: cubic-bezier(.2,.7,.2,1);
+    color: var(--et-ink); font-family: var(--et-font); line-height: 1.6;
+    background: var(--et-paper); min-height: 100vh;
+  }
+  .et *, .et *::before, .et *::after { box-sizing: border-box; }
+  .et .et-panel { border: 1px solid var(--et-line); border-radius: var(--et-radius); background: var(--et-sheet); box-shadow: var(--et-shadow); }
+  .et :focus-visible { outline: 3px solid var(--et-green-deep); outline-offset: 4px; }
+
+  .et .et-button { display: inline-flex; align-items: center; justify-content: center; gap: 9px; min-height: 38px; padding: 8px 14px; border: 1.3px solid var(--et-edge); border-radius: 7px; background: var(--et-sheet); color: var(--et-ink); font: inherit; font-size: 12px; font-weight: 600; text-decoration: none; cursor: pointer; box-shadow: var(--et-relief); transition: transform 150ms, box-shadow 150ms, background 150ms; }
+  .et .et-button:hover { background: var(--et-card); transform: translateY(-1px); }
+  .et .et-button:active { transform: translate(1.5px,2.5px); box-shadow: 0 0 0 var(--et-ink); }
+  .et .et-button--primary { background: var(--et-green); }
+  .et .et-button:disabled { cursor: not-allowed; opacity: .45; transform: none; box-shadow: none; }
+
+  .et .et-tag { display: inline-block; padding: 3px 9px; border: 1px solid var(--et-edge); border-radius: 30px; font-size: 10px; font-weight: 600; background: var(--et-green); }
+  .et .et-badge { display: inline-block; padding: 2px 8px; border: 1px solid var(--et-edge); border-radius: 30px; font-size: 10px; font-weight: 700; }
+  .et .et-badge--success { background: var(--et-green); }
+  .et .et-badge--neutral { background: var(--et-sheet); color: var(--et-muted); }
+  .et .et-badge--caution { background: var(--et-yellow); }
+  .et .et-badge--critical { background: #f3c4bd; color: var(--et-error); }
+  .et .et-badge--info { background: var(--et-blue); }
+
+  .et .et-section { margin-bottom: var(--et-space-6); }
+  .et .et-section__heading { margin: 0 0 var(--et-space-3); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .12em; color: var(--et-muted); }
+  .et .et-metrics { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--et-space-4); }
+  .et .et-metric { padding: var(--et-space-4) var(--et-space-4) var(--et-space-3); }
+  .et .et-metric__label { font-size: 10px; text-transform: uppercase; letter-spacing: .12em; color: var(--et-muted); }
+  .et .et-metric__value { font-size: 28px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.25; }
+  .et .et-metric__value--sm { font-size: 16px; }
+
+  .et .et-banner { padding: var(--et-space-3) var(--et-space-4); border: 1.3px solid var(--et-edge); border-left: 5px solid var(--et-error); border-radius: 7px; background: var(--et-sheet); box-shadow: var(--et-relief); font-size: 12px; margin-bottom: var(--et-space-4); }
+  .et .et-banner--info { border-left-color: var(--et-blue); }
+  .et .et-banner strong { display: block; }
+
+  .et .et-rule { padding: var(--et-space-3) var(--et-space-4); }
+  .et .et-rule + .et-rule { border-top: 1px dashed var(--et-line); }
+  .et .et-rule__head { display: flex; justify-content: space-between; gap: var(--et-space-3); font-size: 12px; margin-bottom: var(--et-space-2); }
+  .et .et-rule__head .muted { color: var(--et-muted); }
+  .et .et-progress { height: 8px; border: 1px solid var(--et-edge); border-radius: 30px; background: var(--et-paper); overflow: hidden; }
+  .et .et-progress__bar { height: 100%; background: var(--et-yellow); }
+  .et .et-progress--success .et-progress__bar { background: var(--et-green-deep); }
+
+  .et .et-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .et .et-table th { text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: .1em; color: var(--et-muted); font-weight: 600; padding: var(--et-space-3) var(--et-space-4); border-bottom: 1.3px solid var(--et-edge); }
+  .et .et-table th--num, .et .et-table .num { text-align: right; }
+  .et .et-table td { padding: var(--et-space-3) var(--et-space-4); border-bottom: 1px solid var(--et-line); vertical-align: top; }
+  .et .et-table tr:last-child td { border-bottom: 0; }
+  .et .et-table a { color: var(--et-ink); font-weight: 600; text-decoration: underline; text-decoration-color: var(--et-blue); text-underline-offset: 3px; }
+  .et .et-table .issues { color: var(--et-muted); font-size: 11px; display: block; }
+  .et .et-table .issues strong { color: var(--et-ink); }
+
+  .et .et-empty { padding: var(--et-space-8); text-align: center; }
+  .et .et-empty h3 { margin: 0 0 var(--et-space-2); font-size: 14px; }
+  .et .et-empty p { margin: 0 0 var(--et-space-4); color: var(--et-muted); font-size: 12px; }
+
+  .mock-page { max-width: 980px; margin: 0 auto; padding: var(--et-space-6); }
+  .mock-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--et-space-6); }
+  .mock-head h1 { font-size: 20px; margin: 0; }
+  .mock-actions { display: flex; gap: var(--et-space-3); }
+
+  @media (max-width: 720px) { .et .et-metrics { grid-template-columns: 1fr; } }
+  @media (prefers-reduced-motion: reduce) {
+    .et *, .et *::before, .et *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  }
+</style>
+</head>
+<body class="et">
+<main class="mock-page">
+  <div class="mock-head">
+    <h1>Data health</h1>
+    <div class="mock-actions">
+      <a href="#" class="et-button">Fix in bulk</a>
+      <button class="et-button et-button--primary">Run audit</button>
+    </div>
+  </div>
+
+  <div class="et-banner et-banner--info">
+    <strong>Audit in progress</strong>
+    Reading the catalog through a bulk operation. Results appear here when it finishes.
+  </div>
+
+  <section class="et-section" aria-labelledby="h-catalog">
+    <h2 id="h-catalog" class="et-section__heading">Catalog</h2>
+    <div class="et-metrics">
+      <div class="et-panel et-metric"><div class="et-metric__label">Average score</div><div class="et-metric__value">82<span style="font-size:14px;color:var(--et-muted)"> / 100</span></div></div>
+      <div class="et-panel et-metric"><div class="et-metric__label">Needs attention</div><div class="et-metric__value">25<span style="font-size:14px;color:var(--et-muted)"> / 27</span></div></div>
+      <div class="et-panel et-metric"><div class="et-metric__label">Last audit</div><div class="et-metric__value et-metric__value--sm">Nov 19, 2026 · 5:52 PM</div></div>
+    </div>
+  </section>
+
+  <section class="et-section" aria-labelledby="h-rules">
+    <h2 id="h-rules" class="et-section__heading">Rules</h2>
+    <div class="et-panel">
+      <div class="et-rule"><div class="et-rule__head"><strong>Guaranteed analysis · 20 pts</strong><span class="muted">25 of 27 products</span></div><div class="et-progress"><div class="et-progress__bar" style="width:92%"></div></div></div>
+      <div class="et-rule"><div class="et-rule__head"><strong>Ingredients · 15 pts</strong><span class="muted">23 of 27 products</span></div><div class="et-progress"><div class="et-progress__bar" style="width:85%"></div></div></div>
+      <div class="et-rule"><div class="et-rule__head"><strong>Search listing · 5 pts</strong><span class="muted">23 of 27 products</span></div><div class="et-progress"><div class="et-progress__bar" style="width:85%"></div></div></div>
+      <div class="et-rule"><div class="et-rule__head"><strong>B2B catalog · 10 pts</strong><span class="muted">2 of 27 products</span></div><div class="et-progress"><div class="et-progress__bar" style="width:7%"></div></div></div>
+      <div class="et-rule"><div class="et-rule__head"><strong>SKUs · 5 pts</strong><span class="muted">24 of 27 products</span></div><div class="et-progress"><div class="et-progress__bar" style="width:89%"></div></div></div>
+    </div>
+  </section>
+
+  <section class="et-section" aria-labelledby="h-products">
+    <h2 id="h-products" class="et-section__heading">Products</h2>
+    <div class="et-panel" style="overflow:hidden">
+      <table class="et-table">
+        <thead><tr><th>Product</th><th>Status</th><th class="num">Score</th><th>Missing</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><a href="#">Cat Starter Kit</a></td>
+            <td><span class="et-badge et-badge--success">ACTIVE</span></td>
+            <td class="num"><span class="et-badge et-badge--critical">10</span></td>
+            <td><span class="issues"><strong>Guaranteed analysis:</strong> crude protein, crude fat…</span><span class="issues"><strong>Ingredients:</strong> ingredient list</span></td>
+          </tr>
+          <tr>
+            <td><a href="#">Kitten Turkey Recipe</a></td>
+            <td><span class="et-badge et-badge--neutral">DRAFT</span></td>
+            <td class="num"><span class="et-badge et-badge--caution">60</span></td>
+            <td><span class="issues"><strong>Images:</strong> at least one image</span><span class="issues"><strong>B2B catalog:</strong> not in any catalog</span></td>
+          </tr>
+          <tr>
+            <td><a href="#">Freeze-Dried Liver Bites</a></td>
+            <td><span class="et-badge et-badge--neutral">DRAFT</span></td>
+            <td class="num"><span class="et-badge et-badge--success">75</span></td>
+            <td><span class="issues"><strong>B2B catalog:</strong> not in any catalog</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="et-section" aria-labelledby="h-empty">
+    <h2 id="h-empty" class="et-section__heading">Empty state (no audit yet)</h2>
+    <div class="et-panel et-empty">
+      <h3>No audit yet</h3>
+      <p>Run an audit to score every product on the completeness of its nutrition data.</p>
+      <button class="et-button et-button--primary">Run audit</button>
+    </div>
+  </section>
+</main>
+</body>
+</html>
