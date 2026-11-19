@@ -2,7 +2,7 @@
 
 | Field     | Value |
 |-----------|-------|
-| Status    | In review |
+| Status    | Done |
 | Branch    | `feature/019-estudio-tecnico-visual` |
 
 
