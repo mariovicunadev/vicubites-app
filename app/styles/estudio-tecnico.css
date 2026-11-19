@@ -40,6 +40,7 @@
   color-scheme: light;
   background: var(--et-paper);
   min-height: 100vh;
+  padding-top: var(--et-space-4);
 }
 .et *, .et *::before, .et *::after { box-sizing: border-box; }
 .et .et-panel { border: 1px solid var(--et-line); border-radius: var(--et-radius); background: var(--et-sheet); box-shadow: var(--et-shadow); }
