@@ -39,6 +39,7 @@
   line-height: 1.6;
   color-scheme: light;
   background: var(--et-paper);
+  min-height: 100vh;
 }
 .et *, .et *::before, .et *::after { box-sizing: border-box; }
 .et .et-panel { border: 1px solid var(--et-line); border-radius: var(--et-radius); background: var(--et-sheet); box-shadow: var(--et-shadow); }
@@ -60,6 +61,12 @@
 .et :focus-visible { outline: 3px solid var(--et-green-deep); outline-offset: 4px; }
 
 /* Pilot components (Overview). */
+.et .et-section { margin-bottom: var(--et-space-6); }
+.et .et-section__heading { margin: 0 0 var(--et-space-3); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .12em; color: var(--et-muted); }
+.et .et-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: var(--et-space-4); }
+@media (max-width: 720px) {
+  .et .et-metrics { grid-template-columns: 1fr; }
+}
 .et .et-metric { padding: var(--et-space-4) var(--et-space-4) var(--et-space-3); }
 .et .et-metric__label { font-size: 10px; text-transform: uppercase; letter-spacing: .12em; color: var(--et-muted); }
 .et .et-metric__value { font-size: 28px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.25; }

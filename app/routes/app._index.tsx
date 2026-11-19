@@ -68,8 +68,11 @@ export default function Index() {
 
       {overview && (
         <>
-          <s-section heading="Catalog">
-            <s-grid gridTemplateColumns="1fr 1fr" gap="base">
+          <section className="et-section" aria-labelledby="overview-catalog">
+            <h2 id="overview-catalog" className="et-section__heading">
+              Catalog
+            </h2>
+            <div className="et-metrics">
               <div className="et-panel et-metric">
                 <div className="et-metric__label">Products</div>
                 <div className="et-metric__value">{overview.products}</div>
@@ -78,10 +81,13 @@ export default function Index() {
                 <div className="et-metric__label">Ingredient entries</div>
                 <div className="et-metric__value">{overview.ingredients}</div>
               </div>
-            </s-grid>
-          </s-section>
+            </div>
+          </section>
 
-          <s-section heading="Modules">
+          <section className="et-section" aria-labelledby="overview-modules">
+            <h2 id="overview-modules" className="et-section__heading">
+              Modules
+            </h2>
             <div className="et-panel">
               <div className="et-module">
                 <div className="et-module__head">
@@ -105,7 +111,7 @@ export default function Index() {
                 </p>
               </div>
             </div>
-          </s-section>
+          </section>
 
           <aside slot="aside" className="et-panel et-aside">
             <h2 className="et-aside__heading">Connection</h2>
