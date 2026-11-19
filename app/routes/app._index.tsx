@@ -113,12 +113,14 @@ export default function Index() {
             </div>
           </section>
 
-          <aside slot="aside" className="et-panel et-aside">
-            <h2 className="et-aside__heading">Connection</h2>
-            <strong>{overview.shopName}</strong>
-            <span className="et-muted">{overview.shopDomain}</span>
-            <span className="et-muted">Admin API {overview.apiVersion}</span>
-          </aside>
+          <s-section slot="aside">
+            <div className="et-aside">
+              <h2 className="et-aside__heading">Connection</h2>
+              <strong>{overview.shopName}</strong>
+              <span className="et-muted">{overview.shopDomain}</span>
+              <span className="et-muted">Admin API {overview.apiVersion}</span>
+            </div>
+          </s-section>
         </>
       )}
     </s-page>
