@@ -2,7 +2,7 @@
 
 | Field     | Value |
 |-----------|-------|
-| Status    | Approved |
+| Status    | Done |
 | Branch    | `feature/021-estudio-tecnico-refill` |
 
 

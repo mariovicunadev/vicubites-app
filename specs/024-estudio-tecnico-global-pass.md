@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|-------|
-| Status | In review |
+| Status | Done |
 | Branch | `feature/024-estudio-tecnico-global-pass` |
 
 ## Goal

@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|-------|
-| Status | In review |
+| Status | Done |
 | Branch | `feature/023-estudio-tecnico-exports-crm` |
 
 ## Goal
