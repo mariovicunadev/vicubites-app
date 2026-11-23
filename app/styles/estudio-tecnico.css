@@ -70,6 +70,19 @@
 .et .et-copy p { margin: 0 0 var(--et-space-3); }
 .et .et-copy p:last-child { margin-bottom: 0; }
 .et .et-copy .muted { color: var(--et-muted); }
+
+/* Form components (spec 022). */
+.et .et-form { display: grid; gap: var(--et-space-4); }
+.et .et-field { display: grid; gap: var(--et-space-2); max-width: 320px; }
+.et .et-field > label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; color: var(--et-muted); }
+.et .et-field__control { display: flex; align-items: center; gap: var(--et-space-3); }
+.et .et-field__suffix { color: var(--et-muted); font-size: 12px; white-space: nowrap; }
+.et .et-field__error { color: var(--et-error); font-size: 13px; font-weight: 600; }
+.et .et-rule-card { padding: var(--et-space-6); font-size: 13px; overflow-wrap: anywhere; }
+.et .et-rule-card .et-input { min-width: 0; font-size: 14px; }
+.et .et-rule-card .et-field { width: 100%; }
+.et .et-rule-card .et-banner { font-size: 13px; }
+.et .et-input[aria-invalid='true'] { border-color: var(--et-error); }
 .et .et-badge { display: inline-block; padding: 2px 8px; border: 1px solid var(--et-edge); border-radius: 30px; font-size: 10px; font-weight: 700; text-transform: uppercase; white-space: nowrap; }
 .et .et-badge--success { background: var(--et-green); }
 .et .et-badge--neutral { background: var(--et-sheet); color: var(--et-muted); }

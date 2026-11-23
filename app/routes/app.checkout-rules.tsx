@@ -63,29 +63,83 @@ export const action = async ({ request }: ActionFunctionArgs): Promise<ActionRes
 };
 
 function StatusBadge({ rule }: { rule: RuleView<unknown> }) {
-  if (!rule.functionReady) return <s-badge tone="warning">Function not deployed</s-badge>;
-  if (!rule.ownerId) return <s-badge>Not created</s-badge>;
-  if (!rule.settings) return <s-badge tone="critical">Invalid settings: rule off</s-badge>;
-  return <s-badge tone={rule.active ? "success" : "warning"}>{rule.active ? "Active" : rule.status}</s-badge>;
+  if (!rule.functionReady) return <span className="et-badge et-badge--caution">Function not deployed</span>;
+  if (!rule.ownerId) return <span className="et-badge et-badge--neutral">Not created</span>;
+  if (!rule.settings) return <span className="et-badge et-badge--critical">Invalid settings: rule off</span>;
+  return (
+    <span className={`et-badge et-badge--${rule.active ? "success" : "caution"}`}>
+      {rule.active ? "Active" : rule.status}
+    </span>
+  );
 }
 
 function FormFeedback({ result }: { result: ActionResult | undefined }) {
   if (!result) return null;
   if (result.error) {
     return (
-      <s-banner heading="Shopify rejected the change" tone="critical">
-        <s-paragraph>{result.error}</s-paragraph>
-      </s-banner>
+      <div className="et-banner" role="alert">
+        <strong>Shopify rejected the change</strong>
+        {result.error}
+      </div>
     );
   }
-  return result.saved ? <s-banner tone="success" heading="Saved. Checkout uses the new settings now." /> : null;
+  return result.saved ? (
+    <div className="et-banner et-banner--success" role="status">
+      <strong>Saved. Checkout uses the new settings now.</strong>
+    </div>
+  ) : null;
+}
+
+function NumberField({
+  name,
+  label,
+  suffix,
+  defaultValue,
+  min,
+  max,
+  error,
+}: {
+  name: string;
+  label: string;
+  suffix: string;
+  defaultValue: string;
+  min: number;
+  max: number;
+  error?: string;
+}) {
+  const errorId = `${name}-error`;
+  const suffixId = `${name}-suffix`;
+  return (
+    <div className="et-field">
+      <label htmlFor={name}>{label}</label>
+      <div className="et-field__control">
+        <input
+          className="et-input"
+          type="number"
+          id={name}
+          name={name}
+          defaultValue={defaultValue}
+          min={min}
+          max={max}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? `${suffixId} ${errorId}` : suffixId}
+        />
+        <span className="et-field__suffix" id={suffixId}>{suffix}</span>
+      </div>
+      {error ? (
+        <span className="et-field__error" id={errorId} role="alert">
+          {error}
+        </span>
+      ) : null}
+    </div>
+  );
 }
 
 function BundlesBadge({ bundles }: { bundles: BundlesView }) {
-  if (!bundles.functionReady) return <s-badge tone="warning">Function not deployed</s-badge>;
-  if (!bundles.transformId) return <s-badge>Not created</s-badge>;
-  if (bundles.outdated) return <s-badge tone="warning">Needs update</s-badge>;
-  return <s-badge tone="success">Active</s-badge>;
+  if (!bundles.functionReady) return <span className="et-badge et-badge--caution">Function not deployed</span>;
+  if (!bundles.transformId) return <span className="et-badge et-badge--neutral">Not created</span>;
+  if (bundles.outdated) return <span className="et-badge et-badge--caution">Needs update</span>;
+  return <span className="et-badge et-badge--success">Active</span>;
 }
 
 function BundlesSection({ bundles }: { bundles: BundlesView }) {
@@ -95,49 +149,57 @@ function BundlesSection({ bundles }: { bundles: BundlesView }) {
   const canSave = bundles.functionReady && build.ok && fetcher.state === "idle";
 
   return (
-    <s-section heading="Bundles">
-      <fetcher.Form method="post">
-        <input type="hidden" name="intent" value="starter-kit" />
-        <s-stack direction="block" gap="base">
-          <s-stack direction="inline" gap="small-200">
+    <section className="et-section" aria-labelledby="rules-bundles">
+      <h2 id="rules-bundles" className="et-section__heading">
+        Bundles
+      </h2>
+      <div className="et-panel et-copy et-rule-card">
+        <fetcher.Form method="post" className="et-form" aria-busy={fetcher.state !== "idle"}>
+          <input type="hidden" name="intent" value="starter-kit" />
+          <div className="et-inline">
             <BundlesBadge bundles={bundles} />
-          </s-stack>
-          <s-text color="subdued">
+          </div>
+          <p className="muted">
             Cat Starter Kit: the buyer picks a dry food recipe and a treat flavor on the product page, and the cart
             expands the kit into those two products at the kit price. Options and price shares come from the products in
             the store; save again after changing them.
-          </s-text>
+          </p>
           {!bundles.eligibleForBundles ? (
-            <s-banner heading="This store can't sell bundles" tone="critical" />
+            <div className="et-banner" role="alert">
+              <strong>This store can&apos;t sell bundles</strong>
+            </div>
           ) : null}
           {problems.length > 0 ? (
-            <s-banner heading="Fix these before saving" tone="warning">
-              <s-unordered-list>
+            <div className="et-banner et-banner--warning" role="alert">
+              <strong>Fix these before saving</strong>
+              <ul>
                 {problems.map((problem) => (
-                  <s-list-item key={problem}>{problem}</s-list-item>
+                  <li key={problem}>{problem}</li>
                 ))}
-              </s-unordered-list>
-            </s-banner>
+              </ul>
+            </div>
           ) : null}
           <FormFeedback result={fetcher.data?.problems ? undefined : fetcher.data} />
           {build.ok ? (
-            <s-stack direction="block" gap="small-200">
-              <s-text>
+            <div>
+              <p>
                 Recipes ({build.picker.recipes.length}):{" "}
                 {build.picker.recipes.map((option) => option.label).join(", ")}
-              </s-text>
-              <s-text>
+              </p>
+              <p>
                 Treat flavors ({build.picker.treats.length}):{" "}
                 {build.picker.treats.map((option) => option.label).join(", ")}
-              </s-text>
-            </s-stack>
+              </p>
+            </div>
           ) : null}
-          <s-button type="submit" variant="primary" {...(!canSave ? { disabled: true } : {})}>
-            {bundles.transformId ? "Save" : "Turn on starter kit"}
-          </s-button>
-        </s-stack>
-      </fetcher.Form>
-    </s-section>
+          <div>
+            <button type="submit" className="et-button et-button--primary" disabled={!canSave}>
+              {bundles.transformId ? "Save" : "Turn on starter kit"}
+            </button>
+          </div>
+        </fetcher.Form>
+      </div>
+    </section>
   );
 }
 
@@ -149,9 +211,10 @@ export default function CheckoutRules() {
   if (!rules || !bundles) {
     return (
       <s-page heading="Checkout rules">
-        <s-banner heading="Could not read the checkout rules" tone="critical">
-          <s-paragraph>{error}</s-paragraph>
-        </s-banner>
+        <div className="et-banner" role="alert">
+          <strong>Could not read the checkout rules</strong>
+          {error}
+        </div>
       </s-page>
     );
   }
@@ -164,78 +227,88 @@ export default function CheckoutRules() {
 
   return (
     <s-page heading="Checkout rules">
-      <s-section heading="Refill reward">
-        <rewardFetcher.Form method="post">
-          <input type="hidden" name="intent" value="refill-reward" />
-          <s-stack direction="block" gap="base">
-            <s-stack direction="inline" gap="small-200">
+      <section className="et-section" aria-labelledby="rules-reward">
+        <h2 id="rules-reward" className="et-section__heading">
+          Refill reward
+        </h2>
+        <div className="et-panel et-copy et-rule-card">
+          <rewardFetcher.Form method="post" className="et-form" aria-busy={rewardFetcher.state !== "idle"}>
+            <input type="hidden" name="intent" value="refill-reward" />
+            <div className="et-inline">
               <StatusBadge rule={refillReward} />
-            </s-stack>
-            <s-text color="subdued">
+            </div>
+            <p className="muted">
               Automatic discount on dry food for signed-in retail customers whose Refill Radar run-out date is
               within the window, before or after it. Combines with order and shipping discounts.
-            </s-text>
+            </p>
             <FormFeedback result={rewardFetcher.data} />
-            <s-number-field
+            <NumberField
               name="percentage"
               label="Discount"
               suffix="%"
               defaultValue={String(reward.percentage)}
               min={RANGES.percentage.min}
               max={RANGES.percentage.max}
-              {...(rewardErrors.percentage ? { error: rewardErrors.percentage } : {})}
+              error={rewardErrors.percentage}
             />
-            <s-number-field
+            <NumberField
               name="windowDays"
               label="Window"
               suffix="days"
               defaultValue={String(reward.windowDays)}
               min={RANGES.windowDays.min}
               max={RANGES.windowDays.max}
-              {...(rewardErrors.windowDays ? { error: rewardErrors.windowDays } : {})}
+              error={rewardErrors.windowDays}
             />
-            <s-button
-              type="submit"
-              variant="primary"
-              {...(!refillReward.functionReady || rewardFetcher.state !== "idle" ? { disabled: true } : {})}
-            >
-              {refillReward.ownerId ? "Save" : "Create discount"}
-            </s-button>
-          </s-stack>
-        </rewardFetcher.Form>
-      </s-section>
+            <div>
+              <button
+                type="submit"
+                className="et-button et-button--primary"
+                disabled={!refillReward.functionReady || rewardFetcher.state !== "idle"}
+              >
+                {refillReward.ownerId ? "Save" : "Create discount"}
+              </button>
+            </div>
+          </rewardFetcher.Form>
+        </div>
+      </section>
 
-      <s-section heading="Order limit per product">
-        <limitFetcher.Form method="post">
-          <input type="hidden" name="intent" value="order-limit" />
-          <s-stack direction="block" gap="base">
-            <s-stack direction="inline" gap="small-200">
+      <section className="et-section" aria-labelledby="rules-limit">
+        <h2 id="rules-limit" className="et-section__heading">
+          Order limit per product
+        </h2>
+        <div className="et-panel et-copy et-rule-card">
+          <limitFetcher.Form method="post" className="et-form" aria-busy={limitFetcher.state !== "idle"}>
+            <input type="hidden" name="intent" value="order-limit" />
+            <div className="et-inline">
               <StatusBadge rule={orderLimit} />
-            </s-stack>
-            <s-text color="subdued">
+            </div>
+            <p className="muted">
               Blocks a retail checkout with more units of one product variant than the limit, and points buyers to a
               business account. B2B orders follow their catalog quantity rules instead.
-            </s-text>
+            </p>
             <FormFeedback result={limitFetcher.data} />
-            <s-number-field
+            <NumberField
               name="maxPerVariant"
               label="Limit per variant"
               suffix="units"
               defaultValue={String(limit.maxPerVariant)}
               min={RANGES.maxPerVariant.min}
               max={RANGES.maxPerVariant.max}
-              {...(limitErrors.maxPerVariant ? { error: limitErrors.maxPerVariant } : {})}
+              error={limitErrors.maxPerVariant}
             />
-            <s-button
-              type="submit"
-              variant="primary"
-              {...(!orderLimit.functionReady || limitFetcher.state !== "idle" ? { disabled: true } : {})}
-            >
-              {orderLimit.ownerId ? "Save" : "Create rule"}
-            </s-button>
-          </s-stack>
-        </limitFetcher.Form>
-      </s-section>
+            <div>
+              <button
+                type="submit"
+                className="et-button et-button--primary"
+                disabled={!orderLimit.functionReady || limitFetcher.state !== "idle"}
+              >
+                {orderLimit.ownerId ? "Save" : "Create rule"}
+              </button>
+            </div>
+          </limitFetcher.Form>
+        </div>
+      </section>
 
       <BundlesSection bundles={bundles} />
     </s-page>
