@@ -78,10 +78,15 @@
 .et .et-field__control { display: flex; align-items: center; gap: var(--et-space-3); }
 .et .et-field__suffix { color: var(--et-muted); font-size: 12px; white-space: nowrap; }
 .et .et-field__error { color: var(--et-error); font-size: 13px; font-weight: 600; }
-.et .et-rule-card { padding: var(--et-space-6); font-size: 13px; overflow-wrap: anywhere; }
-.et .et-rule-card .et-input { min-width: 0; font-size: 14px; }
-.et .et-rule-card .et-field { width: 100%; }
-.et .et-rule-card .et-banner { font-size: 13px; }
+.et .et-rule-card { padding: var(--et-space-4); font-size: 13px; overflow-wrap: anywhere; }
+.et .et-rule-card .et-form { gap: var(--et-space-3); }
+.et .et-rule-card .et-form > p { margin: 0; }
+.et .et-rule-card .et-fields-row { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--et-space-4); }
+.et .et-rule-card .et-input { min-width: 0; min-height: 34px; padding: 6px 10px; font-size: 13px; }
+.et .et-rule-card .et-field { width: 100%; max-width: 220px; gap: var(--et-space-1); }
+.et .et-rule-card .et-field__control { gap: var(--et-space-2); }
+.et .et-rule-card .et-button { min-height: 32px; padding: 4px 12px; }
+.et .et-rule-card .et-banner { font-size: 13px; margin-bottom: 0; }
 .et .et-operation-copy { padding: var(--et-space-6); font-size: 13px; overflow-wrap: anywhere; }
 .et .et-operation-copy > .et-inline { margin-bottom: var(--et-space-4); }
 .et .et-table--operations { min-width: 640px; }

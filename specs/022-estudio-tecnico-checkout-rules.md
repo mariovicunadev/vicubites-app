@@ -57,6 +57,12 @@ language approved in spec 020; no new mock needed.
 - The harness provides the page landmark/title and does not load Polaris or authenticate against Shopify. Embedded navigation, real saves and final visual approval remain pending in the owner's dev preview.
 - Branch is stacked on spec 021 while PR #27 is open; integrate after that PR, then target `develop`. No push or merge performed for this spec.
 
+## Compact layout follow-up
+
+Owner-requested refinement: keep explanatory copy at 13 px, reduce card padding to 16 px and form gaps to 12 px, place the two reward fields side by side when space permits, and use bounded 220 px fields with compact 34 px inputs and 32 px buttons. Wrap fields on narrow screens. Keep labels, errors, intents, constraints, focus and disabled states unchanged. Scoped to checkout rule cards; no other page density changes in this follow-up.
+
+Verified locally on 2026-11-23: typecheck, lint, 351 tests and client/server build pass. Isolated Chrome confirms the compact dimensions, side-by-side fields at 1440 px, stacked fields at 390 px, visible keyboard focus, reduced motion and zero axe violations in all six fixture states. Follow-up is recorded on the current stacked spec 023 branch; final embedded review remains pending.
+
 ## Technical approach
 
 - `app/styles/estudio-tecnico.css` — add `et-form`, `et-field`, error states.
