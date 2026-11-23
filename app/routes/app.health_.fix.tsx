@@ -4,6 +4,7 @@ import { useFetcher, useLoaderData, useNavigate, useRevalidator } from "react-ro
 import { useAppBridge } from "@shopify/app-bridge-react";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 
+import { ScrollRegion } from "../components/et/ScrollRegion";
 import { AdminApiError } from "../lib/admin/errors";
 import { refreshStaleJobs } from "../lib/bulk/jobs.server";
 import { MAX_CSV_BYTES } from "../lib/fix/csv-parse";
@@ -113,30 +114,39 @@ export default function BulkFix() {
       </s-link>
 
       {error && (
-        <s-banner heading="Something went wrong" tone="critical">
+        <div className="et-banner" role="alert">
+          <strong>Something went wrong</strong>
           {error}
-        </s-banner>
+        </div>
       )}
 
-      <s-section heading="1. Download the spreadsheet">
-        <s-stack direction="block" gap="base">
-          <s-paragraph>
+      <section className="et-section" aria-labelledby="fix-template">
+        <h2 id="fix-template" className="et-section__heading">
+          1. Download the spreadsheet
+        </h2>
+        <div className="et-panel et-copy">
+          <p>
             Products from the latest audit missing guaranteed analysis, calories or
             classification, with their current values. Fill in the blanks with the
             manufacturer&apos;s data; blank cells are left unchanged.
-          </s-paragraph>
+          </p>
           <TemplateButton />
-        </s-stack>
-      </s-section>
+        </div>
+      </section>
 
-      <s-section heading="2. Upload the completed file">
-        <s-drop-zone
-          ref={dropZone}
-          label="Completed spreadsheet (CSV, up to 1 MB)"
-          accept=".csv,text/csv"
-          {...(preview.state !== "idle" ? { disabled: true } : {})}
-        ></s-drop-zone>
-      </s-section>
+      <section className="et-section" aria-labelledby="fix-upload">
+        <h2 id="fix-upload" className="et-section__heading">
+          2. Upload the completed file
+        </h2>
+        <div className="et-panel et-copy">
+          <s-drop-zone
+            ref={dropZone}
+            label="Completed spreadsheet (CSV, up to 1 MB)"
+            accept=".csv,text/csv"
+            {...(preview.state !== "idle" ? { disabled: true } : {})}
+          ></s-drop-zone>
+        </div>
+      </section>
 
       {previewData && !applied && (
         <ReviewSection
@@ -188,9 +198,15 @@ function TemplateButton() {
   };
 
   return (
-    <s-button icon="download" onClick={download} {...(busy ? { loading: true } : {})}>
-      Download CSV
-    </s-button>
+    <button
+      type="button"
+      className="et-button"
+      onClick={download}
+      disabled={busy}
+      aria-busy={busy}
+    >
+      {busy ? "Downloading…" : "Download CSV"}
+    </button>
   );
 }
 
@@ -205,69 +221,86 @@ function ReviewSection({
 }) {
   if (plan.fileErrors.length > 0) {
     return (
-      <s-section heading="3. Review">
-        <s-banner heading="The file can't be used" tone="critical">
+      <section className="et-section" aria-labelledby="fix-review">
+        <h2 id="fix-review" className="et-section__heading">
+          3. Review
+        </h2>
+        <div className="et-banner" role="alert">
+          <strong>The file can&apos;t be used</strong>
           {plan.fileErrors.join(" ")}
-        </s-banner>
-      </s-section>
+        </div>
+      </section>
     );
   }
 
   const count = plan.products.length;
   return (
-    <s-section heading="3. Review and apply">
-      <s-stack direction="block" gap="base">
-        <s-text>
-          {count} {count === 1 ? "product" : "products"} will change · {plan.rowErrors.length}{" "}
-          skipped · {plan.unchanged} unchanged
-        </s-text>
+    <section className="et-section" aria-labelledby="fix-review">
+      <h2 id="fix-review" className="et-section__heading">
+        3. Review and apply
+      </h2>
+      <div className="et-panel et-copy">
+        <p>
+          <strong>
+            {count} {count === 1 ? "product" : "products"} will change ·{" "}
+            {plan.rowErrors.length} skipped · {plan.unchanged} unchanged
+          </strong>
+        </p>
 
         {plan.rowErrors.length > 0 && (
-          <s-banner heading="Rows skipped: nothing is written for them" tone="warning">
-            <s-stack direction="block" gap="small-300">
+          <div className="et-banner et-banner--warning" role="alert">
+            <strong>Rows skipped: nothing is written for them</strong>
+            <ul>
               {plan.rowErrors.map((row) => (
-                <s-text key={row.line}>
+                <li key={row.line}>
                   Line {row.line}: {row.messages.join("; ")}
-                </s-text>
+                </li>
               ))}
-            </s-stack>
-          </s-banner>
+            </ul>
+          </div>
         )}
 
         {count > 0 && (
           <>
-            <s-table>
-              <s-table-header-row>
-                <s-table-header>Product</s-table-header>
-                <s-table-header>Changes</s-table-header>
-              </s-table-header-row>
-              <s-table-body>
-                {plan.products.map((product) => (
-                  <s-table-row key={product.productId}>
-                    <s-table-cell>{product.title}</s-table-cell>
-                    <s-table-cell>
-                      <s-stack direction="block" gap="small-300">
+            <ScrollRegion label="Products to change">
+              <table className="et-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Product</th>
+                    <th scope="col">Changes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {plan.products.map((product) => (
+                    <tr key={product.productId}>
+                      <td className="nowrap">{product.title}</td>
+                      <td>
                         {product.changes.map((change) => (
-                          <s-text key={change.key}>
-                            <s-text type="strong">{change.label}:</s-text> {change.from ?? "—"} →{" "}
-                            {change.to}
-                          </s-text>
+                          <span className="issues" key={change.key}>
+                            <strong>{change.label}:</strong> {change.from ?? "—"} → {change.to}
+                          </span>
                         ))}
-                      </s-stack>
-                    </s-table-cell>
-                  </s-table-row>
-                ))}
-              </s-table-body>
-            </s-table>
-            <s-stack direction="inline" gap="base">
-              <s-button variant="primary" onClick={onApply} {...(busy ? { loading: true } : {})}>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </ScrollRegion>
+            <p>
+              <button
+                type="button"
+                className="et-button et-button--primary"
+                onClick={onApply}
+                disabled={busy}
+                aria-busy={busy}
+              >
                 Apply to {count} {count === 1 ? "product" : "products"}
-              </s-button>
-            </s-stack>
+              </button>
+            </p>
           </>
         )}
-      </s-stack>
-    </s-section>
+      </div>
+    </section>
   );
 }
 
@@ -284,67 +317,88 @@ function ResultsSection({
 }) {
   if (running || !outcomes) {
     return (
-      <s-section heading="Last fix">
-        <s-banner heading="Fix in progress" tone="info">
-          Shopify is applying the changes through a bulk operation. Results appear here when it
-          finishes.
-        </s-banner>
-      </s-section>
+      <section className="et-section" aria-labelledby="fix-results">
+        <h2 id="fix-results" className="et-section__heading">
+          Last fix
+        </h2>
+        <div className="et-banner et-banner--info" role="status">
+          <strong>Fix in progress</strong>
+          Shopify is applying the changes through a bulk operation. Results appear here when
+          it finishes.
+        </div>
+      </section>
     );
   }
 
   const counts = countOutcomes(outcomes);
   return (
-    <s-section heading="Last fix">
-      <s-stack direction="block" gap="base">
-        <s-text>
-          {counts.applied} applied · {counts.failed} failed
-          {counts.missing > 0 ? ` · ${counts.missing} without a result` : ""}
-        </s-text>
-        <s-table>
-          <s-table-header-row>
-            <s-table-header>Product</s-table-header>
-            <s-table-header>Result</s-table-header>
-            <s-table-header>Details</s-table-header>
-          </s-table-header-row>
-          <s-table-body>
-            {outcomes.map((outcome) => (
-              <s-table-row key={outcome.productId}>
-                <s-table-cell>
-                  <s-link
-                    href={`shopify://admin/products/${legacyId(outcome.productId)}`}
-                    target="_top"
-                  >
-                    {outcome.title}
-                  </s-link>
-                </s-table-cell>
-                <s-table-cell>
-                  <s-badge tone={outcome.status === "applied" ? "success" : "critical"}>
-                    {outcome.status === "applied"
-                      ? "Applied"
-                      : outcome.status === "failed"
-                        ? "Failed"
-                        : "No result"}
-                  </s-badge>
-                </s-table-cell>
-                <s-table-cell>
-                  {outcome.messages.length > 0 ? (
-                    outcome.messages.join("; ")
-                  ) : (
-                    <s-text color="subdued">—</s-text>
-                  )}
-                </s-table-cell>
-              </s-table-row>
-            ))}
-          </s-table-body>
-        </s-table>
-        <s-stack direction="inline" gap="base">
-          <s-button onClick={onAudit} {...(auditBusy ? { loading: true } : {})}>
+    <section className="et-section" aria-labelledby="fix-results">
+      <h2 id="fix-results" className="et-section__heading">
+        Last fix
+      </h2>
+      <div className="et-panel et-copy">
+        <p>
+          <strong>
+            {counts.applied} applied · {counts.failed} failed
+            {counts.missing > 0 ? ` · ${counts.missing} without a result` : ""}
+          </strong>
+        </p>
+        <ScrollRegion label="Bulk fix results">
+          <table className="et-table">
+            <thead>
+              <tr>
+                <th scope="col">Product</th>
+                <th scope="col">Result</th>
+                <th scope="col">Details</th>
+              </tr>
+            </thead>
+            <tbody>
+              {outcomes.map((outcome) => (
+                <tr key={outcome.productId}>
+                  <td>
+                    <a
+                      href={`shopify://admin/products/${legacyId(outcome.productId)}`}
+                      target="_top"
+                    >
+                      {outcome.title}
+                    </a>
+                  </td>
+                  <td>
+                    <span
+                      className={`et-badge et-badge--${outcome.status === "applied" ? "success" : "critical"}`}
+                    >
+                      {outcome.status === "applied"
+                        ? "Applied"
+                        : outcome.status === "failed"
+                          ? "Failed"
+                          : "No result"}
+                    </span>
+                  </td>
+                  <td>
+                    {outcome.messages.length > 0 ? (
+                      outcome.messages.join("; ")
+                    ) : (
+                      <span className="issues">—</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </ScrollRegion>
+        <p>
+          <button
+            type="button"
+            className="et-button"
+            onClick={onAudit}
+            disabled={auditBusy}
+            aria-busy={auditBusy}
+          >
             Run audit to update scores
-          </s-button>
-        </s-stack>
-      </s-stack>
-    </s-section>
+          </button>
+        </p>
+      </div>
+    </section>
   );
 }
 

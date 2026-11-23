@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|-------|
-| Status | Approved |
+| Status | In review |
 | Branch | `feature/024-estudio-tecnico-global-pass` |
 
 ## Goal
@@ -50,16 +50,29 @@ preview/apply flow, GraphQL and integrations stay untouched.
 
 - [ ] Bulk fix keeps its three-step flow (template download, drop zone, review, results),
   authenticated CSV fetches, disabled/busy states, polling and post-fix audit redirect.
-- [ ] `s-drop-zone`, `s-page` and breadcrumb link unchanged in behavior; preview and apply
+  Markup migrated; live drop-zone/upload/apply interaction still pending in dev preview.
+- [x] `s-drop-zone`, `s-page` and breadcrumb link unchanged in behavior; preview and apply
   submit the same intents.
-- [ ] Stylesheet tokens match the current artifact set (light theme); divergences are
+- [x] Stylesheet tokens match the current artifact set (light theme); divergences are
   documented in the CSS header.
-- [ ] One badge/tag component with documented tones; two documented button tiers.
-- [ ] No readable text below 11 px; micro-labels are uppercase-only and not the sole carrier
+- [x] One badge/tag component with documented tones; two documented button tiers.
+- [x] No readable text below 11 px; micro-labels are uppercase-only and not the sole carrier
   of essential information.
-- [ ] Typecheck, lint, tests and React Router build pass; announced isolated axe checks on
+- [x] Typecheck, lint, tests and React Router build pass; announced isolated axe checks on
   touched routes at 1440/390 px.
-- [ ] No real bulk fix, export, sync or audit runs during verification.
+- [x] No real bulk fix, export, sync or audit runs during verification.
+
+## Verification evidence
+
+- 2026-11-23: typecheck, lint, all 355 tests (4 new SSR presentation tests for the bulk fix
+  states, outside `app/routes`) and React Router client/server build pass.
+- Isolated Chrome: zero axe WCAG A/AA violations and no page-level horizontal overflow for
+  six bulk-fix states (initial+error, review, row errors, file errors, running, results) at
+  1440 and 390 px. Focusable scroll regions, 3 px visible focus and reduced-motion
+  overrides confirmed.
+- Real upload through `s-drop-zone`, preview/apply round trips and the post-fix audit
+  redirect remain pending in the dev preview; no real runs were performed.
+- Branch stacked on local spec 023; no push or merge performed.
 
 ## Technical approach
 

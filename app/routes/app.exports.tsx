@@ -174,7 +174,7 @@ function DownloadCell({ job }: { job: BulkJobView }) {
   return (
     <button
       type="button"
-      className="et-button"
+      className="et-button et-button--compact"
       onClick={download}
       disabled={busy}
       aria-busy={busy}

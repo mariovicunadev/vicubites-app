@@ -193,7 +193,7 @@ function BundlesSection({ bundles }: { bundles: BundlesView }) {
             </div>
           ) : null}
           <div>
-            <button type="submit" className="et-button et-button--primary" disabled={!canSave}>
+            <button type="submit" className="et-button et-button--compact et-button--primary" disabled={!canSave}>
               {bundles.transformId ? "Save" : "Turn on starter kit"}
             </button>
           </div>
@@ -265,7 +265,7 @@ export default function CheckoutRules() {
             <div>
               <button
                 type="submit"
-                className="et-button et-button--primary"
+                className="et-button et-button--compact et-button--primary"
                 disabled={!refillReward.functionReady || rewardFetcher.state !== "idle"}
               >
                 {refillReward.ownerId ? "Save" : "Create discount"}
@@ -302,7 +302,7 @@ export default function CheckoutRules() {
             <div>
               <button
                 type="submit"
-                className="et-button et-button--primary"
+                className="et-button et-button--compact et-button--primary"
                 disabled={!orderLimit.functionReady || limitFetcher.state !== "idle"}
               >
                 {orderLimit.ownerId ? "Save" : "Create rule"}
