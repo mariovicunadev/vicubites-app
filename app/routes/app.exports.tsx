@@ -8,6 +8,7 @@ import { useFetcher, useLoaderData, useRevalidator } from "react-router";
 import { useAppBridge } from "@shopify/app-bridge-react";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 
+import { ScrollRegion } from "../components/et/ScrollRegion";
 import { AdminApiError } from "../lib/admin/errors";
 import { createBulkJob, listBulkJobs, refreshStaleJobs } from "../lib/bulk/jobs.server";
 import { toJobView, type BulkJobView } from "../lib/bulk/job-view";
@@ -63,66 +64,76 @@ export default function Exports() {
 
   return (
     <s-page heading="Exports">
-      <s-button
-        slot="primary-action"
-        variant="primary"
-        icon="export"
-        onClick={startExport}
-        {...(starting || anyRunning ? { disabled: true } : {})}
-      >
-        Export catalog
-      </s-button>
+      <div className="et-actions">
+        <button
+          type="button"
+          className="et-button et-button--primary"
+          onClick={startExport}
+          disabled={starting || anyRunning}
+          aria-busy={starting}
+        >
+          {starting ? "Starting export…" : "Export catalog"}
+        </button>
+      </div>
 
       {error && (
-        <s-banner heading="The export could not be updated" tone="critical">
+        <div className="et-banner" role="alert">
+          <strong>The export could not be updated</strong>
           {error}
-        </s-banner>
+        </div>
       )}
 
-      <s-section heading="Catalog exports">
-        <s-paragraph>
-          Exports every product with its variants, metafields and media through a
-          bulk operation, then builds a CSV with one row per variant. Shopify keeps
-          each result for seven days.
-        </s-paragraph>
-        {jobs.length === 0 ? (
-          <s-paragraph>No exports yet.</s-paragraph>
-        ) : (
-          <JobsTable jobs={jobs} />
-        )}
-      </s-section>
+      <section className="et-section" aria-labelledby="exports-catalog">
+        <h2 id="exports-catalog" className="et-section__heading">Catalog exports</h2>
+        <div className="et-panel">
+          <div className="et-copy et-operation-copy">
+            <p>
+              Exports every product with its variants, metafields and media through a
+              bulk operation, then builds a CSV with one row per variant. Shopify keeps
+              each result for seven days.
+            </p>
+          </div>
+          {jobs.length === 0 ? (
+            <div className="et-empty"><h3>No exports yet.</h3></div>
+          ) : (
+            <JobsTable jobs={jobs} />
+          )}
+        </div>
+      </section>
     </s-page>
   );
 }
 
 function JobsTable({ jobs }: { jobs: BulkJobView[] }) {
   return (
-    <s-table>
-      <s-table-header-row>
-        <s-table-header>Started</s-table-header>
-        <s-table-header>Status</s-table-header>
-        <s-table-header format="numeric">Products</s-table-header>
-        <s-table-header format="numeric">Objects</s-table-header>
-        <s-table-header>Result</s-table-header>
-      </s-table-header-row>
-      <s-table-body>
-        {jobs.map((job) => (
-          <s-table-row key={job.id}>
-            <s-table-cell>{job.createdAt}</s-table-cell>
-            <s-table-cell>
-              <s-badge tone={job.tone}>
-                {job.errorCode ? `${job.status} · ${job.errorCode}` : job.status}
-              </s-badge>
-            </s-table-cell>
-            <s-table-cell>{job.roots}</s-table-cell>
-            <s-table-cell>{job.objects}</s-table-cell>
-            <s-table-cell>
-              <DownloadCell job={job} />
-            </s-table-cell>
-          </s-table-row>
-        ))}
-      </s-table-body>
-    </s-table>
+    <ScrollRegion label="Catalog export jobs">
+      <table className="et-table et-table--operations">
+        <thead>
+          <tr>
+            <th scope="col">Started</th>
+            <th scope="col">Status</th>
+            <th scope="col" className="num">Products</th>
+            <th scope="col" className="num">Objects</th>
+            <th scope="col">Result</th>
+          </tr>
+        </thead>
+        <tbody>
+          {jobs.map((job) => (
+            <tr key={job.id}>
+              <td className="nowrap">{job.createdAt}</td>
+              <td>
+                <span className={`et-badge et-badge--${job.tone === "warning" ? "caution" : job.tone}`}>
+                  {job.errorCode ? `${job.status} · ${job.errorCode}` : job.status}
+                </span>
+              </td>
+              <td className="num">{job.roots}</td>
+              <td className="num">{job.objects}</td>
+              <td><DownloadCell job={job} /></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </ScrollRegion>
   );
 }
 
@@ -130,9 +141,9 @@ function DownloadCell({ job }: { job: BulkJobView }) {
   const shopify = useAppBridge();
   const [busy, setBusy] = useState(false);
 
-  if (job.download === "none") return <s-text color="subdued">—</s-text>;
+  if (job.download === "none") return <span className="issues">—</span>;
   if (job.download === "expired") {
-    return <s-text color="subdued">Expired after 7 days</s-text>;
+    return <span className="issues">Expired after 7 days</span>;
   }
 
   // App Bridge adds the session token to same-origin fetches, which a plain
@@ -161,14 +172,16 @@ function DownloadCell({ job }: { job: BulkJobView }) {
   };
 
   return (
-    <s-button
-      variant="tertiary"
-      icon="download"
+    <button
+      type="button"
+      className="et-button"
       onClick={download}
-      {...(busy ? { loading: true } : {})}
+      disabled={busy}
+      aria-busy={busy}
+      aria-label={`${job.download === "partial" ? "Download partial CSV" : "Download CSV"} from ${job.createdAt}`}
     >
-      {job.download === "partial" ? "Partial CSV" : "CSV"}
-    </s-button>
+      {busy ? "Downloading…" : job.download === "partial" ? "Partial CSV" : "CSV"}
+    </button>
   );
 }
 

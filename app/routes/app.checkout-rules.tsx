@@ -242,24 +242,26 @@ export default function CheckoutRules() {
               within the window, before or after it. Combines with order and shipping discounts.
             </p>
             <FormFeedback result={rewardFetcher.data} />
-            <NumberField
-              name="percentage"
-              label="Discount"
-              suffix="%"
-              defaultValue={String(reward.percentage)}
-              min={RANGES.percentage.min}
-              max={RANGES.percentage.max}
-              error={rewardErrors.percentage}
-            />
-            <NumberField
-              name="windowDays"
-              label="Window"
-              suffix="days"
-              defaultValue={String(reward.windowDays)}
-              min={RANGES.windowDays.min}
-              max={RANGES.windowDays.max}
-              error={rewardErrors.windowDays}
-            />
+            <div className="et-fields-row">
+              <NumberField
+                name="percentage"
+                label="Discount"
+                suffix="%"
+                defaultValue={String(reward.percentage)}
+                min={RANGES.percentage.min}
+                max={RANGES.percentage.max}
+                error={rewardErrors.percentage}
+              />
+              <NumberField
+                name="windowDays"
+                label="Window"
+                suffix="days"
+                defaultValue={String(reward.windowDays)}
+                min={RANGES.windowDays.min}
+                max={RANGES.windowDays.max}
+                error={rewardErrors.windowDays}
+              />
+            </div>
             <div>
               <button
                 type="submit"

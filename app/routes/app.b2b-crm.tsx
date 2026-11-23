@@ -2,6 +2,7 @@ import type { ActionFunctionArgs, HeadersFunction, LoaderFunctionArgs } from "re
 import { useFetcher, useLoaderData } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 
+import { ScrollRegion } from "../components/et/ScrollRegion";
 import { AdminApiError } from "../lib/admin/errors";
 import { loadCrmSyncStatus, syncAllCompanies } from "../lib/hubspot/sync.server";
 import { authenticate } from "../shopify.server";
@@ -30,63 +31,75 @@ export default function B2BCrm() {
   return (
     <s-page heading="B2B CRM">
       {error && (
-        <s-banner heading="The sync could not read Shopify" tone="critical">
-          <s-paragraph>{error}</s-paragraph>
-        </s-banner>
+        <div className="et-banner" role="alert">
+          <strong>The sync could not read Shopify</strong>
+          {error}
+        </div>
       )}
-      <s-section heading="HubSpot">
-        <s-stack direction="block" gap="base">
-          <s-stack direction="inline" gap="small-200">
-            <s-badge tone={connected ? "success" : "warning"}>
+      <section className="et-section" aria-labelledby="crm-hubspot">
+        <h2 id="crm-hubspot" className="et-section__heading">HubSpot</h2>
+        <div className="et-panel et-copy et-operation-copy">
+          <div className="et-inline">
+            <span className={`et-badge et-badge--${connected ? "success" : "caution"}`}>
               {connected ? "HubSpot connected" : "HubSpot not connected"}
-            </s-badge>
+            </span>
             {connected && (
-              <s-button
+              <button
+                type="button"
+                className="et-button et-button--primary"
                 onClick={() => fetcher.submit({}, { method: "post" })}
-                {...(fetcher.state !== "idle" ? { disabled: true } : {})}
+                disabled={fetcher.state !== "idle"}
+                aria-busy={fetcher.state !== "idle"}
               >
-                Sync B2B to HubSpot
-              </s-button>
+                {fetcher.state !== "idle" ? "Syncing…" : "Sync B2B to HubSpot"}
+              </button>
             )}
-          </s-stack>
+          </div>
           {run && (
-            <s-paragraph>
+            <div className={`et-banner et-banner--${run.failed ? "warning" : "success"}`} role="status">
               Synced {run.companies} companies and {run.contacts} contacts · failed {run.failed}.
-            </s-paragraph>
+            </div>
           )}
-          <s-paragraph>
+          <p>
             {lastSyncedAt
               ? `In HubSpot: ${companies} companies and ${contacts} contacts · last sync ${lastSyncedAt.slice(0, 16).replace("T", " ")} UTC.`
               : "Nothing synced yet."}
-          </s-paragraph>
-          <s-text color="subdued">
+          </p>
+          <p className="muted">
             {connected
               ? "Companies and their contacts are pushed to HubSpot when they are created or edited in Shopify, and on demand. HubSpot receives the company name, its Shopify ID and each contact's email, nothing else."
               : "Set HUBSPOT_ACCESS_TOKEN (static token of a private HubSpot app with company and contact scopes) in the app's environment to sync B2B companies."}
-          </s-text>
-        </s-stack>
-      </s-section>
+          </p>
+        </div>
+      </section>
       {failures.length > 0 && (
-        <s-section heading="Latest failures">
-          <s-table>
-            <s-table-header-row>
-              <s-table-header>Record</s-table-header>
-              <s-table-header>Error</s-table-header>
-              <s-table-header>When (UTC)</s-table-header>
-            </s-table-header-row>
-            <s-table-body>
-              {failures.map((failure) => (
-                <s-table-row key={`${failure.objectType}-${failure.shopifyId}`}>
-                  <s-table-cell>
-                    {failure.objectType === "COMPANY" ? "Company" : "Contact"} {failure.shopifyId.split("/").pop()}
-                  </s-table-cell>
-                  <s-table-cell>{failure.error ?? "—"}</s-table-cell>
-                  <s-table-cell>{failure.syncedAt.slice(0, 16).replace("T", " ")}</s-table-cell>
-                </s-table-row>
-              ))}
-            </s-table-body>
-          </s-table>
-        </s-section>
+        <section className="et-section" aria-labelledby="crm-failures">
+          <h2 id="crm-failures" className="et-section__heading">Latest failures</h2>
+          <div className="et-panel">
+            <ScrollRegion label="CRM sync failures">
+              <table className="et-table et-table--operations">
+                <thead>
+                  <tr>
+                    <th scope="col">Record</th>
+                    <th scope="col">Error</th>
+                    <th scope="col">When (UTC)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {failures.map((failure) => (
+                    <tr key={`${failure.objectType}-${failure.shopifyId}`}>
+                      <td>
+                        {failure.objectType === "COMPANY" ? "Company" : "Contact"} {failure.shopifyId.split("/").pop()}
+                      </td>
+                      <td>{failure.error ?? "—"}</td>
+                      <td className="nowrap">{failure.syncedAt.slice(0, 16).replace("T", " ")}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </ScrollRegion>
+          </div>
+        </section>
       )}
     </s-page>
   );
