@@ -82,6 +82,9 @@
 .et .et-rule-card .et-input { min-width: 0; font-size: 14px; }
 .et .et-rule-card .et-field { width: 100%; }
 .et .et-rule-card .et-banner { font-size: 13px; }
+.et .et-operation-copy { padding: var(--et-space-6); font-size: 13px; overflow-wrap: anywhere; }
+.et .et-operation-copy > .et-inline { margin-bottom: var(--et-space-4); }
+.et .et-table--operations { min-width: 640px; }
 .et .et-input[aria-invalid='true'] { border-color: var(--et-error); }
 .et .et-badge { display: inline-block; padding: 2px 8px; border: 1px solid var(--et-edge); border-radius: 30px; font-size: 10px; font-weight: 700; text-transform: uppercase; white-space: nowrap; }
 .et .et-badge--success { background: var(--et-green); }
