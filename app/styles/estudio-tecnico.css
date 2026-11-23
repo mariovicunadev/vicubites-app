@@ -1,11 +1,23 @@
 /*
  * Estudio Técnico — scoped visual layer for the embedded app UI.
- * Tokens and the .et-panel/.et-tag/.et-button/.et-input primitives are a
- * verbatim extract of the design artifact's tokens.css (spec 019). Port
- * future source changes manually. Everything lives under `.et`; no global
- * selectors and no overrides of Polaris `s-*` internals or admin chrome.
- * Pilot-derived classes (et-metric, et-module, et-aside, et-banner) are
- * documented in specs/mocks/019-estudio-tecnico-overview.html.
+ * Tokens are ported from the design artifact's tokens.css (specs 019/024);
+ * port future source changes manually. Everything lives under `.et`; no
+ * global selectors and no overrides of Polaris `s-*` internals or admin
+ * chrome.
+ *
+ * Approved divergences from the artifact: light theme only (the admin chrome
+ * is fixed, so the artifact's dark theme is not ported); standard buttons are
+ * 38 px instead of the artifact's 44 px to match admin density.
+ *
+ * Type scale (4 px grid): uppercase micro-labels at 11 px (.et-section__
+ * heading, .et-metric__label, table th, field labels, badges); reading text
+ * at 13 px minimum; 12 px only for truly secondary detail inside components
+ * that already carry a 13 px primary line (field suffix, badge text is 11 px
+ * uppercase).
+ *
+ * Button tiers: `.et-button` standard actions; `.et-button--compact` inside
+ * cards and table rows (32 px). `.et-tag`/`.et-badge` share one pill style;
+ * `--violet/--success/--neutral/--caution/--critical/--info` set the tone.
  */
 
 .et {
@@ -23,6 +35,9 @@
   --et-yellow: #f5d58e;
   --et-orange: #edb27e;
   --et-error: #aa3932;
+  --et-contact: #46413b;
+  --et-shine: #ffffff;
+  --et-bezel: #292722;
   --et-radius: 12px;
   --et-relief: 1.5px 2.5px 0 var(--et-ink);
   --et-shadow: 0 8px 24px -16px #58432e55;
@@ -33,9 +48,15 @@
   --et-space-4: 16px;
   --et-space-6: 24px;
   --et-space-8: 32px;
+  --et-exit: 420ms;
+  --et-move: 820ms;
+  --et-enter: 680ms;
+  --et-stagger: 130ms;
+  --et-draw: 560ms;
   --et-ease: cubic-bezier(.2,.7,.2,1);
   color: var(--et-ink);
   font-family: var(--et-font);
+  font-size: 13px;
   line-height: 1.6;
   color-scheme: light;
   background: var(--et-paper);
@@ -44,32 +65,49 @@
 }
 .et *, .et *::before, .et *::after { box-sizing: border-box; }
 .et .et-panel { border: 1px solid var(--et-line); border-radius: var(--et-radius); background: var(--et-sheet); box-shadow: var(--et-shadow); }
-.et .et-tag { display: inline-block; padding: 3px 9px; border: 1px solid var(--et-edge); border-radius: 30px; font-size: 10px; font-weight: 600; background: var(--et-green); }
-.et .et-tag--violet { background: var(--et-violet); }
+
+/* One pill style for tags and badges; tone modifiers set the fill. */
+.et .et-tag, .et .et-badge {
+  display: inline-block; max-width: 100%; padding: 3px 9px;
+  border: 1px solid var(--et-edge); border-radius: 6px;
+  font-size: 11px; font-weight: 600; line-height: 1.6;
+  background: var(--et-green); overflow-wrap: anywhere;
+}
+.et .et-badge { border-radius: 30px; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
+.et .et-tag--violet, .et .et-badge--violet { background: var(--et-violet); }
+.et .et-badge--success { background: var(--et-green); }
+.et .et-badge--neutral { background: var(--et-sheet); color: var(--et-muted); }
+.et .et-badge--caution { background: var(--et-yellow); }
+.et .et-badge--critical { background: #f3c4bd; }
+.et .et-badge--info { background: var(--et-blue); }
+
 .et .et-button {
   display: inline-flex; align-items: center; justify-content: center; gap: 9px;
   min-height: 38px; padding: 8px 14px; border: 1.3px solid var(--et-edge);
   border-radius: 7px; background: var(--et-sheet); color: var(--et-ink);
-  font: inherit; font-size: 12px; font-weight: 600; text-decoration: none;
+  font: inherit; font-size: 13px; font-weight: 600; text-decoration: none;
   cursor: pointer; box-shadow: var(--et-relief);
   transition: transform 150ms, box-shadow 150ms, background 150ms;
 }
+.et .et-button--compact { min-height: 32px; padding: 4px 12px; }
 .et .et-button:hover { background: var(--et-card); transform: translateY(-1px); }
 .et .et-button:active { transform: translate(1.5px,2.5px); box-shadow: 0 0 0 var(--et-ink); }
 .et .et-button--primary { background: var(--et-green); }
 .et .et-button:disabled { cursor: not-allowed; opacity: .45; transform: none; box-shadow: none; }
-.et .et-input { width: 100%; padding: 11px 13px; border: 1px solid var(--et-edge); border-radius: 7px; background: var(--et-sheet); color: var(--et-ink); font: inherit; font-size: 12px; }
+.et .et-input { width: 100%; padding: 11px 13px; border: 1px solid var(--et-edge); border-radius: 7px; background: var(--et-sheet); color: var(--et-ink); font: inherit; font-size: 13px; }
 .et :focus-visible { outline: 3px solid var(--et-green-deep); outline-offset: 4px; }
-.et .et-banner { padding: var(--et-space-3) var(--et-space-4); border: 1.3px solid var(--et-edge); border-left: 5px solid var(--et-error); border-radius: 7px; background: var(--et-sheet); box-shadow: var(--et-relief); font-size: 12px; margin-bottom: var(--et-space-4); }
+.et .et-banner { padding: var(--et-space-3) var(--et-space-4); border: 1.3px solid var(--et-edge); border-left: 5px solid var(--et-error); border-radius: 7px; background: var(--et-sheet); box-shadow: var(--et-relief); font-size: 13px; margin-bottom: var(--et-space-4); }
 .et .et-banner--info { border-left-color: var(--et-blue); }
 .et .et-banner--warning { border-left-color: var(--et-orange); }
 .et .et-banner--success { border-left-color: var(--et-green-deep); }
 .et .et-banner strong { display: block; }
+.et .et-banner ul { margin: var(--et-space-2) 0 0; padding-left: var(--et-space-6); }
 .et .et-inline { display: flex; align-items: center; flex-wrap: wrap; gap: var(--et-space-2); }
-.et .et-copy { padding: var(--et-space-4); font-size: 12px; }
+.et .et-copy { padding: var(--et-space-4); font-size: 13px; }
 .et .et-copy p { margin: 0 0 var(--et-space-3); }
 .et .et-copy p:last-child { margin-bottom: 0; }
 .et .et-copy .muted { color: var(--et-muted); }
+.et .et-copy s-drop-zone { margin-top: var(--et-space-2); }
 
 /* Form components (spec 022). */
 .et .et-form { display: grid; gap: var(--et-space-4); }
@@ -82,21 +120,14 @@
 .et .et-rule-card .et-form { gap: var(--et-space-3); }
 .et .et-rule-card .et-form > p { margin: 0; }
 .et .et-rule-card .et-fields-row { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--et-space-4); }
-.et .et-rule-card .et-input { min-width: 0; min-height: 34px; padding: 6px 10px; font-size: 13px; }
+.et .et-rule-card .et-input { min-width: 0; min-height: 34px; padding: 6px 10px; }
 .et .et-rule-card .et-field { width: 100%; max-width: 220px; gap: var(--et-space-1); }
 .et .et-rule-card .et-field__control { gap: var(--et-space-2); }
-.et .et-rule-card .et-button { min-height: 32px; padding: 4px 12px; }
-.et .et-rule-card .et-banner { font-size: 13px; margin-bottom: 0; }
+.et .et-rule-card .et-banner { margin-bottom: 0; }
 .et .et-operation-copy { padding: var(--et-space-6); font-size: 13px; overflow-wrap: anywhere; }
 .et .et-operation-copy > .et-inline { margin-bottom: var(--et-space-4); }
 .et .et-table--operations { min-width: 640px; }
 .et .et-input[aria-invalid='true'] { border-color: var(--et-error); }
-.et .et-badge { display: inline-block; padding: 2px 8px; border: 1px solid var(--et-edge); border-radius: 30px; font-size: 10px; font-weight: 700; text-transform: uppercase; white-space: nowrap; }
-.et .et-badge--success { background: var(--et-green); }
-.et .et-badge--neutral { background: var(--et-sheet); color: var(--et-muted); }
-.et .et-badge--caution { background: var(--et-yellow); }
-.et .et-badge--critical { background: #f3c4bd; }
-.et .et-badge--info { background: var(--et-blue); }
 
 /* Pilot components (Overview). */
 .et .et-actions { display: flex; justify-content: flex-end; gap: var(--et-space-3); margin-bottom: var(--et-space-6); }
@@ -107,14 +138,14 @@
   .et .et-metrics { grid-template-columns: 1fr; }
 }
 .et .et-metric { padding: var(--et-space-4) var(--et-space-4) var(--et-space-3); }
-.et .et-metric__label { font-size: 10px; text-transform: uppercase; letter-spacing: .12em; color: var(--et-muted); }
+.et .et-metric__label { font-size: 11px; text-transform: uppercase; letter-spacing: .12em; color: var(--et-muted); }
 .et .et-metric__value { font-size: 28px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.25; }
 .et .et-module { padding: var(--et-space-4); }
 .et .et-module + .et-module { border-top: 1px dashed var(--et-line); }
 .et .et-module__head { display: flex; align-items: center; gap: var(--et-space-3); }
 .et .et-module__head strong { font-size: 13px; }
-.et .et-module p { margin: var(--et-space-2) 0 0; font-size: 12px; color: var(--et-muted); }
-.et .et-aside { padding: var(--et-space-4); font-size: 12px; }
+.et .et-module p { margin: var(--et-space-2) 0 0; font-size: 13px; color: var(--et-muted); }
+.et .et-aside { padding: var(--et-space-4); font-size: 13px; }
 .et .et-aside__heading { margin: 0 0 var(--et-space-3); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .12em; color: var(--et-muted); }
 .et .et-aside strong { display: block; font-size: 13px; }
 .et .et-aside .et-muted { display: block; color: var(--et-muted); }
@@ -124,14 +155,14 @@
 /* Data health components (spec 020). */
 .et .et-rule { padding: var(--et-space-3) var(--et-space-4); }
 .et .et-rule + .et-rule { border-top: 1px dashed var(--et-line); }
-.et .et-rule__head { display: flex; justify-content: space-between; gap: var(--et-space-3); font-size: 12px; margin-bottom: var(--et-space-2); }
+.et .et-rule__head { display: flex; justify-content: space-between; gap: var(--et-space-3); font-size: 13px; margin-bottom: var(--et-space-2); }
 .et .et-rule__head .muted { color: var(--et-muted); }
 .et .et-progress { height: 8px; border: 1px solid var(--et-edge); border-radius: 30px; background: var(--et-paper); overflow: hidden; }
 .et .et-progress__bar { height: 100%; background: var(--et-yellow); }
 .et .et-progress--success .et-progress__bar { background: var(--et-green-deep); }
 .et .et-table__scroll { overflow-x: auto; }
 .et .et-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-.et .et-table th { text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: .1em; color: var(--et-muted); font-weight: 600; padding: var(--et-space-3) var(--et-space-4); border-bottom: 1.3px solid var(--et-edge); }
+.et .et-table th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .1em; color: var(--et-muted); font-weight: 600; padding: var(--et-space-3) var(--et-space-4); border-bottom: 1.3px solid var(--et-edge); }
 .et .et-table .num { text-align: right; }
 .et .et-table .nowrap { white-space: nowrap; }
 .et .et-table td { padding: var(--et-space-3) var(--et-space-4); border-bottom: 1px solid var(--et-line); vertical-align: top; }
@@ -141,7 +172,10 @@
 .et .et-table .issues strong { color: var(--et-ink); }
 .et .et-empty { padding: var(--et-space-8); text-align: center; }
 .et .et-empty h3 { margin: 0 0 var(--et-space-2); font-size: 14px; }
-.et .et-empty p { margin: 0 0 var(--et-space-4); color: var(--et-muted); font-size: 12px; }
+.et .et-empty p { margin: 0 0 var(--et-space-4); color: var(--et-muted); font-size: 13px; }
+
+/* Numbered step heading inside bulk-fix panels. */
+.et .et-step { margin: 0 0 var(--et-space-3); font-size: 13px; font-weight: 700; }
 
 /* Inherit the .et font into Polaris host elements; it only reaches shadow
    children that don't set their own font-family. */

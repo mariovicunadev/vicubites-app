@@ -61,9 +61,10 @@ export default function Index() {
   return (
     <s-page heading="Overview">
       {error && (
-        <s-banner heading="Store data could not be loaded" tone="critical">
+        <div className="et-banner" role="alert">
+          <strong>Store data could not be loaded</strong>
           {error}
-        </s-banner>
+        </div>
       )}
 
       {overview && (
