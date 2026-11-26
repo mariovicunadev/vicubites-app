@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|-------|
-| Status | In review |
+| Status | Done |
 | Branch | `feature/025-review-fixes-round-1` |
 
 ## Goal
