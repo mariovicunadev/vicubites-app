@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|-------|
-| Status | In progress |
+| Status | In review |
 | Branch | `feature/025-review-fixes-round-1` |
 
 ## Goal
@@ -48,22 +48,22 @@ know what the bulk fix spreadsheet contains before downloading it.
 
 ## Acceptance criteria
 
-- [ ] Given the kit page on `/es`, then every recipe and treat flavor in the picker reads in
+- [x] Given the kit page on `/es`, then every recipe and treat flavor in the picker reads in
       Spanish, matching the titles of those products and variants on `/es`, and "Turkey" reads
       "Pavo"
-- [ ] Given the kit page on `/`, then the picker reads as before
-- [ ] Given a picker metafield without `variantId` (saved before this change), then the picker
+- [x] Given the kit page on `/`, then the picker reads as before
+- [x] Given a picker metafield without `variantId` (saved before this change), then the picker
       renders every option, with the stored label where no lookup is possible
-- [ ] Given a kit added from `/es` with a non-default recipe and the turkey flavor, then the cart
+- [x] Given a kit added from `/es` with a non-default recipe and the turkey flavor, then the cart
       expands into the chosen products and checkout shows "Pavo"
-- [ ] Given `/es` product pages of `crunchy-treats-for-cats` and `pate-for-cats`, then the flavor
+- [x] Given `/es` product pages of `crunchy-treats-for-cats` and `pate-for-cats`, then the flavor
       option reads "Pavo"
-- [ ] Given the bulk fix page, then section 1 states that the file holds only the products with
+- [x] Given the bulk fix page, then section 1 states that the file holds only the products with
       fixable failures in the latest audit, not the whole catalog
-- [ ] Access scopes: none added
-- [ ] Every `.liquid` file passes theme validation; `npm run typecheck`, `npm run lint`,
+- [x] Access scopes: none added
+- [x] Every `.liquid` file passes theme validation; `npm run typecheck`, `npm run lint`,
       `npm test` and `npx react-router build` pass
-- [ ] One axe pass on the kit page (`/es`) and the bulk fix page reports no new violations
+- [x] One axe pass on the kit page (`/es`) and the bulk fix page reports no new violations
 
 ## Technical approach
 
@@ -82,6 +82,16 @@ know what the bulk fix spreadsheet contains before downloading it.
 - Release: deploy the app, run `shopify app deploy`, then **Save** the starter kit in Checkout
   rules so the metafield gets the new fields. That order is safe: until the save, treat flavors
   keep their stored label. No migration.
+
+## Verification
+
+- Development preview on the store: `/es` checked before saving the kit (recipes in Spanish,
+  treat flavors with their stored labels) and after it (every label in Spanish). `/` unchanged.
+- A kit with the salmon recipe and the turkey treat expanded at checkout into those two
+  products, with "Pavo" as the flavor. The test line was removed from the cart.
+- axe (WCAG 2.2 AA): the kit page reports one violation, an untitled frame in Shopify's preview
+  bar, and none in the picker. The bulk fix page, server-rendered with the app styles and
+  Polaris, reports none.
 
 ## References
 
