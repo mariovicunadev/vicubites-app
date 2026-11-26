@@ -67,10 +67,18 @@ export interface StarterKitFunctionConfig {
   defaultTreat: string;
 }
 
+/**
+ * `value` and the treat's `variantId` let the theme block read each label from
+ * the storefront's own product objects, in the buyer's language; `label` is
+ * the primary language fallback.
+ */
 export interface StarterKitPickerConfig {
   productId: number;
+  /** A recipe's value is its product handle. */
   recipes: { value: string; label: string }[];
-  treats: { value: string; label: string }[];
+  treatsHandle: string;
+  /** `variantId` is numeric, as Liquid's `variant.id` is. */
+  treats: { value: string; label: string; variantId: number }[];
   defaultRecipe: string;
   defaultTreat: string;
 }
@@ -78,6 +86,11 @@ export interface StarterKitPickerConfig {
 export type StarterKitBuild =
   | { ok: true; functionConfig: StarterKitFunctionConfig; picker: StarterKitPickerConfig }
   | { ok: false; problems: string[] };
+
+/** `gid://shopify/ProductVariant/123` → `123`. */
+function numericId(gid: string): number {
+  return Number(gid.slice(gid.lastIndexOf("/") + 1));
+}
 
 /** `Salmon` → `salmon`; `Ocean Fish` → `ocean-fish`. */
 export function toOptionValue(title: string): string {
@@ -148,7 +161,8 @@ export function buildStarterKit(source: StarterKitSource): StarterKitBuild {
     picker: {
       productId: Number(kit.legacyResourceId),
       recipes: recipes.map(strip),
-      treats: treats.map(strip),
+      treatsHandle: STARTER_KIT.treatsHandle,
+      treats: treats.map((option) => ({ ...strip(option), variantId: numericId(option.variantId) })),
       defaultRecipe,
       defaultTreat,
     },

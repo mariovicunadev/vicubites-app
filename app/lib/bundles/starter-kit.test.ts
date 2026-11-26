@@ -53,7 +53,11 @@ describe("buildStarterKit", () => {
     expect(build.picker).toEqual({
       productId: 9001,
       recipes: build.functionConfig.recipes.map(({ value, label }) => ({ value, label })),
-      treats: build.functionConfig.treats.map(({ value, label }) => ({ value, label })),
+      treatsHandle: STARTER_KIT.treatsHandle,
+      treats: [
+        { value: "salmon", label: "Salmon", variantId: 301 },
+        { value: "chicken", label: "Chicken", variantId: 302 },
+      ],
       defaultRecipe: STARTER_KIT.defaultRecipe,
       defaultTreat: "chicken",
     });
