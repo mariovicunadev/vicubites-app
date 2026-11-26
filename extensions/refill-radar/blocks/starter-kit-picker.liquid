@@ -5,6 +5,8 @@
 
   Options come from the app-owned shop metafield `$app.starter_kit_picker`, written together with
   the function's configuration, so the picker never offers a choice the function doesn't know.
+  Labels are read from the products themselves, so they follow the buyer's language; the stored
+  label is the fallback when a lookup returns nothing.
   Renders only on the kit's product page; without JavaScript the kit uses the default choices.
 {% enddoc %}
 {%- liquid
@@ -30,8 +32,12 @@
         data-kit-field
       >
         {%- for option in picker.recipes -%}
+          {%- liquid
+            assign recipe = all_products[option.value]
+            assign label = recipe.title | default: option.label
+          -%}
           <option value="{{ option.value | escape }}"{% if option.value == picker.defaultRecipe %} selected{% endif %}>
-            {{- option.label | escape -}}
+            {{- label | escape -}}
           </option>
         {%- endfor -%}
       </select>
@@ -45,9 +51,23 @@
         name="properties[_kit_treat]"
         data-kit-field
       >
+        {%- liquid
+          if picker.treatsHandle != blank
+            assign treats = all_products[picker.treatsHandle]
+          endif
+        -%}
         {%- for option in picker.treats -%}
+          {%- liquid
+            assign label = option.label
+            for variant in treats.variants
+              if variant.id == option.variantId
+                assign label = variant.title
+                break
+              endif
+            endfor
+          -%}
           <option value="{{ option.value | escape }}"{% if option.value == picker.defaultTreat %} selected{% endif %}>
-            {{- option.label | escape -}}
+            {{- label | escape -}}
           </option>
         {%- endfor -%}
       </select>

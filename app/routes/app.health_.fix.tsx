@@ -130,6 +130,11 @@ export default function BulkFix() {
             classification, with their current values. Fill in the blanks with the
             manufacturer&apos;s data; blank cells are left unchanged.
           </p>
+          <div className="et-banner et-banner--info">
+            <strong>This is not a full catalog export</strong>
+            The file only includes products with failures this spreadsheet can fix (guaranteed
+            analysis, calories or classification) in the latest audit.
+          </div>
           <TemplateButton />
         </div>
       </section>
